@@ -1,0 +1,214 @@
+.evd-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.evd-back {
+  background: rgba(30, 41, 59, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: var(--primary);
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 600;
+  padding: 8px 14px;
+  border-radius: var(--radius-md);
+  align-self: flex-start;
+  transition: var(--transition-fast);
+}
+
+.evd-back:hover {
+  background: rgba(99, 102, 241, 0.2);
+  color: #ffffff;
+}
+
+.evd-title {
+  margin: 0;
+  font-size: 24px;
+  font-weight: 800;
+  font-family: var(--font-heading);
+  background: linear-gradient(135deg, #ffffff 0%, #cbd5e1 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.evd-sub {
+  margin: 2px 0 16px;
+  font-size: 14px;
+  color: var(--text-sub);
+}
+
+.evd-split {
+  display: flex;
+  gap: 20px;
+  align-items: stretch;
+}
+
+.evd-pdf-panel, .evd-ai-panel {
+  flex: 1;
+  background: rgba(15, 23, 42, 0.75);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-lg);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.evd-panel-header {
+  padding: 14px 20px;
+  font-family: var(--font-heading);
+  font-weight: 700;
+  font-size: 15px;
+  color: var(--text-bright);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(30, 41, 59, 0.4);
+}
+
+.evd-pdf-frame {
+  width: 100%;
+  height: 600px;
+  border: none;
+  background: #ffffff;
+}
+
+.evd-q-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 14px 18px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(15, 23, 42, 0.4);
+}
+
+.evd-q-tab {
+  padding: 8px 14px;
+  border-radius: var(--radius-md);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(30, 41, 59, 0.6);
+  color: var(--text-sub);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: var(--transition-fast);
+}
+
+.evd-q-tab:hover {
+  background: rgba(99, 102, 241, 0.2);
+  color: #ffffff;
+}
+
+.evd-q-tab.active {
+  background: var(--primary-gradient);
+  color: #ffffff;
+  border-color: rgba(255, 255, 255, 0.2);
+  box-shadow: 0 4px 12px rgba(99, 102, 241, 0.35);
+}
+
+.evd-q-tab.done {
+  border-color: rgba(16, 185, 129, 0.4);
+}
+
+.evd-q-detail {
+  padding: 20px;
+  overflow-y: auto;
+}
+
+.evd-q-header {
+  display: flex;
+  justify-content: space-between;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text-bright);
+  margin-bottom: 8px;
+}
+
+.evd-q-text {
+  font-size: 14px;
+  color: var(--text-main);
+  margin-bottom: 18px;
+  line-height: 1.5;
+}
+
+.evd-block {
+  margin-bottom: 18px;
+}
+
+.evd-block-label {
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: var(--text-sub);
+  letter-spacing: 0.05em;
+  margin-bottom: 6px;
+}
+
+.evd-ocr {
+  font-size: 13px;
+  color: var(--text-main);
+  white-space: pre-wrap;
+  background: rgba(30, 41, 59, 0.6);
+  padding: 12px 14px;
+  border-radius: var(--radius-md);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  line-height: 1.5;
+}
+
+.evd-evidence {
+  font-size: 13px;
+  color: #a5b4fc;
+  font-style: italic;
+  background: rgba(99, 102, 241, 0.1);
+  padding: 10px 12px;
+  border-radius: var(--radius-md);
+  border: 1px solid rgba(99, 102, 241, 0.2);
+}
+
+.evd-warn {
+  color: #f87171;
+  font-size: 12px;
+  margin-left: 8px;
+  font-weight: 600;
+}
+
+.evd-suggested {
+  font-size: 15px;
+  color: var(--text-bright);
+  margin-bottom: 16px;
+  background: rgba(16, 185, 129, 0.1);
+  border: 1px solid rgba(16, 185, 129, 0.25);
+  padding: 12px 14px;
+  border-radius: var(--radius-md);
+}
+
+.evd-final {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 14px;
+}
+
+.evd-final label {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-bright);
+}
+
+.evd-final input {
+  width: 90px !important;
+}
+
+.evd-total-bar {
+  margin-top: 16px;
+  font-family: var(--font-heading);
+  font-size: 16px;
+  font-weight: 700;
+  color: #34d399;
+  background: rgba(16, 185, 129, 0.15);
+  border: 1px solid rgba(16, 185, 129, 0.3);
+  padding: 14px 20px;
+  border-radius: var(--radius-lg);
+  text-align: right;
+}

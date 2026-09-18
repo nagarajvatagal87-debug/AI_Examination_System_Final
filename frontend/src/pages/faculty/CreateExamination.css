@@ -1,0 +1,113 @@
+.ce-wrap {
+  max-width: 760px;
+  background: rgba(15, 23, 42, 0.75);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: var(--radius-xl);
+  padding: 32px;
+  box-shadow: var(--shadow-lg);
+}
+
+.ce-title {
+  margin: 0 0 24px;
+  font-size: 24px;
+  font-weight: 800;
+  font-family: var(--font-heading);
+  background: linear-gradient(135deg, #ffffff 0%, #cbd5e1 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.ce-field {
+  margin-bottom: 22px;
+}
+
+.ce-field label {
+  display: block;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-bright);
+  margin-bottom: 8px;
+}
+
+.ce-field select, .ce-field input, .ce-field textarea {
+  width: 100%;
+}
+
+.ce-pattern-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 10px;
+  font-size: 14px;
+  color: var(--text-main);
+  background: rgba(30, 41, 59, 0.5);
+  padding: 10px 14px;
+  border-radius: var(--radius-md);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.ce-pattern-row input {
+  width: 90px !important;
+}
+
+.ce-remove {
+  background: rgba(239, 68, 68, 0.15);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  color: #f87171;
+  border-radius: 6px;
+  padding: 6px 10px;
+  cursor: pointer;
+  font-size: 14px;
+  transition: var(--transition-fast);
+  margin-left: auto;
+}
+
+.ce-remove:hover {
+  background: rgba(239, 68, 68, 0.3);
+  color: #ffffff;
+}
+
+.ce-match {
+  color: #34d399;
+  font-weight: 700;
+}
+
+.ce-mismatch {
+  color: #f87171;
+  font-weight: 700;
+}
+
+.ce-units {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px;
+}
+
+.ce-unit-checkbox {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  color: var(--text-main);
+  background: rgba(30, 41, 59, 0.6);
+  padding: 8px 14px;
+  border-radius: var(--radius-md);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  cursor: pointer;
+  transition: var(--transition-fast);
+}
+
+.ce-unit-checkbox:hover {
+  border-color: var(--primary);
+}
+
+.ce-generate {
+  width: 100%;
+  padding: 14px !important;
+  font-size: 16px !important;
+  font-weight: 700 !important;
+  margin-top: 12px;
+  border-radius: var(--radius-md) !important;
+}

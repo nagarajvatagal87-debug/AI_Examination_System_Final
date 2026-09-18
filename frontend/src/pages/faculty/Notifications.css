@@ -1,0 +1,13 @@
+.nf-title { margin: 0 0 18px; font-size: 18px; color: #1f2937; }
+.nf-list { display: flex; flex-direction: column; gap: 8px; }
+.nf-item {
+  display: flex; align-items: flex-start; gap: 12px; background: #fff; border-radius: 10px;
+  padding: 14px 16px; box-shadow: 0 1px 3px rgba(0,0,0,0.06); cursor: pointer; position: relative;
+}
+.nf-item.unread { background: #ecfdf5; border: 1px solid #a7f3d0; }
+.nf-icon { font-size: 18px; }
+.nf-body { flex: 1; }
+.nf-title-line { font-weight: 600; font-size: 13px; color: #1f2937; }
+.nf-desc { font-size: 12px; color: #6b7280; margin-top: 2px; }
+.nf-time { font-size: 11px; color: #9ca3af; margin-top: 4px; }
+.nf-dot { width: 8px; height: 8px; border-radius: 50%; background: #059669; position: absolute; top: 14px; right: 14px; }

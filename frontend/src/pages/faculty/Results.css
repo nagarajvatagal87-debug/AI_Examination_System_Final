@@ -1,0 +1,52 @@
+.rs-title {
+  margin: 0 0 4px;
+  font-size: 24px;
+  font-weight: 800;
+  font-family: var(--font-heading);
+  background: linear-gradient(135deg, #ffffff 0%, #cbd5e1 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.rs-sub {
+  margin: 0 0 20px;
+  font-size: 14px;
+  color: var(--text-sub);
+}
+
+.rs-table {
+  width: 100%;
+  border-collapse: collapse;
+  background: rgba(15, 23, 42, 0.75);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  box-shadow: var(--shadow-lg);
+  margin-bottom: 20px;
+}
+
+.rs-table th {
+  text-align: left;
+  padding: 14px 18px;
+  background: rgba(30, 41, 59, 0.6);
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: var(--text-sub);
+  letter-spacing: 0.05em;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.rs-table td {
+  padding: 14px 18px;
+  border-top: 1px solid rgba(255, 255, 255, 0.04);
+  font-size: 14px;
+  color: var(--text-main);
+}
+
+.rs-actions {
+  display: flex;
+  gap: 12px;
+}

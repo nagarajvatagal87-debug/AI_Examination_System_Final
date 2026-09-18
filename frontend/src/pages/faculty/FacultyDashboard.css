@@ -1,0 +1,555 @@
+/* =========================================
+   FACULTY DASHBOARD - MAIN LAYOUT
+========================================= */
+
+* {
+  box-sizing: border-box;
+}
+
+.fd-wrap {
+  min-height: 100vh;
+  background: #f5f7fb;
+  color: #1f2937;
+  font-family: Inter, Arial, sans-serif;
+}
+
+/* =========================================
+   HEADER
+========================================= */
+
+.fd-header {
+  height: 72px;
+  background: #ffffff;
+  border-bottom: 1px solid #e5e7eb;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 30px;
+  position: sticky;
+  top: 0;
+  z-index: 20;
+}
+
+.fd-header h1 {
+  margin: 0;
+  font-size: 24px;
+  font-weight: 800;
+  color: #111827;
+}
+
+.fd-header .sub {
+  margin-top: 4px;
+  font-size: 13px;
+  color: #6b7280;
+}
+
+.fd-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+/* =========================================
+   LOGOUT
+========================================= */
+
+.fd-logout {
+  border: none;
+  background: #111827;
+  color: white;
+  padding: 9px 16px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.fd-logout:hover {
+  background: #374151;
+}
+
+/* =========================================
+   BODY
+========================================= */
+
+.fd-body {
+  max-width: 1250px;
+  margin: 0 auto;
+  padding: 28px;
+}
+
+/* =========================================
+   SUBJECT BAR
+========================================= */
+
+.fd-subject-bar {
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 14px;
+  padding: 16px 18px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 22px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.03);
+}
+
+.fd-subject-bar label {
+  font-weight: 700;
+  color: #374151;
+}
+
+.fd-subject-bar select {
+  min-width: 240px;
+}
+
+/* =========================================
+   NEW SUBJECT
+========================================= */
+
+.fd-new-subject-toggle {
+  color: #059669;
+  font-weight: 700;
+  cursor: pointer;
+  margin-left: 4px;
+}
+
+.fd-new-subject-toggle:hover {
+  text-decoration: underline;
+}
+
+/* =========================================
+   SECTIONS / CARDS
+========================================= */
+
+.fd-section {
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 16px;
+  padding: 22px;
+  margin-bottom: 22px;
+  box-shadow: 0 4px 14px rgba(15, 23, 42, 0.04);
+}
+
+.fd-section h2 {
+  margin: 0 0 8px;
+  font-size: 19px;
+  color: #111827;
+}
+
+.hint {
+  color: #6b7280;
+  font-size: 13px;
+  margin: 4px 0 16px;
+}
+
+/* =========================================
+   FORMS
+========================================= */
+
+.fd-form-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.fd-form-row input,
+.fd-form-row select,
+.fd-instruction-box textarea,
+.fd-section input,
+.fd-section select {
+  border: 1px solid #d1d5db;
+  border-radius: 9px;
+  padding: 10px 12px;
+  font-size: 14px;
+  background: #ffffff;
+  color: #1f2937;
+  outline: none;
+}
+
+.fd-form-row input:focus,
+.fd-form-row select:focus,
+.fd-instruction-box textarea:focus {
+  border-color: #059669;
+  box-shadow: 0 0 0 3px rgba(5, 150, 105, 0.1);
+}
+
+/* =========================================
+   BUTTONS
+========================================= */
+
+.fd-btn {
+  border: none;
+  background: #059669;
+  color: white;
+  padding: 10px 17px;
+  border-radius: 9px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 700;
+  transition: 0.2s;
+}
+
+.fd-btn:hover {
+  background: #047857;
+  transform: translateY(-1px);
+}
+
+.fd-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.fd-btn-secondary {
+  background: #374151;
+}
+
+.fd-btn-secondary:hover {
+  background: #1f2937;
+}
+
+.fd-btn-danger {
+  background: #dc2626;
+}
+
+.fd-btn-danger:hover {
+  background: #b91c1c;
+}
+
+/* =========================================
+   AI INSTRUCTION BOX
+========================================= */
+
+.fd-instruction-box {
+  margin: 18px 0;
+  padding: 16px;
+  background: #f0fdf4;
+  border: 1px solid #bbf7d0;
+  border-radius: 12px;
+}
+
+.fd-instruction-box label {
+  display: block;
+  font-size: 13px;
+  font-weight: 700;
+  color: #065f46;
+  margin-bottom: 8px;
+}
+
+.fd-instruction-box textarea {
+  width: 100%;
+  resize: vertical;
+}
+
+/* =========================================
+   STATUS
+========================================= */
+
+.fd-status {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  max-width: 450px;
+  padding: 13px 18px;
+  border-radius: 10px;
+  background: #ecfdf5;
+  border: 1px solid #a7f3d0;
+  color: #065f46;
+  font-size: 13px;
+  font-weight: 600;
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.12);
+  z-index: 100;
+}
+
+.fd-status.error {
+  background: #fef2f2;
+  border-color: #fecaca;
+  color: #991b1b;
+}
+
+/* =========================================
+   QUESTION LIST
+========================================= */
+
+.fd-question-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.fd-question-card {
+  background: #f9fafb;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  padding: 14px;
+}
+
+.fd-question-meta {
+  font-size: 11px;
+  color: #059669;
+  text-transform: uppercase;
+  margin-bottom: 6px;
+  font-weight: 600;
+}
+
+.fd-question-text {
+  font-size: 14px;
+  margin: 6px 0 10px;
+  color: #1f2937;
+}
+
+/* =========================================
+   TABLE
+========================================= */
+
+.fd-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+  margin: 12px 0;
+}
+
+.fd-table th {
+  text-align: left;
+  color: #059669;
+  padding: 11px;
+  border-bottom: 2px solid #e5e7eb;
+  font-size: 11px;
+  text-transform: uppercase;
+}
+
+.fd-table td {
+  padding: 11px;
+  border-bottom: 1px solid #f3f4f6;
+  color: #1f2937;
+}
+
+.fd-table tr:hover {
+  background: #f9fafb;
+}
+
+/* =========================================
+   MODAL
+========================================= */
+
+.fd-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 50;
+}
+
+.fd-modal {
+  background: #fff;
+  border-radius: 16px;
+  padding: 24px;
+  max-width: 700px;
+  width: 90%;
+  max-height: 85vh;
+  overflow-y: auto;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+}
+
+.fd-modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.fd-modal-header h3 {
+  margin: 0;
+  color: #1f2937;
+}
+
+.fd-modal-close {
+  background: none;
+  border: none;
+  color: #6b7280;
+  font-size: 20px;
+  cursor: pointer;
+}
+
+/* =========================================
+   EVALUATION
+========================================= */
+
+.fd-eval-card {
+  border-bottom: 1px solid #e5e7eb;
+  padding: 14px 0;
+  font-size: 13px;
+  color: #374151;
+}
+
+.fd-ocr-text {
+  background: #f9fafb;
+  padding: 10px;
+  border-radius: 8px;
+  font-family: monospace;
+  font-size: 12px;
+  color: #1f2937;
+  white-space: pre-wrap;
+}
+
+.fd-verified-badge {
+  color: #059669;
+  font-weight: 700;
+}
+
+/* =========================================
+   ANALYTICS
+========================================= */
+
+.fd-stat-row {
+  display: flex;
+  gap: 16px;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+}
+
+.fd-stat {
+  background: #ecfdf5;
+  border: 1px solid #a7f3d0;
+  border-radius: 10px;
+  padding: 14px 20px;
+  text-align: center;
+  min-width: 130px;
+}
+
+.fd-stat-value {
+  font-size: 22px;
+  font-weight: 800;
+  color: #064e3b;
+}
+
+.fd-stat-label {
+  font-size: 11px;
+  color: #059669;
+}
+
+/* =========================================
+   BAR CHART
+========================================= */
+
+.fd-bar-chart {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.fd-bar-row {
+  display: grid;
+  grid-template-columns: 70px 1fr 30px;
+  align-items: center;
+  gap: 10px;
+}
+
+.fd-bar-label {
+  font-size: 12px;
+  color: #6b7280;
+}
+
+.fd-bar-track {
+  height: 10px;
+  background: #f3f4f6;
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+.fd-bar-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #059669, #10b981);
+}
+
+.fd-bar-value {
+  font-size: 12px;
+  color: #1f2937;
+  text-align: right;
+}
+
+/* =========================================
+   HOD CHAT
+========================================= */
+
+.fd-chat-window {
+  max-height: 260px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 12px;
+  padding: 10px;
+  background: #f9fafb;
+  border-radius: 10px;
+}
+
+.fd-chat-bubble {
+  align-self: flex-start;
+  background: #e5e7eb;
+  color: #1f2937;
+  padding: 8px 12px;
+  border-radius: 10px;
+  max-width: 80%;
+  font-size: 13px;
+}
+
+.fd-chat-bubble.mine {
+  align-self: flex-end;
+  background: #059669;
+  color: #fff;
+}
+
+.fd-chat-sender {
+  font-size: 10px;
+  opacity: 0.7;
+  margin-bottom: 2px;
+}
+
+/* =========================================
+   RESPONSIVE
+========================================= */
+
+@media (max-width: 768px) {
+  .fd-header {
+    padding: 0 16px;
+  }
+
+  .fd-header h1 {
+    font-size: 20px;
+  }
+
+  .fd-body {
+    padding: 16px;
+  }
+
+  .fd-subject-bar {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .fd-form-row {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .fd-form-row input,
+  .fd-form-row select,
+  .fd-btn {
+    width: 100%;
+  }
+
+  .fd-header-actions span {
+    display: none;
+  }
+
+  .fd-table {
+    display: block;
+    overflow-x: auto;
+  }
+}

@@ -1,0 +1,65 @@
+.main-header-banner {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: linear-gradient(135deg, #1e1b4b 0%, #312e81 50%, #1e1035 100%);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+  padding: 12px 28px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+  width: 100%;
+  z-index: 100;
+}
+
+.header-brand-left {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.header-logo-icon {
+  font-size: 28px;
+  background: rgba(99, 102, 241, 0.2);
+  border: 1px solid rgba(165, 180, 252, 0.3);
+  border-radius: 12px;
+  width: 46px;
+  height: 46px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 0 16px rgba(99, 102, 241, 0.3);
+}
+
+.header-college-title {
+  font-size: 14px;
+  font-weight: 700;
+  color: #a5b4fc;
+  margin: 0;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+}
+
+.header-system-title {
+  font-size: 20px;
+  font-weight: 800;
+  background: linear-gradient(135deg, #ffffff 0%, #cbd5e1 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  margin: 2px 0 0 0;
+}
+
+.header-tagline-right {
+  display: flex;
+  align-items: center;
+}
+
+.tagline-pill {
+  font-family: var(--font-heading);
+  font-size: 13px;
+  font-weight: 600;
+  color: #e2e8f0;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  padding: 6px 16px;
+  border-radius: 20px;
+  letter-spacing: 1px;
+}

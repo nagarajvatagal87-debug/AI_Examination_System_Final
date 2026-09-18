@@ -1,0 +1,11 @@
+venv/
+__pycache__/
+*.pyc
+.env
+
+# Node.js
+node_modules/
+
+# Prisma
+/generated/prisma
+gcp-vision-key.json

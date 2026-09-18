@@ -1,0 +1,223 @@
+.fl-wrap {
+  display: flex;
+  min-height: 100vh;
+  background: var(--bg-gradient);
+  font-family: var(--font-body);
+}
+
+.fl-sidebar {
+  width: 260px;
+  background: rgba(15, 23, 42, 0.85);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-right: 1px solid rgba(255, 255, 255, 0.08);
+  color: var(--text-main);
+  display: flex;
+  flex-direction: column;
+  padding: 24px 18px;
+  flex-shrink: 0;
+  box-shadow: 4px 0 24px rgba(0, 0, 0, 0.3);
+}
+
+.fl-brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 28px;
+  padding: 0 4px;
+}
+
+.fl-logo {
+  font-size: 32px;
+  filter: drop-shadow(0 0 10px rgba(99, 102, 241, 0.5));
+}
+
+.fl-brand-text {
+  font-family: var(--font-heading);
+  font-size: 14px;
+  font-weight: 800;
+  line-height: 1.25;
+  background: linear-gradient(135deg, #ffffff 0%, #a5b4fc 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  letter-spacing: -0.01em;
+}
+
+.fl-profile {
+  text-align: center;
+  padding: 18px 12px;
+  background: rgba(30, 41, 59, 0.4);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: var(--radius-lg);
+  margin-bottom: 20px;
+}
+
+.fl-avatar {
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  background: var(--primary-gradient);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 22px;
+  font-weight: 700;
+  margin: 0 auto 12px;
+  overflow: hidden;
+  box-shadow: 0 4px 16px rgba(99, 102, 241, 0.4);
+  border: 2px solid rgba(255, 255, 255, 0.2);
+}
+
+.fl-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.fl-profile-name {
+  font-family: var(--font-heading);
+  font-weight: 700;
+  font-size: 15px;
+  color: var(--text-bright);
+}
+
+.fl-profile-role {
+  font-size: 12px;
+  color: var(--text-sub);
+  margin-top: 2px;
+}
+
+.fl-online {
+  font-size: 11px;
+  color: #34d399;
+  margin-top: 8px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(16, 185, 129, 0.12);
+  padding: 3px 10px;
+  border-radius: 12px;
+  border: 1px solid rgba(16, 185, 129, 0.25);
+  font-weight: 600;
+}
+
+.fl-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #34d399;
+  box-shadow: 0 0 8px #34d399;
+}
+
+.fl-nav {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  flex: 1;
+  overflow-y: auto;
+  padding-right: 2px;
+}
+
+.fl-nav-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px;
+  border-radius: var(--radius-md);
+  color: var(--text-sub);
+  text-decoration: none;
+  font-size: 14px;
+  font-weight: 500;
+  transition: var(--transition-fast);
+  border: 1px solid transparent;
+}
+
+.fl-nav-item:hover {
+  background: rgba(30, 41, 59, 0.6);
+  color: var(--text-bright);
+  border-color: rgba(255, 255, 255, 0.08);
+}
+
+.fl-nav-item.active {
+  background: var(--primary-gradient);
+  color: #ffffff;
+  font-weight: 600;
+  box-shadow: 0 4px 16px rgba(99, 102, 241, 0.35);
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
+.fl-nav-icon {
+  font-size: 18px;
+  width: 22px;
+  text-align: center;
+}
+
+.fl-logout {
+  margin-top: 16px;
+  background: rgba(239, 68, 68, 0.1);
+  border: 1px solid rgba(239, 68, 68, 0.25);
+  color: #f87171;
+  padding: 11px;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 600;
+  transition: var(--transition-fast);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.fl-logout:hover {
+  background: rgba(239, 68, 68, 0.25);
+  color: #ffffff;
+}
+
+.fl-main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.fl-topbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 18px 32px;
+  background: rgba(15, 23, 42, 0.6);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.fl-topbar-title {
+  font-family: var(--font-heading);
+  font-weight: 800;
+  font-size: 18px;
+  color: var(--text-bright);
+}
+
+.fl-topbar-actions {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  font-size: 14px;
+  color: var(--text-main);
+  font-weight: 500;
+}
+
+.fl-topbar-name {
+  background: rgba(30, 41, 59, 0.6);
+  padding: 6px 14px;
+  border-radius: 20px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.fl-content {
+  padding: 32px;
+  flex: 1;
+  overflow-y: auto;
+}

@@ -1,0 +1,35 @@
+# Node
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Python
+venv/
+__pycache__/
+*.py[cod]
+
+# Environment / secrets
+.env
+.env.*
+!.env.example
+
+# Build
+dist/
+build/
+.vite/
+
+# IDE
+.vscode/
+.idea/
+
+# Logs
+*.log
+
+# Credentials
+*gcp-vision*.json
+*credentials*.json
+
+# Temporary backups
+git-backup/
+AI_Examination_project_OLD_BACKUP/

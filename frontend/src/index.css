@@ -1,0 +1,167 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700;800&display=swap');
+
+:root {
+  --font-heading: 'Outfit', sans-serif;
+  --font-body: 'Inter', sans-serif;
+
+  --bg-gradient: radial-gradient(circle at top left, #1e1b4b 0%, #0f172a 40%, #090d16 100%);
+  --bg-surface: rgba(15, 23, 42, 0.7);
+  --bg-surface-elevated: rgba(30, 41, 59, 0.65);
+  
+  --glass-bg: rgba(255, 255, 255, 0.03);
+  --glass-border: rgba(255, 255, 255, 0.1);
+  --glass-border-active: rgba(99, 102, 241, 0.5);
+  --glass-blur: blur(16px);
+
+  --primary: #6366f1;
+  --primary-hover: #4f46e5;
+  --primary-gradient: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+  --emerald-gradient: linear-gradient(135deg, #059669 0%, #10b981 100%);
+  --amber-gradient: linear-gradient(135deg, #d97706 0%, #f59e0b 100%);
+  --rose-gradient: linear-gradient(135deg, #e11d48 0%, #f43f5e 100%);
+
+  --text-bright: #f8fafc;
+  --text-main: #e2e8f0;
+  --text-sub: #94a3b8;
+  --text-muted: #64748b;
+
+  --radius-xl: 20px;
+  --radius-lg: 14px;
+  --radius-md: 10px;
+  --radius-sm: 6px;
+
+  --shadow-lg: 0 12px 36px rgba(0, 0, 0, 0.45);
+  --shadow-glow: 0 0 24px rgba(99, 102, 241, 0.25);
+  --transition-fast: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html, body, #root {
+  width: 100%;
+  min-height: 100vh;
+  background: var(--bg-gradient);
+  color: var(--text-main);
+  font-family: var(--font-body);
+  -webkit-font-smoothing: antialiased;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-heading);
+  color: var(--text-bright);
+  letter-spacing: -0.02em;
+}
+
+/* Scrollbar Customization */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-track {
+  background: rgba(15, 23, 42, 0.5);
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(148, 163, 184, 0.2);
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(148, 163, 184, 0.4);
+}
+
+/* Glassmorphism Global Card Utility */
+.glass-card {
+  background: var(--bg-surface);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-lg);
+  transition: var(--transition-fast);
+}
+
+.glass-card:hover {
+  border-color: var(--glass-border-active);
+  box-shadow: var(--shadow-glow);
+}
+
+/* Status Badges */
+.badge-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: capitalize;
+}
+
+.badge-status.published, .badge-status.verified, .badge-status.done {
+  background: rgba(16, 185, 129, 0.15);
+  color: #34d399;
+  border: 1px solid rgba(16, 185, 129, 0.3);
+}
+
+.badge-status.evaluation, .badge-status.pending, .badge-status.pending_review {
+  background: rgba(245, 158, 11, 0.15);
+  color: #fbbf24;
+  border: 1px solid rgba(245, 158, 11, 0.3);
+}
+
+.badge-status.draft, .badge-status.not_uploaded {
+  background: rgba(148, 163, 184, 0.15);
+  color: #cbd5e1;
+  border: 1px solid rgba(148, 163, 184, 0.3);
+}
+
+/* Glass Form Inputs & Controls */
+input[type="text"], input[type="email"], input[type="password"], input[type="number"], select, textarea {
+  background: rgba(15, 23, 42, 0.8) !important;
+  border: 1px solid rgba(255, 255, 255, 0.12) !important;
+  color: var(--text-bright) !important;
+  border-radius: var(--radius-md) !important;
+  padding: 10px 14px !important;
+  font-family: var(--font-body) !important;
+  font-size: 14px !important;
+  outline: none !important;
+  transition: var(--transition-fast) !important;
+}
+
+input:focus, select:focus, textarea:focus {
+  border-color: var(--primary) !important;
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.25) !important;
+}
+
+/* Glass Buttons */
+button.fd-btn, button.auth-submit {
+  background: var(--primary-gradient);
+  color: #ffffff;
+  font-weight: 600;
+  border: none;
+  border-radius: var(--radius-md);
+  padding: 10px 20px;
+  cursor: pointer;
+  transition: var(--transition-fast);
+  box-shadow: 0 4px 14px rgba(99, 102, 241, 0.35);
+}
+
+button.fd-btn:hover, button.auth-submit:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 20px rgba(99, 102, 241, 0.5);
+}
+
+button.fd-btn-secondary {
+  background: rgba(30, 41, 59, 0.8) !important;
+  border: 1px solid rgba(255, 255, 255, 0.15) !important;
+  color: var(--text-main) !important;
+  box-shadow: none !important;
+}
+
+button.fd-btn-secondary:hover {
+  border-color: var(--primary) !important;
+  color: #ffffff !important;
+}

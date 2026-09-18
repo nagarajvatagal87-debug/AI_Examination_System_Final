@@ -1,0 +1,45 @@
+.sep-wrap { display: flex; flex-direction: column; gap: 14px; }
+.sep-progress {
+  font-weight: 600; font-size: 13px; color: #065f46;
+  background: #ecfdf5; border: 1px solid #a7f3d0; padding: 10px 16px; border-radius: 10px;
+}
+.sep-layout { display: flex; gap: 16px; }
+.sep-list { flex: 0 0 260px; display: flex; flex-direction: column; gap: 6px; max-height: 500px; overflow-y: auto; }
+.sep-student-row {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 10px 12px; border-radius: 10px; background: #fff; border: 1px solid #e5e7eb;
+  cursor: pointer; font-size: 13px;
+}
+.sep-student-row.active { border-color: #059669; background: #ecfdf5; }
+.sep-reg { font-size: 11px; color: #9ca3af; }
+.sep-badge {
+  font-size: 10px; padding: 3px 8px; border-radius: 999px; text-transform: capitalize;
+  background: #f3f4f6; color: #6b7280;
+}
+.sep-badge.verified, .sep-badge.published { background: #d1fae5; color: #065f46; }
+.sep-badge.pending_review, .sep-badge.processing, .sep-badge.ocr_pending { background: #fef3c7; color: #92400e; }
+.sep-badge.not_uploaded { background: #fee2e2; color: #991b1b; }
+
+.sep-detail { flex: 1; background: #fff; border-radius: 12px; padding: 18px; border: 1px solid #e5e7eb; }
+.sep-upload { display: flex; gap: 10px; align-items: center; margin: 12px 0; }
+
+.sep-question-card { border: 1px solid #e5e7eb; border-radius: 10px; padding: 14px; margin-bottom: 12px; }
+.sep-q-header { display: flex; justify-content: space-between; font-size: 13px; color: #374151; margin-bottom: 6px; }
+.sep-q-text { font-size: 13px; color: #1f2937; margin-bottom: 10px; }
+.sep-ocr { font-size: 12px; color: #4b5563; white-space: pre-wrap; background: #f9fafb; padding: 8px; border-radius: 6px; }
+.sep-evidence { font-size: 12px; color: #6b7280; font-style: italic; }
+.sep-warn { color: #dc2626; font-size: 11px; margin-left: 6px; }
+
+.sep-marks-row { display: flex; align-items: center; gap: 10px; margin-top: 10px; font-size: 13px; }
+.sep-marks-row input { width: 60px; padding: 6px 8px; border: 1px solid #d1d5db; border-radius: 6px; }
+
+.sep-stat-row { display: flex; gap: 20px; margin-bottom: 16px; }
+.sep-stat { text-align: center; }
+.sep-stat strong { display: block; font-size: 22px; color: #059669; }
+.sep-stat span { font-size: 12px; color: #6b7280; }
+
+.sep-thread { max-height: 280px; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; margin-bottom: 12px; }
+.sep-msg { max-width: 70%; padding: 8px 12px; border-radius: 10px; font-size: 13px; }
+.sep-msg.from-hod { background: #f3f4f6; align-self: flex-start; }
+.sep-msg.from-me { background: #d1fae5; align-self: flex-end; }
+.sep-msg small { display: block; font-size: 10px; color: #9ca3af; margin-top: 4px; }

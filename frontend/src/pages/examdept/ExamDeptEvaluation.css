@@ -1,0 +1,53 @@
+.ev-title { margin: 0 0 4px; font-size: 20px; font-weight: 800; color: #f8fafc; }
+.ev-sub { margin: 0 0 20px; font-size: 13px; color: #94a3b8; }
+
+.ev-cards { display: flex; gap: 16px; margin-bottom: 22px; }
+.ev-card {
+  background: rgba(30, 41, 59, 0.85);
+  backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 14px;
+  padding: 18px 24px;
+  text-align: center;
+  box-shadow: 0 10px 25px -5px rgba(0,0,0,0.3);
+  color: #f8fafc;
+}
+.ev-card.highlight { background: rgba(245, 158, 11, 0.15); border-color: rgba(245, 158, 11, 0.3); }
+.ev-card-value { font-size: 24px; font-weight: 800; color: #34d399; }
+.ev-card.highlight .ev-card-value { color: #fbbf24; }
+.ev-card-label { font-size: 12px; color: #94a3b8; margin-top: 4px; }
+
+.ev-search {
+  width: 100%;
+  max-width: 340px;
+  padding: 10px 14px;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 8px;
+  margin-bottom: 20px;
+  font-size: 13px;
+  background: rgba(15, 23, 42, 0.85);
+  color: #f8fafc;
+  outline: none;
+}
+
+.ev-table {
+  width: 100%;
+  border-collapse: collapse;
+  background: rgba(30, 41, 59, 0.85);
+  backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 14px;
+  overflow: hidden;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.25);
+  color: #f8fafc;
+}
+.ev-table th { text-align: left; padding: 12px 16px; background: rgba(15, 23, 42, 0.6); font-size: 11px; text-transform: uppercase; color: #94a3b8; border-bottom: 1px solid rgba(255, 255, 255, 0.08); }
+.ev-table td { padding: 14px 16px; border-top: 1px solid rgba(255, 255, 255, 0.05); font-size: 13px; color: #cbd5e1; }
+.ev-row { cursor: pointer; transition: background 0.15s ease; }
+.ev-row:hover { background: rgba(255, 255, 255, 0.04); }
+.ev-arrow { text-align: right; color: #38bdf8; font-weight: 700; }
+
+.ev-status { font-size: 12px; }
+.ev-status.verified, .ev-status.published { color: #34d399; font-weight: 700; }
+.ev-status.pending_review, .ev-status.processing, .ev-status.ocr_pending { color: #fbbf24; font-weight: 700; }
+.ev-status.not_uploaded { color: #94a3b8; }

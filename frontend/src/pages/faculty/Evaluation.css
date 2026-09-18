@@ -1,0 +1,127 @@
+.ev-title {
+  margin: 0 0 4px;
+  font-size: 24px;
+  font-weight: 800;
+  font-family: var(--font-heading);
+  background: linear-gradient(135deg, #ffffff 0%, #cbd5e1 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.ev-sub {
+  margin: 0 0 20px;
+  font-size: 14px;
+  color: var(--text-sub);
+}
+
+.ev-cards {
+  display: flex;
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.ev-card {
+  background: rgba(30, 41, 59, 0.6);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: var(--radius-lg);
+  padding: 20px 32px;
+  text-align: center;
+  transition: var(--transition-fast);
+}
+
+.ev-card.highlight {
+  background: linear-gradient(135deg, rgba(245, 158, 11, 0.15) 0%, rgba(217, 119, 6, 0.08) 100%);
+  border-color: rgba(245, 158, 11, 0.3);
+}
+
+.ev-card-value {
+  font-family: var(--font-heading);
+  font-size: 32px;
+  font-weight: 800;
+  color: var(--primary);
+}
+
+.ev-card.highlight .ev-card-value {
+  color: #fbbf24;
+}
+
+.ev-card-label {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--text-sub);
+  margin-top: 4px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.ev-search {
+  width: 100%;
+  max-width: 360px;
+  margin-bottom: 20px;
+}
+
+.ev-table {
+  width: 100%;
+  border-collapse: collapse;
+  background: rgba(15, 23, 42, 0.75);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  box-shadow: var(--shadow-lg);
+}
+
+.ev-table th {
+  text-align: left;
+  padding: 14px 18px;
+  background: rgba(30, 41, 59, 0.6);
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: var(--text-sub);
+  letter-spacing: 0.05em;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.ev-table td {
+  padding: 14px 18px;
+  border-top: 1px solid rgba(255, 255, 255, 0.04);
+  font-size: 14px;
+  color: var(--text-main);
+}
+
+.ev-row {
+  cursor: pointer;
+  transition: var(--transition-fast);
+}
+
+.ev-row:hover {
+  background: rgba(30, 41, 59, 0.5);
+}
+
+.ev-arrow {
+  text-align: right;
+  color: var(--text-sub);
+  font-size: 18px;
+  font-weight: 700;
+}
+
+.ev-status {
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.ev-status.verified, .ev-status.published {
+  color: #34d399;
+}
+
+.ev-status.pending_review, .ev-status.processing, .ev-status.ocr_pending {
+  color: #fbbf24;
+}
+
+.ev-status.not_uploaded {
+  color: var(--text-sub);
+}

@@ -1,0 +1,16 @@
+.fc-title { margin: 0 0 18px; font-size: 18px; color: #1f2937; }
+.fc-table { width: 100%; border-collapse: collapse; background: #fff; border-radius: 12px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.06); }
+.fc-table th { text-align: left; padding: 12px 16px; background: #f9fafb; font-size: 11px; text-transform: uppercase; color: #6b7280; }
+.fc-table td { padding: 12px 16px; border-top: 1px solid #f3f4f6; font-size: 13px; }
+.fc-row { cursor: pointer; }
+.fc-row:hover { background: #f9fafb; }
+.fc-reg { font-size: 11px; color: #9ca3af; }
+.fc-status { font-size: 12px; text-transform: capitalize; }
+.fc-status.open { color: #b45309; }
+.fc-status.resolved { color: #059669; }
+.fc-status.rejected { color: #dc2626; }
+
+.fc-panel { margin-top: 20px; background: #fff; border-radius: 12px; padding: 20px; box-shadow: 0 1px 3px rgba(0,0,0,0.06); }
+.fc-panel-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+.fc-reason { font-size: 13px; color: #374151; }
+.fc-current { font-size: 13px; color: #6b7280; margin-bottom: 12px; }
