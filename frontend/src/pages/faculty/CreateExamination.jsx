@@ -59,10 +59,9 @@ export default function CreateExamination() {
   const patternTotal = pattern.reduce((sum, p) => sum + p.marks * p.count, 0)
 
   async function handleGenerate() {
-    if (!subjectId) return setMsg('Select a subject first.')
-    if (!courseMaterialId) return setMsg('Select a course material first.')
+    if (!subjectId) return setMsg('Please create or select a subject first.')
     if (patternTotal !== Number(totalMarks)) {
-      return setMsg(`Question pattern totals ${patternTotal}, but Total Marks is ${totalMarks}. They must match.`)
+      return setMsg(`Question pattern totals ${patternTotal} marks, but Total Marks is specified as ${totalMarks} marks. They must match.`)
     }
 
     setLoading(true)

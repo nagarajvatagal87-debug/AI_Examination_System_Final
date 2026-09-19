@@ -28,14 +28,31 @@ export default function StudentDashboard() {
     },
   ])
 
-  const subjects = [
+  const [dbSubjects, setDbSubjects] = useState([])
+  const [dbMarks, setDbMarks] = useState([])
+  const [dbComplaints, setDbComplaints] = useState([])
+  const [dbMaterials, setDbMaterials] = useState([])
+  const [studentInternals, setStudentInternals] = useState([])
+  const [mainResults, setMainResults] = useState([])
+
+  const defaultSubjects = [
     { id: 'sub-dbms', name: 'DBMS', fullName: 'Database Management Systems', code: 'DBMS-301', icon: '📗', progress: 72, color: '#10b981' },
     { id: 'sub-ds', name: 'DSA', fullName: 'Data Structures & Algorithms', code: 'DSA-302', icon: '📙', progress: 84, color: '#f59e0b' },
     { id: 'sub-cn', name: 'Computer Networks', fullName: 'Computer Networks', code: 'CN-303', icon: '📕', progress: 65, color: '#f43f5e' },
     { id: 'sub-os', name: 'Operating Systems', fullName: 'Operating Systems', code: 'OS-304', icon: '📘', progress: 76, color: '#3b82f6' },
-    { id: 'sub-ai', name: 'Artificial Intelligence', fullName: 'Artificial Intelligence', code: 'AI-305', icon: '🔮', progress: 68, color: '#8b5cf6' },
-    { id: 'sub-genai', name: 'Generative AI', fullName: 'Generative AI & LLMs', code: 'GAI-306', icon: '🤖', progress: 70, color: '#06b6d4' },
   ]
+
+  const subjects = dbSubjects.length > 0
+    ? dbSubjects.map((s, idx) => ({
+        id: s.id,
+        name: s.name,
+        fullName: s.name,
+        code: s.code || `SUB-30${idx + 1}`,
+        icon: idx % 4 === 0 ? '📗' : idx % 4 === 1 ? '📙' : idx % 4 === 2 ? '📕' : '📘',
+        progress: 70 + (idx * 5) % 25,
+        color: idx % 4 === 0 ? '#10b981' : idx % 4 === 1 ? '#f59e0b' : idx % 4 === 2 ? '#f43f5e' : '#3b82f6',
+      }))
+    : defaultSubjects
 
   const courseMaterialsMap = {
     'sub-dbms': [
@@ -44,34 +61,17 @@ export default function StudentDashboard() {
       { id: 'mat-3', title: 'DBMS - Unit 3 Normalization (1NF to BCNF)', file_name: 'DBMS_Unit_3_Normalization.pdf', unit: 3, type: 'PDF' },
       { id: 'mat-4', title: 'DBMS - Unit 4 Transaction Management & ACID', file_name: 'DBMS_Unit_4_Transactions.pdf', unit: 4, type: 'PDF' },
     ],
-    'sub-ds': [
-      { id: 'mat-5', title: 'DSA - Unit 1 Stacks & Queues (PDF)', file_name: 'DSA_Unit_1_Stacks.pdf', unit: 1, type: 'PDF' },
-      { id: 'mat-6', title: 'DSA - Unit 2 Trees & AVL Trees (PDF)', file_name: 'DSA_Unit_2_Trees.pdf', unit: 2, type: 'PDF' },
-    ],
-    'sub-cn': [
-      { id: 'mat-7', title: 'CN - Unit 1 OSI & TCP/IP Layer Models (PDF)', file_name: 'CN_Unit_1_Layers.pdf', unit: 1, type: 'PDF' },
-    ],
-    'sub-os': [
-      { id: 'mat-8', title: 'OS - Unit 1 Process Synchronization (PDF)', file_name: 'OS_Unit_1_Processes.pdf', unit: 1, type: 'PDF' },
-    ],
-    'sub-ai': [
-      { id: 'mat-9', title: 'AI - Unit 1 Search Algorithms (PDF)', file_name: 'AI_Unit_1_Search.pdf', unit: 1, type: 'PDF' },
-    ],
-    'sub-genai': [
-      { id: 'mat-10', title: 'GenAI - Unit 1 RAG & Transformer Models (PDF)', file_name: 'GenAI_Unit_1_RAG.pdf', unit: 1, type: 'PDF' },
-    ],
   }
 
-  const studentResults = [
-    { exam: 'DBMS Internal-1', type: 'Internal', qNo: 'Q1', question: 'Define DBMS and 3-schema architecture', maxMarks: 5, aiScore: 4.5, teacherScore: 4.5, verified: true, feedback: 'Accurate diagram and clear separation of external/conceptual levels.' },
-    { exam: 'DBMS Internal-1', type: 'Internal', qNo: 'Q2', question: 'Differentiate 2NF and 3NF with examples', maxMarks: 5, aiScore: 3.5, teacherScore: 4.0, verified: true, feedback: 'Good explanation of transitive dependency. Partial credit awarded.' },
-    { exam: 'DBMS Internal-1', type: 'Internal', qNo: 'Q3', question: 'Explain ACID properties in transaction processing', maxMarks: 10, aiScore: 8.0, teacherScore: 8.5, verified: true, feedback: 'Clear examples for Isolation and Durability.' },
-  ]
-
-  const [dbComplaints, setDbComplaints] = useState([])
-  const [dbMaterials, setDbMaterials] = useState([])
-
   useEffect(() => {
+    api.get('/student/subjects')
+      .then((res) => { if (Array.isArray(res.data) && res.data.length > 0) setDbSubjects(res.data) })
+      .catch(() => {})
+
+    api.get('/student/dashboard')
+      .then((res) => { if (res.data?.marks) setDbMarks(res.data.marks) })
+      .catch(() => {})
+
     api.get('/student/complaints')
       .then((res) => { if (Array.isArray(res.data) && res.data.length > 0) setDbComplaints(res.data) })
       .catch(() => {})
@@ -79,7 +79,33 @@ export default function StudentDashboard() {
     api.get('/student/materials')
       .then((res) => { if (Array.isArray(res.data) && res.data.length > 0) setDbMaterials(res.data) })
       .catch(() => {})
+
+    api.get('/student/internal-marks')
+      .then((res) => { if (Array.isArray(res.data)) setStudentInternals(res.data) })
+      .catch(() => {})
+
+    api.get('/student/main-results')
+      .then((res) => { if (Array.isArray(res.data)) setMainResults(res.data) })
+      .catch(() => {})
   }, [])
+
+  const studentResults = dbMarks.length > 0
+    ? dbMarks.map((m) => ({
+        exam: m.answers?.questions?.exams?.title || 'Course Exam',
+        type: m.answers?.questions?.exams?.type || 'Internal',
+        qNo: `Q${m.answers?.questions?.question_no || 1}`,
+        question: m.answers?.questions?.question_text || 'Subject question',
+        maxMarks: m.answers?.questions?.marks || 10,
+        aiScore: m.ai_suggested_marks || 0,
+        teacherScore: m.final_marks !== null ? m.final_marks : m.ai_suggested_marks,
+        verified: m.final_marks !== null,
+        feedback: m.ai_evidence?.evidence || 'Answers evaluated successfully.',
+      }))
+    : [
+        { exam: 'DBMS Internal-1', type: 'Internal', qNo: 'Q1', question: 'Define DBMS and 3-schema architecture', maxMarks: 5, aiScore: 4.5, teacherScore: 4.5, verified: true, feedback: 'Accurate diagram and clear separation of external/conceptual levels.' },
+        { exam: 'DBMS Internal-1', type: 'Internal', qNo: 'Q2', question: 'Differentiate 2NF and 3NF with examples', maxMarks: 5, aiScore: 3.5, teacherScore: 4.0, verified: true, feedback: 'Good explanation of transitive dependency. Partial credit awarded.' },
+        { exam: 'DBMS Internal-1', type: 'Internal', qNo: 'Q3', question: 'Explain ACID properties in transaction processing', maxMarks: 10, aiScore: 8.0, teacherScore: 8.5, verified: true, feedback: 'Clear examples for Isolation and Durability.' },
+      ]
 
   async function handleSubmitComplaint(e) {
     e.preventDefault()
@@ -467,26 +493,165 @@ export default function StudentDashboard() {
 
           {/* Tab 4: Results */}
           {activeTab === 'results' && (
-            <div className="content-card">
-              <h3>📊 Exam Results & Faculty Feedback</h3>
-              <table className="results-data-table">
-                <thead>
-                  <tr><th>EXAM</th><th>Q.NO</th><th>QUESTION</th><th>MAX</th><th>AI SCORE</th><th>TEACHER MARKS</th><th>FEEDBACK</th></tr>
-                </thead>
-                <tbody>
-                  {studentResults.map((r, i) => (
-                    <tr key={i}>
-                      <td><strong>{r.exam}</strong></td>
-                      <td>{r.qNo}</td>
-                      <td>{r.question}</td>
-                      <td>{r.maxMarks}</td>
-                      <td style={{ color: '#3b82f6' }}>{r.aiScore}</td>
-                      <td style={{ color: '#10b981', fontWeight: 700 }}>{r.teacherScore}</td>
-                      <td>{r.feedback}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
+              {/* Card 1: 50-Mark Faculty Internal Evaluation & Main Exam Eligibility */}
+              <div className="content-card">
+                <div className="card-header-line">
+                  <h3>📋 My Internal Assessment Marks (50 Marks Scale)</h3>
+                  <span className="mat-tag" style={{ background: '#3b82f6', color: '#fff' }}>Eligibility Threshold: 25/50 (50%)</span>
+                </div>
+                <p style={{ fontSize: 13, color: '#94a3b8', marginBottom: 16 }}>
+                  Faculty 50-Mark Internal Assessment: Internal-1 (15m), Internal-2 (15m), Assignment (10m/20m), Project (10m/0m). Approved by HOD.
+                </p>
+
+                {studentInternals.length === 0 ? (
+                  <div style={{ padding: 20, textAlign: 'center', color: '#94a3b8', background: 'rgba(255,255,255,0.03)', borderRadius: 8 }}>
+                    Internal marks are currently being evaluated by your subject faculty.
+                  </div>
+                ) : (
+                  <table className="results-data-table">
+                    <thead>
+                      <tr>
+                        <th>SUBJECT</th>
+                        <th>INT 1 (15M)</th>
+                        <th>INT 2 (15M)</th>
+                        <th>ASSIGNMENT</th>
+                        <th>PROJECT</th>
+                        <th>TOTAL (50M)</th>
+                        <th>HOD STATUS</th>
+                        <th>ELIGIBILITY</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {studentInternals.map((m) => {
+                        const i1 = m.internal1_marks ?? 0
+                        const i2 = m.internal2_marks ?? 0
+                        const ass = m.assignment_marks ?? 0
+                        const proj = m.project_marks ?? 0
+                        const tot = m.total_internal_marks ?? (i1 + i2 + ass + proj)
+                        const eligible = m.is_eligible !== false && tot >= 25
+
+                        return (
+                          <tr key={m.id || m.subject_id}>
+                            <td>
+                              <strong>{m.subjects?.name || 'Subject'}</strong>
+                              <div style={{ fontSize: 11, color: '#94a3b8' }}>{m.subjects?.code}</div>
+                            </td>
+                            <td>{i1} / 15</td>
+                            <td>{i2} / 15</td>
+                            <td>{ass}</td>
+                            <td>{proj}</td>
+                            <td>
+                              <strong style={{ fontSize: 15, color: eligible ? '#10b981' : '#ef4444' }}>
+                                {tot} / 50
+                              </strong>
+                            </td>
+                            <td>
+                              <span style={{
+                                padding: '3px 8px',
+                                borderRadius: 4,
+                                fontSize: 11,
+                                fontWeight: 700,
+                                background: m.status === 'approved_by_hod' ? 'rgba(16,185,129,0.15)' : 'rgba(245,158,11,0.15)',
+                                color: m.status === 'approved_by_hod' ? '#10b981' : '#f59e0b',
+                              }}>
+                                {m.status === 'approved_by_hod' ? '✓ HOD Approved' : '⏳ Under Review'}
+                              </span>
+                            </td>
+                            <td>
+                              <span style={{
+                                padding: '4px 10px',
+                                borderRadius: 6,
+                                fontSize: 12,
+                                fontWeight: 800,
+                                background: eligible ? 'rgba(16,185,129,0.2)' : 'rgba(239,68,68,0.2)',
+                                color: eligible ? '#34d399' : '#f87171',
+                                border: eligible ? '1px solid #10b981' : '1px solid #ef4444',
+                              }}>
+                                {eligible ? '✓ Eligible' : '⚠️ Detained (<25)'}
+                              </span>
+                            </td>
+                          </tr>
+                        )
+                      })}
+                    </tbody>
+                  </table>
+                )}
+              </div>
+
+              {/* Card 2: Main Exam Published Final Results (100 Marks Total) */}
+              {mainResults.length > 0 && (
+                <div className="content-card">
+                  <h3>🏆 Main Examination Published Results (100 Marks)</h3>
+                  <p style={{ fontSize: 13, color: '#94a3b8', marginBottom: 16 }}>
+                    Final Score = 50-Mark HOD Internal + (100-Mark Written Exam ÷ 2).
+                  </p>
+
+                  <table className="results-data-table">
+                    <thead>
+                      <tr>
+                        <th>SUBJECT / EXAM</th>
+                        <th>FINAL SCORE</th>
+                        <th>MAX MARKS</th>
+                        <th>RESULT STATUS</th>
+                        <th>PUBLISHED DATE</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {mainResults.map((mr) => (
+                        <tr key={mr.id}>
+                          <td>
+                            <strong>{mr.exams?.subjects?.name || mr.exams?.title || 'Main Exam'}</strong>
+                            <div style={{ fontSize: 11, color: '#94a3b8' }}>{mr.exams?.title}</div>
+                          </td>
+                          <td style={{ fontSize: 16, fontWeight: 800, color: mr.passed ? '#10b981' : '#ef4444' }}>
+                            {mr.total_marks}
+                          </td>
+                          <td>{mr.max_marks || 100}</td>
+                          <td>
+                            <span style={{
+                              padding: '4px 10px',
+                              borderRadius: 6,
+                              fontSize: 12,
+                              fontWeight: 800,
+                              background: mr.passed ? 'rgba(16,185,129,0.2)' : 'rgba(239,68,68,0.2)',
+                              color: mr.passed ? '#34d399' : '#f87171',
+                            }}>
+                              {mr.passed ? 'PASSED' : 'FAILED'}
+                            </span>
+                          </td>
+                          <td style={{ fontSize: 12, color: '#94a3b8' }}>
+                            {mr.published_at ? new Date(mr.published_at).toLocaleDateString() : 'Just now'}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+
+              {/* Card 3: Question-wise AI & Teacher Evaluation Feedback */}
+              <div className="content-card">
+                <h3>📊 Detailed Answer Evaluations & Faculty Feedback</h3>
+                <table className="results-data-table">
+                  <thead>
+                    <tr><th>EXAM</th><th>Q.NO</th><th>QUESTION</th><th>MAX</th><th>AI SCORE</th><th>TEACHER MARKS</th><th>FEEDBACK</th></tr>
+                  </thead>
+                  <tbody>
+                    {studentResults.map((r, i) => (
+                      <tr key={i}>
+                        <td><strong>{r.exam}</strong></td>
+                        <td>{r.qNo}</td>
+                        <td>{r.question}</td>
+                        <td>{r.maxMarks}</td>
+                        <td style={{ color: '#3b82f6' }}>{r.aiScore}</td>
+                        <td style={{ color: '#10b981', fontWeight: 700 }}>{r.teacherScore}</td>
+                        <td>{r.feedback}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
             </div>
           )}
 

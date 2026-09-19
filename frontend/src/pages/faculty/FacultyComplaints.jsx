@@ -12,7 +12,9 @@ export default function FacultyComplaints() {
   useEffect(() => { load() }, [])
 
   function load() {
-    api.get('/complaints').then((res) => setComplaints(res.data)).catch(() => {})
+    api.get('/complaints')
+      .then((res) => setComplaints(Array.isArray(res.data) ? res.data : []))
+      .catch(() => setComplaints([]))
   }
 
   function openComplaint(c) {
@@ -39,26 +41,29 @@ export default function FacultyComplaints() {
 
   return (
     <div>
-      <h2 className="fc-title">Internal Mark Complaints</h2>
+      <h2 className="fc-title">💬 Student Internal Mark Complaints</h2>
+      <p style={{ margin: '0 0 20px 0', fontSize: 13, color: '#94a3b8' }}>Review student grievance requests and re-evaluation applications</p>
 
       <table className="fc-table">
         <thead>
-          <tr><th>Student</th><th>Question</th><th>Current Marks</th><th>Status</th><th></th></tr>
+          <tr><th>Student</th><th>Question</th><th>Current Marks</th><th>Status</th><th>Action</th></tr>
         </thead>
         <tbody>
-          {complaints.map((c) => {
+          {(complaints || []).map((c) => {
             const q = c.evaluations?.answers?.questions
             return (
               <tr key={c.id} className="fc-row" onClick={() => openComplaint(c)}>
-                <td>{c.profiles?.full_name} <span className="fc-reg">({c.profiles?.registration_no})</span></td>
-                <td>Q{q?.question_no}</td>
-                <td>{c.evaluations?.final_marks} / {q?.marks}</td>
+                <td><strong>{c.profiles?.full_name || 'Student'}</strong> <span className="fc-reg">({c.profiles?.registration_no || '—'})</span></td>
+                <td>Q{q?.question_no || 1}</td>
+                <td>{c.evaluations?.final_marks || 0} / {q?.marks || 10}</td>
                 <td><span className={`fc-status ${c.status}`}>{c.status}</span></td>
-                <td className="ev-arrow">›</td>
+                <td className="ev-arrow">Review ›</td>
               </tr>
             )
           })}
-          {complaints.length === 0 && <tr><td colSpan={5} className="hint">No open complaints.</td></tr>}
+          {(!complaints || complaints.length === 0) && (
+            <tr><td colSpan={5} className="hint" style={{ textAlign: 'center', padding: 20 }}>No open student complaints filed.</td></tr>
+          )}
         </tbody>
       </table>
 
@@ -69,28 +74,28 @@ export default function FacultyComplaints() {
             <button className="ms-close" onClick={() => setSelected(null)}>✕</button>
           </div>
           <p className="fc-reason"><strong>Reason:</strong> {selected.reason}</p>
-          <p className="fc-current">Current: {selected.evaluations?.final_marks} / {selected.evaluations?.answers?.questions?.marks} (AI suggested: {selected.evaluations?.ai_suggested_marks})</p>
+          <p className="fc-current">Current Marks: {selected.evaluations?.final_marks} / {selected.evaluations?.answers?.questions?.marks} (AI suggested: {selected.evaluations?.ai_suggested_marks})</p>
 
           <div className="fd-form-row">
-            <label style={{ fontSize: 13, color: '#6b7280' }}>Extra marks to award (if approving)</label>
-            <input type="number" value={extraMarks} onChange={(e) => setExtraMarks(e.target.value)} style={{ width: 80 }} />
+            <label style={{ fontSize: 13, color: '#94a3b8' }}>Extra marks to award (if approving)</label>
+            <input type="number" value={extraMarks} onChange={(e) => setExtraMarks(e.target.value)} style={{ width: 80, padding: 6, borderRadius: 6 }} />
           </div>
           <textarea
             placeholder="Resolution note (optional)"
             value={note}
             onChange={(e) => setNote(e.target.value)}
             rows={2}
-            style={{ width: '100%', marginTop: 8, padding: 8, borderRadius: 8, border: '1px solid #d1d5db' }}
+            style={{ width: '100%', marginTop: 8, padding: 8, borderRadius: 8, background: 'rgba(0,0,0,0.4)', color: '#fff', border: '1px solid rgba(255,255,255,0.2)' }}
           />
 
-          <div className="fd-form-row" style={{ marginTop: 12 }}>
+          <div className="fd-form-row" style={{ marginTop: 12, display: 'flex', gap: 10 }}>
             <button className="fd-btn" onClick={() => handleResolve(true)}>Approve & Award Marks</button>
             <button className="fd-btn fd-btn-secondary" onClick={() => handleResolve(false)}>Reject</button>
           </div>
         </div>
       )}
 
-      {msg && <p className="fd-status">{msg}</p>}
+      {msg && <p className="fd-status" style={{ marginTop: 14 }}>{msg}</p>}
     </div>
   )
 }

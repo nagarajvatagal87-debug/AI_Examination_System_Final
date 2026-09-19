@@ -5,24 +5,26 @@ const { requireAuth, requireRole } = require("../middleware/auth.js");
 const router = express.Router();
 router.use(requireAuth);
 
-// GET /api/subjects -> list subjects (optionally filtered by department or mine=true)
+// GET /api/subjects -> list subjects (filtered by mine=true for logged-in faculty)
 router.get("/", async (req, res) => {
   const { departmentId, mine } = req.query;
-  let query = supabaseAdmin.from("subjects").select("id, name, code, department_id, faculty_id").order("name");
-  
+
   if (mine === "true" && req.user?.id) {
-    // If mine=true, try to filter by faculty_id, but fallback to all if no subjects match
-    const { data: mySubs } = await supabaseAdmin.from("subjects").select("id, name, code, department_id, faculty_id").eq("faculty_id", req.user.id).order("name");
-    if (mySubs && mySubs.length > 0) {
-      return res.json(mySubs);
-    }
+    const { data: mySubs, error } = await supabaseAdmin
+      .from("subjects")
+      .select("id, name, code, department_id, faculty_id")
+      .eq("faculty_id", req.user.id)
+      .order("name");
+    if (error) return res.status(500).json({ error: error.message });
+    return res.json(mySubs || []);
   }
 
+  let query = supabaseAdmin.from("subjects").select("id, name, code, department_id, faculty_id").order("name");
   if (departmentId) query = query.eq("department_id", departmentId);
 
   const { data, error } = await query;
   if (error) return res.status(500).json({ error: error.message });
-  res.json(data);
+  res.json(data || []);
 });
 
 // POST /api/subjects  body: { name, code, departmentId }  -- faculty/hod create subjects

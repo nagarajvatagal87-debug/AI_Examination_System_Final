@@ -24,6 +24,7 @@ import ExamPreview from './pages/faculty/ExamPreview.jsx'
 import FacultyComplaints from './pages/faculty/FacultyComplaints.jsx'
 import HODMessages from './pages/faculty/HODMessages.jsx'
 import Notifications from './pages/faculty/Notifications.jsx'
+import ProfileSettings from './components/ProfileSettings.jsx'
 
 import ExamDeptLayout from './pages/examdept/ExamDeptLayout.jsx'
 import ExamDeptDashboard from './pages/examdept/ExamDeptDashboard.jsx'
@@ -80,6 +81,7 @@ export default function App() {
             <Route path="complaints" element={<FacultyComplaints />} />
             <Route path="messages" element={<HODMessages />} />
             <Route path="notifications" element={<Notifications />} />
+            <Route path="settings" element={<ProfileSettings />} />
           </Route>
 
           <Route

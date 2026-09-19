@@ -222,4 +222,20 @@ router.get("/main-results", async (req, res) => {
   }
 });
 
+// GET /api/student/internal-marks -> 50-mark internal breakdown & eligibility status for logged-in student
+router.get("/internal-marks", async (req, res) => {
+  try {
+    const studentId = req.user.id;
+    const { data, error } = await supabaseAdmin
+      .from("internal_marks")
+      .select("*, subjects(id, name, code)")
+      .eq("student_id", studentId);
+
+    if (error) throw error;
+    res.json(data || []);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 module.exports = router;

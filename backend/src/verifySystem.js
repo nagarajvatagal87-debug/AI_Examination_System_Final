@@ -1,4 +1,6 @@
-const { supabaseAdmin } = require('../config/Supabase');
+const path = require("path");
+require("dotenv").config({ path: path.resolve(__dirname, "../.env") });
+const { supabaseAdmin } = require("../config/Supabase");
 
 async function testSystem() {
   console.log('--- RUNNING FULL SYSTEM END-TO-END VERIFICATION ---');

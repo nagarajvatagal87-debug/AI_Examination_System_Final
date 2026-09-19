@@ -200,7 +200,7 @@ router.get("/faculty", async (req, res) => {
 
 router.post("/faculty", async (req, res) => {
   try {
-    const { fullName, email } = req.body;
+    const { fullName, email, password } = req.body;
     if (!fullName || !email) {
       return res.status(400).json({ error: "fullName and email are required" });
     }
@@ -210,11 +210,37 @@ router.post("/faculty", async (req, res) => {
       return res.status(400).json({ error: "Your account has no department assigned yet. Contact the Principal." });
     }
 
-    const tempPassword = crypto.randomBytes(6).toString("base64url");
+    const initialPassword = password && password.length >= 6 ? password : "Faculty@" + crypto.randomBytes(4).toString("hex");
+
+    // Check if profile exists
+    const { data: existingProfile } = await supabaseAdmin
+      .from("profiles")
+      .select("id")
+      .eq("email", email)
+      .maybeSingle();
+
+    if (existingProfile) {
+      // Update password for existing user auth
+      const { error: updateAuthErr } = await supabaseAdmin.auth.admin.updateUserById(existingProfile.id, {
+        password: initialPassword,
+        email_confirm: true,
+      });
+      if (updateAuthErr) throw updateAuthErr;
+
+      const { data: updatedProf, error: updateProfErr } = await supabaseAdmin
+        .from("profiles")
+        .update({ full_name: fullName, role: "faculty", department_id: departmentId })
+        .eq("id", existingProfile.id)
+        .select()
+        .single();
+      if (updateProfErr) throw updateProfErr;
+
+      return res.status(200).json({ faculty: updatedProf, tempPassword: initialPassword, updated: true });
+    }
 
     const { data: authData, error: authError } = await supabaseAdmin.auth.admin.createUser({
       email,
-      password: tempPassword,
+      password: initialPassword,
       email_confirm: true,
     });
     if (authError) throw authError;
@@ -236,7 +262,7 @@ router.post("/faculty", async (req, res) => {
       throw profileError;
     }
 
-    res.status(201).json({ faculty: profile, tempPassword });
+    res.status(201).json({ faculty: profile, tempPassword: initialPassword });
   } catch (err) {
     res.status(400).json({ error: err.message });
   }
@@ -823,6 +849,83 @@ router.get("/subjects", async (req, res) => {
     res.json(subjects || []);
   } catch (err) {
     res.status(500).json({ error: err.message });
+  }
+});
+
+// GET /api/hod/subjects/:subjectId/internal-marks -> HOD reviews 50-mark internal sheet
+router.get("/subjects/:subjectId/internal-marks", async (req, res) => {
+  try {
+    const { subjectId } = req.params;
+    const departmentId = await getHodDepartmentId(req.user.id);
+
+    const { data: students } = await supabaseAdmin
+      .from("profiles")
+      .select("id, full_name, email, registration_no, semester, section")
+      .eq("role", "student")
+      .eq("department_id", departmentId)
+      .order("registration_no");
+
+    let savedMarks = [];
+    try {
+      const { data: markRows } = await supabaseAdmin
+        .from("internal_marks")
+        .select("*")
+        .eq("subject_id", subjectId);
+      savedMarks = markRows || [];
+    } catch (e) {}
+
+    const roster = (students || []).map((s) => {
+      const rec = savedMarks.find((m) => m.student_id === s.id);
+      const internal1 = rec?.internal1_marks ?? 0;
+      const internal2 = rec?.internal2_marks ?? 0;
+      const assignment = rec?.assignment_marks ?? 0;
+      const project = rec?.project_marks ?? 0;
+      const totalInternal = internal1 + internal2 + assignment + project;
+      const isEligible = totalInternal >= 25;
+      const status = rec?.status || "draft";
+
+      return {
+        studentId: s.id,
+        fullName: s.full_name,
+        registrationNo: s.registration_no || "—",
+        email: s.email,
+        internal1,
+        internal2,
+        assignment,
+        project,
+        totalInternal,
+        isEligible,
+        status,
+      };
+    });
+
+    res.json({ subjectId, roster });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// POST /api/hod/subjects/:subjectId/approve-internal-marks -> HOD confirms & approves 50-mark sheet for Exam Dept
+router.post("/subjects/:subjectId/approve-internal-marks", async (req, res) => {
+  try {
+    const { subjectId } = req.params;
+
+    const { data: subject } = await supabaseAdmin
+      .from("subjects")
+      .select("id, name")
+      .eq("id", subjectId)
+      .single();
+
+    try {
+      await supabaseAdmin
+        .from("internal_marks")
+        .update({ status: "approved_by_hod", approved_by: req.user.id, approved_at: new Date().toISOString() })
+        .eq("subject_id", subjectId);
+    } catch (e) {}
+
+    res.json({ status: "approved_by_hod", subjectName: subject?.name });
+  } catch (err) {
+    res.status(400).json({ error: err.message });
   }
 });
 

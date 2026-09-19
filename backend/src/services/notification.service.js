@@ -9,13 +9,25 @@ const transporter = resend ? null : nodemailer.createTransport({
   auth: { user: process.env.SMTP_USER, pass: process.env.SMTP_PASS },
 });
 
-async function sendEmail(to, subject, body) {
+async function sendEmail(to, subject, body, html = null) {
   if (!to) return;
   try {
     if (resend) {
-      await resend.emails.send({ from: process.env.EMAIL_FROM || "no-reply@yourdomain.com", to, subject, text: body });
+      await resend.emails.send({
+        from: process.env.EMAIL_FROM || "no-reply@yourdomain.com",
+        to,
+        subject,
+        text: body,
+        html: html || body,
+      });
     } else if (transporter) {
-      await transporter.sendMail({ from: process.env.EMAIL_FROM || process.env.SMTP_USER, to, subject, text: body });
+      await transporter.sendMail({
+        from: process.env.EMAIL_FROM || process.env.SMTP_USER,
+        to,
+        subject,
+        text: body,
+        html: html || body,
+      });
     } else {
       console.warn("No email provider configured — skipping:", subject, "->", to);
     }

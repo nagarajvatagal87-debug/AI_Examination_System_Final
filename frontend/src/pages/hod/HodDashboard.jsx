@@ -9,6 +9,7 @@ const SECTIONS = [
   { key: 'overview', label: 'Dashboard', icon: '📊' },
   { key: 'students', label: 'Department Students', icon: '🎓' },
   { key: 'faculty', label: 'Manage Faculty', icon: '👩‍🏫' },
+  { key: 'internals', label: '50m Internal Approval', icon: '📋' },
   { key: 'timetable', label: 'Exam Schedule & Hall Tickets', icon: '🎫' },
   { key: 'mainexam', label: 'Main Exam Analytics', icon: '📈' },
   { key: 'attendance', label: 'Attendance', icon: '📅' },
@@ -62,6 +63,7 @@ export default function HodDashboard() {
           {!loading && !error && activeSection === 'overview' && <OverviewSection overview={overview} />}
           {!loading && !error && activeSection === 'students' && <DepartmentStudentsSection />}
           {!loading && !error && activeSection === 'faculty' && <FacultyManagement />}
+          {!loading && !error && activeSection === 'internals' && <HodInternalApprovalSection />}
           {!loading && !error && activeSection === 'timetable' && <HodExamTimetableSection overview={overview} />}
           {!loading && !error && activeSection === 'mainexam' && <MainExamAnalyticsSection />}
           {!loading && !error && activeSection === 'attendance' && <ComingSoon label="Attendance Tracking" />}
@@ -1016,6 +1018,116 @@ function HodExamTimetableSection({ overview }) {
           </tbody>
         </table>
       )}
+    </div>
+  )
+}
+
+function HodInternalApprovalSection() {
+  const [subjects, setSubjects] = useState([])
+  const [selectedSubject, setSelectedSubject] = useState('')
+  const [roster, setRoster] = useState([])
+  const [msg, setMsg] = useState('')
+
+  useEffect(() => {
+    api.get('/hod/subjects').then((res) => {
+      setSubjects(res.data || [])
+      if (res.data?.length > 0) {
+        setSelectedSubject(res.data[0].id)
+        loadRoster(res.data[0].id)
+      }
+    }).catch(() => {})
+  }, [])
+
+  function loadRoster(subId) {
+    api.get(`/hod/subjects/${subId}/internal-marks`)
+      .then((res) => setRoster(res.data.roster || []))
+      .catch(() => {})
+  }
+
+  function handleSelectSubject(subId) {
+    setSelectedSubject(subId)
+    loadRoster(subId)
+  }
+
+  async function handleApprove() {
+    if (!selectedSubject) return
+    setMsg('Approving 50-mark internal sheet...')
+    try {
+      const res = await api.post(`/hod/subjects/${selectedSubject}/approve-internal-marks`)
+      setMsg(`✅ 50-Mark Internal Sheet for ${res.data.subjectName} confirmed & approved! Scores are now unlocked for Exam Dept.`)
+      loadRoster(selectedSubject)
+    } catch (err) {
+      setMsg(`❌ ${err.response?.data?.error || 'Approval failed'}`)
+    }
+  }
+
+  return (
+    <div className="hod-section-card glass-card" style={{ padding: 24 }}>
+      <h2 style={{ margin: '0 0 16px 0', fontSize: 20, color: '#f8fafc' }}>📋 Department 50-Mark Internal Marks Approval</h2>
+      
+      <div style={{ display: 'flex', gap: 16, alignItems: 'center', marginBottom: 20 }}>
+        <label style={{ fontSize: 13, color: '#94a3b8', fontWeight: 600 }}>Select Department Subject:</label>
+        <select
+          value={selectedSubject}
+          onChange={(e) => handleSelectSubject(e.target.value)}
+          style={{ padding: '8px 14px', borderRadius: 8, background: 'rgba(15,23,42,0.8)', border: '1px solid rgba(255,255,255,0.2)', color: '#fff', fontSize: 13 }}
+        >
+          {subjects.map((s) => (
+            <option key={s.id} value={s.id}>{s.name} ({s.code || 'SUB'})</option>
+          ))}
+          {subjects.length === 0 && <option value="">No subjects created yet</option>}
+        </select>
+
+        {selectedSubject && (
+          <button className="fd-btn" onClick={handleApprove} style={{ background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)', marginLeft: 'auto' }}>
+            ✓ Confirm & Approve Internal Sheet for Exam Dept
+          </button>
+        )}
+      </div>
+
+      {msg && <p style={{ padding: '10px 14px', borderRadius: 6, background: msg.includes('❌') ? 'rgba(239,68,68,0.2)' : 'rgba(16,185,129,0.2)', color: msg.includes('❌') ? '#fca5a5' : '#6ee7b7', fontSize: 13, fontWeight: 600, marginBottom: 20 }}>{msg}</p>}
+
+      <table className="hod-table" style={{ width: '100%', fontSize: 13 }}>
+        <thead>
+          <tr style={{ background: 'rgba(124,58,237,0.2)', color: '#c084fc' }}>
+            <th>USN / REG NO</th>
+            <th>STUDENT NAME</th>
+            <th>INT-1 (15M)</th>
+            <th>INT-2 (15M)</th>
+            <th>ASSIGNMENT (10M)</th>
+            <th>PROJECT (10M)</th>
+            <th>TOTAL (50M)</th>
+            <th>ELIGIBILITY STATUS</th>
+          </tr>
+        </thead>
+        <tbody>
+          {roster.map((st) => (
+            <tr key={st.studentId}>
+              <td style={{ fontWeight: 700, color: '#38bdf8' }}>{st.registrationNo}</td>
+              <td style={{ fontWeight: 600 }}>{st.fullName}</td>
+              <td>{st.internal1}</td>
+              <td>{st.internal2}</td>
+              <td>{st.assignment}</td>
+              <td>{st.project}</td>
+              <td style={{ fontWeight: 900, color: st.isEligible ? '#34d399' : '#f87171' }}>{st.totalInternal} / 50</td>
+              <td>
+                {st.isEligible ? (
+                  <span style={{ padding: '4px 10px', borderRadius: 12, background: 'rgba(16,185,129,0.2)', color: '#34d399', fontSize: 12, fontWeight: 700 }}>
+                    ✓ Eligible (≥25)
+                  </span>
+                ) : (
+                  <span style={{ padding: '4px 10px', borderRadius: 12, background: 'rgba(239,68,68,0.2)', color: '#f87171', fontSize: 12, fontWeight: 700 }}>
+                    ⚠️ Detained (&lt;25)
+                  </span>
+                )}
+              </td>
+            </tr>
+          ))}
+          {roster.length === 0 && (
+            <tr><td colSpan={8} className="hod-empty">No student internal marks uploaded for this subject yet.</td></tr>
+          )}
+        </tbody>
+      </table>
     </div>
   )
 }

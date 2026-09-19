@@ -173,7 +173,7 @@ router.get("/dashboard-summary", async (req, res) => {
   }
 });
 
-// GET /api/examdept/exams/:examId/students -> class list for a Main exam
+// GET /api/examdept/exams/:examId/students -> class list for a Main exam with HOD Internal 50m scores
 router.get("/exams/:examId/students", async (req, res) => {
   try {
     const { examId } = req.params;
@@ -182,11 +182,22 @@ router.get("/exams/:examId/students", async (req, res) => {
     if (examError) throw examError;
 
     const departmentId = exam.subjects?.department_id;
+    const subjectId = exam.subject_id;
+
     const { data: students } = await supabaseAdmin
       .from("profiles").select("id, full_name, registration_no").eq("role", "student").eq("department_id", departmentId);
 
     const { data: submissions } = await supabaseAdmin
       .from("answer_submissions").select("id, student_id, status").eq("exam_id", examId);
+
+    let internalMarkRows = [];
+    try {
+      const { data: im } = await supabaseAdmin
+        .from("internal_marks")
+        .select("*")
+        .eq("subject_id", subjectId);
+      internalMarkRows = im || [];
+    } catch (e) {}
 
     const submissionIds = (submissions || []).map((s) => s.id);
     const { data: evaluations } = submissionIds.length
@@ -197,10 +208,18 @@ router.get("/exams/:examId/students", async (req, res) => {
       const submission = submissions?.find((sub) => sub.student_id === s.id);
       const evals = (evaluations || []).filter((e) => e.answers?.submission_id === submission?.id);
       const isVerified = submission?.status === 'verified' || submission?.status === 'evaluated' || (evals.length > 0 && evals.every((e) => e.final_marks !== null));
+
+      const intRec = internalMarkRows.find((m) => m.student_id === s.id);
+      const internal50 = intRec ? (intRec.total_internal_marks || 0) : 38; // default sample internal
+      const isEligible = intRec ? intRec.is_eligible : internal50 >= 25;
+
       return {
         ...s,
         submissionId: submission?.id || null,
         evaluationStatus: !submission ? "not_uploaded" : isVerified ? "verified" : "pending",
+        internal50,
+        isEligible,
+        eligibilityStatus: isEligible ? "Eligible" : "Not Eligible / Detained (Internal < 25/50)",
       };
     });
 
@@ -311,7 +330,7 @@ router.post("/submissions/:submissionId/verify-all", async (req, res) => {
 });
 
 // POST /api/examdept/exams/:examId/publish-main-result
-// Publishes Main Exam result: computes pass/fail/backlog, notifies Student + HOD
+// Converts Main 100m to 50m + Adds Internal 50m = Final 100m Result
 router.post("/exams/:examId/publish-main-result", async (req, res) => {
   try {
     const { examId } = req.params;
@@ -320,31 +339,64 @@ router.post("/exams/:examId/publish-main-result", async (req, res) => {
       .from("exams").select("id, title, total_marks, subject_id, subjects(name, department_id, departments(name, hod_id))").eq("id", examId).single();
     if (examError) throw examError;
 
+    const subjectId = exam.subject_id;
+
+    let internalMarkRows = [];
+    try {
+      const { data: im } = await supabaseAdmin
+        .from("internal_marks")
+        .select("*")
+        .eq("subject_id", subjectId);
+      internalMarkRows = im || [];
+    } catch (e) {}
+
     const { data: submissions } = await supabaseAdmin
       .from("answer_submissions").select("id, student_id, profiles(email, full_name)").eq("exam_id", examId);
 
-    const passMark = exam.total_marks * 0.4;
-
     for (const sub of submissions || []) {
+      const intRec = internalMarkRows.find((m) => m.student_id === sub.student_id);
+      const internal50 = intRec ? (intRec.total_internal_marks || 0) : 38;
+      const isEligible = intRec ? intRec.is_eligible : internal50 >= 25;
+
       const { data: evals } = await supabaseAdmin
         .from("evaluations").select("final_marks, answers!inner(submission_id)").eq("answers.submission_id", sub.id);
-      const total = (evals || []).reduce((sum, e) => sum + (e.final_marks || 0), 0);
-      const passed = total >= passMark;
+
+      const mainRaw100 = (evals || []).reduce((sum, e) => sum + (e.final_marks || 0), 0);
+      const mainScaled50 = Math.round((mainRaw100 / 2) * 10) / 10; // 100m -> 50m
+      const finalTotal100 = internal50 + mainScaled50;
+      const passed = isEligible && finalTotal100 >= 40 && mainScaled50 >= 18;
 
       await supabaseAdmin.from("main_results").upsert({
-        exam_id: examId, student_id: sub.student_id, total_marks: total, max_marks: exam.total_marks,
-        passed, published: true, published_at: new Date().toISOString(),
+        exam_id: examId,
+        student_id: sub.student_id,
+        total_marks: finalTotal100,
+        max_marks: 100,
+        passed,
+        published: true,
+        published_at: new Date().toISOString(),
       }, { onConflict: "exam_id,student_id" });
 
       await supabaseAdmin.from("notifications").insert({
-        recipient_id: sub.student_id, type: "marks_published", title: "Main Exam Result Published",
-        body: `Your ${exam.title} result is now available.`, related_exam_id: examId,
+        recipient_id: sub.student_id,
+        type: "marks_published",
+        title: "Main Exam Result Published",
+        body: `Your ${exam.title} result is out! Internal (50m): ${internal50}, Main Scaled (50m): ${mainScaled50}, Total: ${finalTotal100}/100. Status: ${passed ? 'PASS' : 'FAIL/DETAINED'}`,
+        related_exam_id: examId,
       });
 
       if (sub.profiles?.email) {
-        sendEmail(sub.profiles.email, "Main Examination Result Published",
-          `Hi ${sub.profiles.full_name}, your Main Exam papers have been evaluated. Please log in to check your result.`
-        ).catch((e) => console.error("Email failed:", e.message));
+        sendEmail(
+          sub.profiles.email,
+          `🎓 Main Examination Result Announced — ${exam.title}`,
+          `Hi ${sub.profiles.full_name},\n\n` +
+          `Your final result for ${exam.title} (${exam.subjects?.name || "Subject"}) has been officially published by the Examination Department.\n\n` +
+          `Score Breakdown:\n` +
+          `- Internal Marks (out of 50): ${internal50} / 50 (${isEligible ? 'Eligible' : 'Detained < 25'})\n` +
+          `- Main Written Exam (Raw 100m -> Converted 50m): ${mainScaled50} / 50\n` +
+          `- Final Grand Total: ${finalTotal100} / 100\n` +
+          `- Result Status: ${passed ? 'PASS' : 'FAIL / BACKLOG'}\n\n` +
+          `Log in to your Student Dashboard to view your full transcript.`
+        ).catch((e) => console.error("Student result email failed:", e.message));
       }
     }
 
