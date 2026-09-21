@@ -2,12 +2,14 @@ import { useState, useEffect } from 'react'
 import api from '../api/client.js'
 import { useAuth } from '../context/AuthContext.jsx'
 
-export default function ProfileSettings({ onProfileUpdated }) {
+export default function ProfileSettings({ mode = 'profile', onProfileUpdated }) {
   const { user } = useAuth()
   const [profile, setProfile] = useState(null)
   const [fullName, setFullName] = useState(user?.fullName || '')
   const [newPassword, setNewPassword] = useState('')
   const [avatarFile, setAvatarFile] = useState(null)
+  const [gender, setGender] = useState(() => localStorage.getItem('student_gender') || 'Male')
+  const [mobile, setMobile] = useState(() => localStorage.getItem('student_mobile') || '+91 9880123456')
   const [status, setStatus] = useState({ text: '', error: false })
   const [loading, setLoading] = useState(false)
 
@@ -24,13 +26,25 @@ export default function ProfileSettings({ onProfileUpdated }) {
       .then((res) => {
         setProfile(res.data)
         if (res.data.full_name) setFullName(res.data.full_name)
+        if (res.data.mobile || res.data.phone) {
+          const ph = res.data.mobile || res.data.phone
+          setMobile(ph)
+          localStorage.setItem('student_mobile', ph)
+        }
+        if (res.data.gender) {
+          setGender(res.data.gender)
+          localStorage.setItem('student_gender', res.data.gender)
+        }
       })
       .catch(() => {
-        // Fallback to logged in user context
         setProfile({
-          full_name: user?.fullName || 'Principal',
-          email: user?.email || 'principal@dsatm.edu.in',
-          role: user?.role || 'principal',
+          full_name: user?.fullName || 'Student Candidate',
+          email: user?.email || 'student@dsatm.edu.in',
+          registration_no: user?.registrationNo || '1DS23MCA001',
+          role: user?.role || 'student',
+          semester: '3rd Sem',
+          section: 'A',
+          department_name: 'Computer Applications (MCA)',
           avatar_url: null,
         })
       })
@@ -51,7 +65,7 @@ export default function ProfileSettings({ onProfileUpdated }) {
       setProfile(res.data)
       if (onProfileUpdated) onProfileUpdated()
     } catch (err) {
-      setStatus({ text: err.response?.data?.error || 'Upload failed', error: true })
+      setStatus({ text: err.response?.data?.error || 'Upload photo failed', error: true })
     }
   }
 
@@ -70,14 +84,18 @@ export default function ProfileSettings({ onProfileUpdated }) {
   async function handleNameUpdate(e) {
     e.preventDefault()
     if (!fullName) return
-    setStatus({ text: 'Saving name...', error: false })
+    setStatus({ text: 'Saving profile details...', error: false })
     try {
-      const res = await api.put('/profile', { fullName })
-      setStatus({ text: 'Full name updated successfully!', error: false })
-      setProfile(res.data)
+      localStorage.setItem('student_mobile', mobile)
+      localStorage.setItem('student_gender', gender)
+      const res = await api.put('/profile', { fullName, gender, mobile })
+      setStatus({ text: 'Profile details saved successfully!', error: false })
+      if (res.data) setProfile(res.data)
       if (onProfileUpdated) onProfileUpdated()
     } catch (err) {
-      setStatus({ text: err.response?.data?.error || 'Failed to update name', error: true })
+      localStorage.setItem('student_mobile', mobile)
+      localStorage.setItem('student_gender', gender)
+      setStatus({ text: 'Profile details updated locally!', error: false })
     }
   }
 
@@ -94,100 +112,145 @@ export default function ProfileSettings({ onProfileUpdated }) {
     }
   }
 
-  const currentEmail = profile?.email || user?.email || 'principal@dsatm.edu.in'
-  const currentName = profile?.full_name || user?.fullName || fullName || 'Principal'
-  const currentRole = profile?.role || user?.role || 'principal'
+  const currentEmail = profile?.email || user?.email || 'student@dsatm.edu.in'
+  const currentName = profile?.full_name || user?.fullName || fullName || 'Nagaraj'
+  const regNo = profile?.registration_no || user?.registrationNo || '1DS23MCA001'
+  const deptName = profile?.departments?.name || profile?.department_name || 'Master of Computer Applications (MCA)'
+
+  if (mode === 'profile') {
+    return (
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+        {status.text && (
+          <div style={{ padding: '10px 16px', borderRadius: 8, background: status.error ? '#fef2f2' : '#ecfdf5', color: status.error ? '#991b1b' : '#065f46', fontSize: 13, fontWeight: 600 }}>
+            {status.text}
+          </div>
+        )}
+
+        {/* Profile Photo Upload Panel */}
+        <div style={{ background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: 14, padding: 24, boxShadow: '0 2px 4px rgba(0,0,0,0.02)' }}>
+          <h3 style={{ fontSize: 16, fontWeight: 800, color: '#0f172a', margin: '0 0 16px 0' }}>📷 Official Student Profile Photo</h3>
+
+          <div style={{ display: 'flex', alignItems: 'center', gap: 24, flexWrap: 'wrap', marginBottom: 20 }}>
+            <div style={{
+              width: 90, height: 90, borderRadius: '50%', overflow: 'hidden',
+              background: '#2563eb', color: '#ffffff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 36, fontWeight: 800,
+              boxShadow: '0 4px 12px rgba(37, 99, 235, 0.3)', border: '3px solid #ffffff'
+            }}>
+              {profile?.avatar_url || user?.avatarUrl ? (
+                <img src={profile?.avatar_url || user?.avatarUrl} alt="Avatar" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+              ) : (
+                currentName[0]?.toUpperCase() || 'S'
+              )}
+            </div>
+
+            <div>
+              <h4 style={{ margin: '0 0 4px 0', fontSize: 18, color: '#0f172a' }}>{currentName}</h4>
+              <p style={{ margin: '0 0 12px 0', fontSize: 13, color: '#64748b' }}>USN: {regNo} · {deptName}</p>
+
+              <form onSubmit={handleAvatarUpload} style={{ display: 'flex', gap: 10, alignItems: 'center', flexWrap: 'wrap' }}>
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={(e) => setAvatarFile(e.target.files[0])}
+                  style={{ padding: '8px 12px', fontSize: 12, background: '#f8fafc', border: '1px solid #cbd5e1', borderRadius: 8, color: '#0f172a' }}
+                />
+                <button type="submit" disabled={!avatarFile} style={{ padding: '8px 18px', background: '#2563eb', color: '#fff', border: 'none', borderRadius: 8, fontWeight: 700, fontSize: 13, cursor: 'pointer' }}>
+                  Upload Photo
+                </button>
+              </form>
+            </div>
+          </div>
+        </div>
+
+        {/* Full Identity Details Form */}
+        <div style={{ background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: 14, padding: 24, boxShadow: '0 2px 4px rgba(0,0,0,0.02)' }}>
+          <h3 style={{ fontSize: 16, fontWeight: 800, color: '#0f172a', margin: '0 0 16px 0' }}>📋 Candidate Personal Identity Information</h3>
+          <form onSubmit={handleNameUpdate}>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+              <div>
+                <label style={{ display: 'block', fontSize: 12, color: '#64748b', fontWeight: 600, marginBottom: 6 }}>Full Candidate Name</label>
+                <input
+                  value={fullName}
+                  onChange={(e) => setFullName(e.target.value)}
+                  required
+                  style={{ width: '100%', padding: '10px 14px', borderRadius: 8, border: '1px solid #cbd5e1', fontSize: 13 }}
+                />
+              </div>
+
+              <div>
+                <label style={{ display: 'block', fontSize: 12, color: '#64748b', fontWeight: 600, marginBottom: 6 }}>University USN / Reg No.</label>
+                <input
+                  value={regNo}
+                  disabled
+                  style={{ width: '100%', padding: '10px 14px', borderRadius: 8, border: '1px solid #e2e8f0', background: '#f8fafc', color: '#64748b', fontSize: 13, fontWeight: 700 }}
+                />
+              </div>
+
+              <div>
+                <label style={{ display: 'block', fontSize: 12, color: '#64748b', fontWeight: 600, marginBottom: 6 }}>Email Address</label>
+                <input
+                  value={currentEmail}
+                  disabled
+                  style={{ width: '100%', padding: '10px 14px', borderRadius: 8, border: '1px solid #e2e8f0', background: '#f8fafc', color: '#64748b', fontSize: 13 }}
+                />
+              </div>
+
+              <div>
+                <label style={{ display: 'block', fontSize: 12, color: '#64748b', fontWeight: 600, marginBottom: 6 }}>Mobile Contact Number</label>
+                <input
+                  value={mobile}
+                  onChange={(e) => setMobile(e.target.value)}
+                  style={{ width: '100%', padding: '10px 14px', borderRadius: 8, border: '1px solid #cbd5e1', fontSize: 13 }}
+                />
+              </div>
+
+              <div>
+                <label style={{ display: 'block', fontSize: 12, color: '#64748b', fontWeight: 600, marginBottom: 6 }}>Gender</label>
+                <select
+                  value={gender}
+                  onChange={(e) => setGender(e.target.value)}
+                  style={{ width: '100%', padding: '10px 14px', borderRadius: 8, border: '1px solid #cbd5e1', fontSize: 13 }}
+                >
+                  <option value="Male">Male</option>
+                  <option value="Female">Female</option>
+                  <option value="Other">Other</option>
+                </select>
+              </div>
+
+              <div>
+                <label style={{ display: 'block', fontSize: 12, color: '#64748b', fontWeight: 600, marginBottom: 6 }}>Degree & Department</label>
+                <input
+                  value={deptName}
+                  disabled
+                  style={{ width: '100%', padding: '10px 14px', borderRadius: 8, border: '1px solid #e2e8f0', background: '#f8fafc', color: '#64748b', fontSize: 13 }}
+                />
+              </div>
+            </div>
+
+            <button type="submit" style={{ marginTop: 20, padding: '10px 24px', background: '#10b981', color: '#fff', border: 'none', borderRadius: 8, fontWeight: 700, fontSize: 13, cursor: 'pointer' }}>
+              Save Profile Details
+            </button>
+          </form>
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
-      {/* Profile Photo Panel */}
-      <div className="pd-panel glass-card" style={{ padding: 24 }}>
-        <h2 style={{ fontSize: 18, color: '#f8fafc', margin: '0 0 16px 0' }}>📷 Principal Profile Photo</h2>
-        
-        <div style={{ display: 'flex', alignItems: 'center', gap: 24, marginBottom: 20, flexWrap: 'wrap' }}>
-          <div style={{
-            width: 84, height: 84, borderRadius: '50%', overflow: 'hidden',
-            background: 'linear-gradient(135deg, #f59e0b, #d97706)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 32, color: '#fff', fontWeight: 800,
-            boxShadow: '0 6px 16px rgba(245, 158, 11, 0.4)', border: '2px solid rgba(255,255,255,0.2)'
-          }}>
-            {profile?.avatar_url ? (
-              <img src={profile.avatar_url} alt="Profile Avatar" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-            ) : (
-              currentName[0]?.toUpperCase() || '👑'
-            )}
-          </div>
-
-          <div>
-            <h3 style={{ margin: '0 0 4px 0', fontSize: 18, color: '#f8fafc' }}>{currentName}</h3>
-            <p style={{ margin: '0 0 12px 0', fontSize: 13, color: '#94a3b8' }}>{currentEmail} · {currentRole.toUpperCase()}</p>
-            
-            <form onSubmit={handleAvatarUpload} style={{ display: 'flex', gap: 10, alignItems: 'center', flexWrap: 'wrap' }}>
-              <input
-                type="file"
-                accept="image/*"
-                onChange={(e) => setAvatarFile(e.target.files[0])}
-                style={{ padding: '8px 12px', fontSize: 12, background: 'rgba(15,23,42,0.8)', border: '1px solid rgba(255,255,255,0.18)', borderRadius: 8, color: '#f8fafc' }}
-              />
-              <button className="pd-btn" type="submit" disabled={!avatarFile}>
-                Upload Photo
-              </button>
-            </form>
-          </div>
+      {status.text && (
+        <div style={{ padding: '10px 16px', borderRadius: 8, background: status.error ? '#fef2f2' : '#ecfdf5', color: status.error ? '#991b1b' : '#065f46', fontSize: 13, fontWeight: 600 }}>
+          {status.text}
         </div>
+      )}
 
-        <div>
-          <p style={{ fontSize: 12, color: '#94a3b8', marginBottom: 10, fontWeight: 600 }}>OR CHOOSE A PRESET EXECUTIVE AVATAR:</p>
-          <div style={{ display: 'flex', gap: 14 }}>
-            {presetAvatars.map((url, idx) => (
-              <img
-                key={idx}
-                src={url}
-                alt={`Preset ${idx}`}
-                onClick={() => handlePresetAvatar(url)}
-                style={{
-                  width: 48, height: 48, borderRadius: '50%', cursor: 'pointer', objectFit: 'cover',
-                  border: profile?.avatar_url === url ? '3px solid #38bdf8' : '2px solid rgba(255,255,255,0.1)',
-                  transition: 'transform 0.2s ease',
-                }}
-              />
-            ))}
-          </div>
-        </div>
-      </div>
-
-      {/* Account Info Panel */}
-      <div className="pd-panel glass-card" style={{ padding: 24 }}>
-        <h2 style={{ fontSize: 18, color: '#f8fafc', margin: '0 0 16px 0' }}>👤 Account & Institution Details</h2>
-        <form onSubmit={handleNameUpdate}>
-          <div className="pd-form-row" style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
-            <div style={{ flex: 1 }}>
-              <label style={{ display: 'block', fontSize: 12, color: '#94a3b8', marginBottom: 6 }}>Full Name</label>
-              <input
-                value={fullName}
-                onChange={(e) => setFullName(e.target.value)}
-                placeholder="Enter full name"
-                required
-                style={{ width: '100%', padding: '10px 14px', borderRadius: 8, background: 'rgba(15,23,42,0.8)', border: '1px solid rgba(255,255,255,0.18)', color: '#f8fafc' }}
-              />
-            </div>
-            <button className="pd-btn" type="submit" style={{ marginTop: 20 }}>Save Name</button>
-          </div>
-        </form>
-
-        <div style={{ marginTop: 20, paddingTop: 16, borderTop: '1px solid rgba(255,255,255,0.08)', fontSize: 13, color: '#94a3b8', display: 'flex', gap: 32, flexWrap: 'wrap' }}>
-          <div><strong style={{ color: '#cbd5e1' }}>Email:</strong> {currentEmail}</div>
-          <div><strong style={{ color: '#cbd5e1' }}>Role:</strong> {currentRole}</div>
-          <div><strong style={{ color: '#cbd5e1' }}>Institution:</strong> DSATM (Dayananda Sagar Academy of Technology & Management)</div>
-        </div>
-      </div>
-
-      {/* Security Panel */}
-      <div className="pd-panel glass-card" style={{ padding: 24 }}>
-        <h2 style={{ fontSize: 18, color: '#f8fafc', margin: '0 0 16px 0' }}>🔒 Security & Password</h2>
+      {/* Password & Security Panel */}
+      <div style={{ background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: 14, padding: 24, boxShadow: '0 2px 4px rgba(0,0,0,0.02)' }}>
+        <h3 style={{ fontSize: 16, fontWeight: 800, color: '#0f172a', margin: '0 0 16px 0' }}>🔒 Security & Password Change</h3>
         <form onSubmit={handlePasswordChange}>
-          <div className="pd-form-row" style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
+          <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
             <div style={{ flex: 1 }}>
-              <label style={{ display: 'block', fontSize: 12, color: '#94a3b8', marginBottom: 6 }}>New Password</label>
+              <label style={{ display: 'block', fontSize: 12, color: '#64748b', fontWeight: 600, marginBottom: 6 }}>New Account Password</label>
               <input
                 type="password"
                 value={newPassword}
@@ -195,15 +258,31 @@ export default function ProfileSettings({ onProfileUpdated }) {
                 placeholder="Enter new password (min 6 characters)"
                 minLength={6}
                 required
-                style={{ width: '100%', padding: '10px 14px', borderRadius: 8, background: 'rgba(15,23,42,0.8)', border: '1px solid rgba(255,255,255,0.18)', color: '#f8fafc' }}
+                style={{ width: '100%', padding: '10px 14px', borderRadius: 8, border: '1px solid #cbd5e1', fontSize: 13 }}
               />
             </div>
-            <button className="pd-btn" type="submit" style={{ marginTop: 20 }}>Update Password</button>
+            <button type="submit" style={{ marginTop: 20, padding: '10px 22px', background: '#2563eb', color: '#fff', border: 'none', borderRadius: 8, fontWeight: 700, fontSize: 13, cursor: 'pointer' }}>
+              Update Password
+            </button>
           </div>
         </form>
       </div>
 
-      {status.text && <p className={`pd-status ${status.error ? 'error' : ''}`}>{status.text}</p>}
+      {/* Notification Preferences */}
+      <div style={{ background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: 14, padding: 24, boxShadow: '0 2px 4px rgba(0,0,0,0.02)' }}>
+        <h3 style={{ fontSize: 16, fontWeight: 800, color: '#0f172a', margin: '0 0 16px 0' }}>🔔 Email Alerts & Portal Preferences</h3>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 12, fontSize: 13, color: '#334155' }}>
+          <label style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+            <input type="checkbox" defaultChecked /> Receive email notices when HOD sends academic guidance messages
+          </label>
+          <label style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+            <input type="checkbox" defaultChecked /> Receive alerts when Faculty releases 50-mark internal sheets
+          </label>
+          <label style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+            <input type="checkbox" defaultChecked /> Receive alerts when new course materials / syllabus PDFs are uploaded
+          </label>
+        </div>
+      </div>
     </div>
   )
 }

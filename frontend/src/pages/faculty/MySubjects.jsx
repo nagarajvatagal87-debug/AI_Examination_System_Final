@@ -157,6 +157,115 @@ export default function MySubjects() {
     }
   }
 
+  const [attendanceFor, setAttendanceFor] = useState(null)
+  const [attendanceList, setAttendanceList] = useState([])
+  const [attendanceMsg, setAttendanceMsg] = useState('')
+
+  function openAttendance(subject) {
+    setMaterialsFor(null)
+    setStudentsFor(null)
+    setInternalsFor(null)
+    setAttendanceFor(subject)
+    setAttendanceMsg('')
+    api.get(`/faculty/attendance?subjectId=${subject.id}`)
+      .then((res) => setAttendanceList(res.data || []))
+      .catch(() => {})
+  }
+
+  function handleMarkPresent(studentId) {
+    setAttendanceList((prev) =>
+      prev.map((item) => {
+        if (item.student_id === studentId) {
+          const newTotal = (item.totalClasses || 0) + 1
+          const newAtt = (item.attendedClasses || 0) + 1
+          const pct = Math.round((newAtt / newTotal) * 100)
+          return {
+            ...item,
+            totalClasses: newTotal,
+            attendedClasses: newAtt,
+            percentage: pct,
+            hasAttendance: true,
+            isEligible: pct >= 75,
+            status: pct >= 75 ? 'ELIGIBLE' : 'NOT_ELIGIBLE_ATTENDANCE_SHORTAGE'
+          }
+        }
+        return item
+      })
+    )
+  }
+
+  function handleMarkAbsent(studentId) {
+    setAttendanceList((prev) =>
+      prev.map((item) => {
+        if (item.student_id === studentId) {
+          const newTotal = (item.totalClasses || 0) + 1
+          const newAtt = item.attendedClasses || 0
+          const pct = Math.round((newAtt / newTotal) * 100)
+          return {
+            ...item,
+            totalClasses: newTotal,
+            attendedClasses: newAtt,
+            percentage: pct,
+            hasAttendance: true,
+            isEligible: pct >= 75,
+            status: pct >= 75 ? 'ELIGIBLE' : 'NOT_ELIGIBLE_ATTENDANCE_SHORTAGE'
+          }
+        }
+        return item
+      })
+    )
+  }
+
+  function handleDirectAttChange(studentId, field, val) {
+    const num = Math.max(0, Number(val) || 0)
+    setAttendanceList((prev) =>
+      prev.map((item) => {
+        if (item.student_id === studentId) {
+          const tot = field === 'totalClasses' ? num : (item.totalClasses || 0)
+          const att = field === 'attendedClasses' ? num : (item.attendedClasses || 0)
+          const validAtt = Math.min(tot, att)
+          const pct = tot > 0 ? Math.round((validAtt / tot) * 100) : 0
+          return {
+            ...item,
+            totalClasses: tot,
+            attendedClasses: validAtt,
+            percentage: pct,
+            hasAttendance: tot > 0,
+            isEligible: tot > 0 && pct >= 75,
+            status: tot > 0 ? (pct >= 75 ? 'ELIGIBLE' : 'NOT_ELIGIBLE_ATTENDANCE_SHORTAGE') : 'PENDING_ATTENDANCE_ENTRY'
+          }
+        }
+        return item
+      })
+    )
+  }
+
+  async function handleSaveAttendance() {
+    if (!attendanceFor) return
+    setAttendanceMsg('Updating & recalculating attendance percentages...')
+    try {
+      await api.post('/faculty/attendance', {
+        subjectId: attendanceFor.id,
+        attendanceList
+      })
+      setAttendanceMsg('✅ Attendance percentage updated successfully! HOD & Student views updated.')
+    } catch (err) {
+      setAttendanceMsg(`❌ ${err.response?.data?.error || 'Failed to update attendance'}`)
+    }
+  }
+
+  async function handleDeleteMaterial(materialId, fileName) {
+    if (!window.confirm(`Are you sure you want to delete "${fileName}"? It will also be removed from the Student Dashboard.`)) return
+    setMsg('Deleting syllabus PDF...')
+    try {
+      await api.delete(`/course-materials/${materialId}`)
+      setMsg(`✅ "${fileName}" deleted successfully!`)
+      setMaterials((prev) => prev.filter((m) => m.id !== materialId))
+    } catch (err) {
+      setMsg(`❌ ${err.response?.data?.error || 'Failed to delete PDF'}`)
+    }
+  }
+
   return (
     <div>
       <h2 className="ms-title">My Subjects & Internal Marks Workspace</h2>
@@ -169,6 +278,7 @@ export default function MySubjects() {
             <div className="ms-actions">
               <button className="fd-btn fd-btn-secondary" onClick={() => openMaterials(s)}>Syllabus PDF</button>
               <button className="fd-btn fd-btn-secondary" style={{ background: '#3b82f6', borderColor: '#3b82f6', color: '#fff' }} onClick={() => openStudents(s)}>🎓 Students</button>
+              <button className="fd-btn fd-btn-secondary" style={{ background: '#8b5cf6', borderColor: '#8b5cf6', color: '#fff' }} onClick={() => openAttendance(s)}>📋 Attendance</button>
               <button className="fd-btn fd-btn-secondary" style={{ background: '#10b981', borderColor: '#10b981', color: '#fff' }} onClick={() => openInternalEvaluation(s)}>📊 50m Internals</button>
               <button className="fd-btn" onClick={() => navigate(`/faculty/examinations?subjectId=${s.id}`)}>Exams</button>
             </div>
@@ -185,7 +295,19 @@ export default function MySubjects() {
           </div>
           <ul className="ms-materials-list">
             {materials.map((m) => (
-              <li key={m.id}>📄 {m.file_name} <span className="ms-date">{new Date(m.created_at).toLocaleDateString()}</span></li>
+              <li key={m.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 14px', background: 'rgba(255,255,255,0.04)', borderRadius: 8, marginBottom: 8, border: '1px solid rgba(255,255,255,0.1)' }}>
+                <div>
+                  📄 <strong style={{ color: '#f8fafc' }}>{m.title || m.file_name}</strong>
+                  <span className="ms-date" style={{ marginLeft: 12, color: '#94a3b8', fontSize: 12 }}>{new Date(m.created_at).toLocaleDateString()}</span>
+                </div>
+                <button
+                  onClick={() => handleDeleteMaterial(m.id, m.title || m.file_name)}
+                  style={{ padding: '5px 12px', background: '#ef4444', color: '#fff', border: 'none', borderRadius: 6, fontWeight: 700, fontSize: 12, cursor: 'pointer' }}
+                  title="Delete syllabus PDF"
+                >
+                  🗑️ Delete PDF
+                </button>
+              </li>
             ))}
             {materials.length === 0 && <li className="hint">No syllabus PDF uploaded yet. Upload below to enable RAG Question Generation.</li>}
           </ul>
@@ -194,6 +316,101 @@ export default function MySubjects() {
             <button className="fd-btn" onClick={handleUpload}>+ Upload Syllabus / Notes PDF</button>
           </div>
           {msg && <p className="fd-status" style={{ color: '#10b981', marginTop: 10 }}>{msg}</p>}
+        </div>
+      )}
+
+      {/* Attendance Management Panel */}
+      {attendanceFor && (
+        <div className="ms-materials-panel" style={{ borderColor: 'rgba(139,92,246,0.6)' }}>
+          <div className="ms-materials-header">
+            <h3>📋 Student Daily Attendance Tracker — {attendanceFor.name}</h3>
+            <button className="ms-close" onClick={() => setAttendanceFor(null)}>✕</button>
+          </div>
+
+          <div style={{ background: 'rgba(15,23,42,0.6)', padding: 14, borderRadius: 10, marginBottom: 16, fontSize: 13, color: '#cbd5e1', border: '1px solid rgba(255,255,255,0.1)' }}>
+            <strong>Academic Attendance Rule:</strong> Attendance percentages are generated automatically as <code style={{ color: '#38bdf8' }}>(Attended / Total) × 100</code>.<br />
+            <span style={{ color: '#f87171', fontWeight: 700 }}>⚠️ 75% Cutoff Rule:</span> Students maintaining <strong>&lt; 75% overall attendance</strong> are <strong>NOT ELIGIBLE</strong> to write internal exams or view the internal timetable.
+          </div>
+
+          {attendanceMsg && (
+            <p style={{ padding: '10px 14px', borderRadius: 6, background: attendanceMsg.includes('❌') ? 'rgba(239,68,68,0.2)' : 'rgba(16,185,129,0.2)', color: attendanceMsg.includes('❌') ? '#fca5a5' : '#6ee7b7', fontSize: 13, fontWeight: 600, marginBottom: 16 }}>
+              {attendanceMsg}
+            </p>
+          )}
+
+          <div style={{ overflowX: 'auto', marginBottom: 20 }}>
+            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13, color: '#f8fafc' }}>
+              <thead>
+                <tr style={{ background: 'rgba(139,92,246,0.2)', color: '#c084fc', textAlign: 'left', borderBottom: '1px solid rgba(139,92,246,0.4)' }}>
+                  <th style={{ padding: 10 }}>USN / Reg No</th>
+                  <th style={{ padding: 10 }}>Student Name</th>
+                  <th style={{ padding: 10 }}>Total Classes</th>
+                  <th style={{ padding: 10 }}>Classes Attended</th>
+                  <th style={{ padding: 10 }}>Attendance %</th>
+                  <th style={{ padding: 10 }}>Quick Attendance</th>
+                  <th style={{ padding: 10 }}>Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                {attendanceList.map((st) => (
+                  <tr key={st.student_id} style={{ borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
+                    <td style={{ padding: 10, color: '#38bdf8', fontWeight: 700 }}>{st.registration_no}</td>
+                    <td style={{ padding: 10, fontWeight: 600 }}>{st.full_name}</td>
+                    <td style={{ padding: 6 }}>
+                      <input
+                        type="number" min={1} max={100}
+                        value={st.totalClasses}
+                        onChange={(e) => handleDirectAttChange(st.student_id, 'totalClasses', e.target.value)}
+                        style={{ width: 60, padding: 6, borderRadius: 6, border: '1px solid rgba(255,255,255,0.2)', background: 'rgba(0,0,0,0.5)', color: '#fff', fontSize: 13 }}
+                      />
+                    </td>
+                    <td style={{ padding: 6 }}>
+                      <input
+                        type="number" min={0} max={st.totalClasses}
+                        value={st.attendedClasses}
+                        onChange={(e) => handleDirectAttChange(st.student_id, 'attendedClasses', e.target.value)}
+                        style={{ width: 60, padding: 6, borderRadius: 6, border: '1px solid rgba(255,255,255,0.2)', background: 'rgba(0,0,0,0.5)', color: '#fff', fontSize: 13 }}
+                      />
+                    </td>
+                    <td style={{ padding: 10, fontWeight: 900, fontSize: 15, color: st.percentage >= 75 ? '#34d399' : '#f87171' }}>
+                      {st.percentage}%
+                    </td>
+                    <td style={{ padding: 6 }}>
+                      <div style={{ display: 'flex', gap: 6 }}>
+                        <button
+                          onClick={() => handleMarkPresent(st.student_id)}
+                          style={{ padding: '4px 8px', borderRadius: 6, background: '#10b981', color: '#fff', border: 'none', fontWeight: 700, fontSize: 11, cursor: 'pointer' }}
+                        >
+                          + Present
+                        </button>
+                        <button
+                          onClick={() => handleMarkAbsent(st.student_id)}
+                          style={{ padding: '4px 8px', borderRadius: 6, background: '#ef4444', color: '#fff', border: 'none', fontWeight: 700, fontSize: 11, cursor: 'pointer' }}
+                        >
+                          + Absent
+                        </button>
+                      </div>
+                    </td>
+                    <td style={{ padding: 10 }}>
+                      {st.percentage >= 75 ? (
+                        <span style={{ padding: '4px 10px', borderRadius: 12, background: 'rgba(16,185,129,0.2)', color: '#34d399', fontSize: 12, fontWeight: 700 }}>
+                          ✓ Eligible (≥75%)
+                        </span>
+                      ) : (
+                        <span style={{ padding: '4px 10px', borderRadius: 12, background: 'rgba(239,68,68,0.2)', color: '#f87171', fontSize: 12, fontWeight: 700 }}>
+                          ⚠️ Shortage (&lt;75%)
+                        </span>
+                      )}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+
+          <button className="fd-btn" onClick={handleSaveAttendance} style={{ background: 'linear-gradient(135deg, #8b5cf6 0%, #6d28d9 100%)', width: '100%' }}>
+            💾 Save & Sync Student Attendance Percentages
+          </button>
         </div>
       )}
 

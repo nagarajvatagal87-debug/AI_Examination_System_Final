@@ -2,29 +2,34 @@
   position: fixed;
   top: 0;
   left: 0;
+  right: 0;
+  bottom: 0;
   width: 100vw;
   height: 100vh;
-  background: rgba(15, 23, 42, 0.85);
-  backdrop-filter: blur(12px);
-  z-index: 9999;
+  background: rgba(15, 23, 42, 0.75);
+  backdrop-filter: blur(8px);
+  z-index: 99999;
   display: flex;
   align-items: center;
   justify-content: center;
 }
 
 .lms-view-full-app {
-  width: 96vw;
-  height: 94vh;
-  background: #f8fafc;
+  width: 95vw;
+  height: 92vh;
+  background: #ffffff;
   border-radius: 16px;
-  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.4);
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.35);
   display: flex;
+  flex-direction: row;
   overflow: hidden;
+  border: 1px solid #cbd5e1;
 }
 
 /* Left Sidebar */
 .lms-view-sidebar {
   width: 240px;
+  height: 100%;
   background: #0f172a;
   color: #cbd5e1;
   display: flex;
@@ -103,6 +108,7 @@
 /* Main Area */
 .lms-view-main-pane {
   flex: 1;
+  height: 100%;
   display: flex;
   flex-direction: column;
   background: #f1f5f9;
@@ -435,4 +441,131 @@
   font-weight: 700;
   font-size: 13px;
   cursor: pointer;
+}
+
+/* ChatGPT-style Markdown Formatting */
+.markdown-content {
+  font-size: 14px;
+  line-height: 1.65;
+  color: #0f172a;
+}
+
+.markdown-content h1,
+.markdown-content h2,
+.markdown-content h3,
+.markdown-content h4 {
+  color: #0f172a;
+  font-weight: 800;
+  margin-top: 14px;
+  margin-bottom: 8px;
+  letter-spacing: -0.01em;
+}
+
+.markdown-content h1 { font-size: 18px; border-bottom: 1px solid #e2e8f0; padding-bottom: 6px; }
+.markdown-content h2 { font-size: 16px; color: #1e293b; }
+.markdown-content h3 { font-size: 15px; color: #2563eb; }
+.markdown-content h4 { font-size: 14px; }
+
+.markdown-content p {
+  margin-top: 0;
+  margin-bottom: 10px;
+}
+
+.markdown-content ul,
+.markdown-content ol {
+  padding-left: 20px;
+  margin-top: 6px;
+  margin-bottom: 12px;
+}
+
+.markdown-content li {
+  margin-bottom: 6px;
+}
+
+.markdown-content strong {
+  color: #0f172a;
+  font-weight: 700;
+}
+
+.markdown-content code {
+  background: #f1f5f9;
+  color: #2563eb;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-family: 'Fira Code', 'Consolas', monospace;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.markdown-content pre {
+  background: #0f172a;
+  color: #f8fafc;
+  padding: 14px 18px;
+  border-radius: 10px;
+  overflow-x: auto;
+  margin: 12px 0;
+  border: 1px solid #1e293b;
+}
+
+.markdown-content pre code {
+  background: transparent;
+  color: inherit;
+  padding: 0;
+  font-size: 13px;
+}
+
+.markdown-content table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 14px 0;
+  font-size: 13px;
+  background: #ffffff;
+  border-radius: 8px;
+  overflow: hidden;
+  border: 1px solid #cbd5e1;
+}
+
+.markdown-content th {
+  background: #f1f5f9;
+  color: #0f172a;
+  font-weight: 800;
+  padding: 10px 12px;
+  border: 1px solid #cbd5e1;
+  text-align: left;
+}
+
+.markdown-content td {
+  padding: 10px 12px;
+  border: 1px solid #e2e8f0;
+}
+
+.markdown-content blockquote {
+  border-left: 4px solid #3b82f6;
+  background: #eff6ff;
+  color: #1d4ed8;
+  margin: 12px 0;
+  padding: 10px 16px;
+  border-radius: 0 8px 8px 0;
+  font-style: italic;
+}
+
+/* Ensure modal header, titles, dropdowns & inputs have high contrast */
+.lms-view-full-app h1,
+.lms-view-full-app h2,
+.lms-view-full-app h3,
+.lms-view-full-app h4 {
+  color: #0f172a !important;
+}
+
+.lms-doc-heading-title {
+  color: #0f172a !important;
+  font-weight: 800 !important;
+}
+
+.ai-study-assistant-pane select,
+.ai-chat-input-row input,
+.lms-header-search input {
+  background: #ffffff !important;
+  color: #0f172a !important;
+  border: 1px solid #cbd5e1 !important;
 }

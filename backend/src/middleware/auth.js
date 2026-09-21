@@ -14,11 +14,16 @@ const ROLE_FALLBACK_UUIDS = {
  */
 async function requireAuth(req, res, next) {
   const authHeader = req.headers.authorization;
-  if (!authHeader || !authHeader.startsWith("Bearer ")) {
-    return res.status(401).json({ error: "Missing or invalid Authorization header" });
+  let token = null;
+  if (authHeader && authHeader.startsWith("Bearer ")) {
+    token = authHeader.split(" ")[1];
+  } else if (req.query.token) {
+    token = req.query.token;
   }
 
-  const token = authHeader.split(" ")[1];
+  if (!token) {
+    return res.status(401).json({ error: "Missing or invalid Authorization header" });
+  }
 
   // 1. Direct user token format: token-<UUID>
   if (token.startsWith("token-")) {

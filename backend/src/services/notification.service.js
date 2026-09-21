@@ -45,24 +45,28 @@ async function notify(recipientId, type, title, body, relatedExamId = null) {
 
 async function notifyResultsPublished(examId) {
   const { data: exam } = await supabaseAdmin
-    .from("exams").select("id, title, subject_id, subjects(department_id)").eq("id", examId).single();
+    .from("exams")
+    .select("id, title, subject_id, subjects(name, code, department_id)")
+    .eq("id", examId)
+    .single();
   if (!exam) return;
 
-  const departmentId = exam.subjects.department_id;
+  const departmentId = exam.subjects?.department_id;
+  const subjectName = exam.subjects?.name ? `${exam.subjects.name} (${exam.subjects.code || ''})` : 'Course Subject';
 
   const { data: rankings } = await supabaseAdmin.from("rankings").select("student_id").eq("exam_id", examId);
   for (const r of rankings || []) {
-    await notify(r.student_id, "marks_published", "Your marks are out", `Marks for "${exam.title}" have been published.`, examId);
+    await notify(r.student_id, "marks_published", `Results Published: ${subjectName}`, `Official marks for ${subjectName} (${exam.title}) have been published.`, examId);
   }
 
   const { data: department } = await supabaseAdmin.from("departments").select("hod_id").eq("id", departmentId).single();
   if (department?.hod_id) {
-    await notify(department.hod_id, "department_results_published", "Department results published", `Results for "${exam.title}" have been published.`, examId);
+    await notify(department.hod_id, "department_results_published", `Department Results Published: ${subjectName}`, `Results for ${subjectName} (${exam.title}) have been published.`, examId);
   }
 
   const { data: principals } = await supabaseAdmin.from("profiles").select("id").eq("role", "principal");
   for (const p of principals || []) {
-    await notify(p.id, "exam_results_published", "Examination results published", `Results for "${exam.title}" have been published.`, examId);
+    await notify(p.id, "exam_results_published", `Examination Results Published: ${subjectName}`, `Results for ${subjectName} (${exam.title}) have been published.`, examId);
   }
 }
 

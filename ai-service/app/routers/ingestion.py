@@ -35,30 +35,53 @@ async def ingest_course_material(payload: IngestRequest, authorization: str = He
         supabase = get_supabase()
         pdf_bytes = supabase.storage.from_(STORAGE_BUCKET).download(payload.file_path)
         reader = PdfReader(io.BytesIO(pdf_bytes))
-        full_text = "".join(page.extract_text() or "" for page in reader.pages)
 
-        if not full_text.strip():
+        all_page_chunks = []
+        global_chunk_idx = 0
+
+        for page_idx, page in enumerate(reader.pages):
+            page_num = page_idx + 1
+            page_text = page.extract_text() or ""
+            if not page_text.strip():
+                continue
+
+            page_chunks = chunk_text(page_text)
+            for chunk_str in page_chunks:
+                all_page_chunks.append({
+                    "chunk_index": global_chunk_idx,
+                    "page_number": page_num,
+                    "content": chunk_str
+                })
+                global_chunk_idx += 1
+
+        if not all_page_chunks:
+            supabase.table("course_materials").update({"processed": False, "ingestion_status": "FAILED"}).eq("id", payload.course_material_id).execute()
             raise HTTPException(status_code=400, detail="No extractable text found in PDF")
 
-        chunks = chunk_text(full_text)
-        embeddings = embed_batch(chunks)
+        texts = [c["content"] for c in all_page_chunks]
+        embeddings = embed_batch(texts)
 
         rows = [
             {
                 "course_material_id": payload.course_material_id,
                 "subject_id": payload.subject_id,
-                "chunk_index": i,
-                "content": chunk,
-                "embedding": embedding,
+                "chunk_index": c["chunk_index"],
+                "page_number": c["page_number"],
+                "content": c["content"],
+                "embedding": emb,
             }
-            for i, (chunk, embedding) in enumerate(zip(chunks, embeddings))
+            for c, emb in zip(all_page_chunks, embeddings)
         ]
 
         supabase.table("course_chunks").insert(rows).execute()
-        supabase.table("course_materials").update({"processed": True}).eq("id", payload.course_material_id).execute()
+        supabase.table("course_materials").update({"processed": True, "ingestion_status": "INDEXED"}).eq("id", payload.course_material_id).execute()
 
         return {"status": "ok", "chunks_created": len(rows)}
     except HTTPException:
         raise
     except Exception as e:
+        try:
+            supabase.table("course_materials").update({"processed": False, "ingestion_status": "FAILED"}).eq("id", payload.course_material_id).execute()
+        except Exception:
+            pass
         raise HTTPException(status_code=500, detail=str(e))

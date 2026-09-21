@@ -66,7 +66,7 @@ export default function HodDashboard() {
           {!loading && !error && activeSection === 'internals' && <HodInternalApprovalSection />}
           {!loading && !error && activeSection === 'timetable' && <HodExamTimetableSection overview={overview} />}
           {!loading && !error && activeSection === 'mainexam' && <MainExamAnalyticsSection />}
-          {!loading && !error && activeSection === 'attendance' && <ComingSoon label="Attendance Tracking" />}
+          {!loading && !error && activeSection === 'attendance' && <HodAttendanceSection />}
           {!loading && !error && activeSection === 'results' && <ResultsSection />}
           {!loading && !error && activeSection === 'placements' && <ComingSoon label="Placement Tracking" />}
         </main>
@@ -954,70 +954,274 @@ function ComingSoon({ label }) {
 }
 
 function HodExamTimetableSection({ overview }) {
-  const [timetable, setTimetable] = useState([])
+  const [subjectDetails, setSubjectDetails] = useState([])
+  const [timetableData, setTimetableData] = useState(null)
+  const [examName, setExamName] = useState('Continuous Internal Assessment Test - 1 (IAT-1 2026)')
+  const [scheduleInputs, setScheduleInputs] = useState([])
+  const [publishMsg, setPublishMsg] = useState('')
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    api.get('/student/hall-ticket')
-      .then((res) => setTimetable(res.data.timetable || []))
+    Promise.all([
+      api.get('/hod/subjects-detail').catch(() => ({ data: [] })),
+      api.get('/hod/internal-timetable').catch(() => ({ data: null }))
+    ]).then(([subRes, ttRes]) => {
+      const subs = subRes.data || []
+      setSubjectDetails(subs)
+
+      if (ttRes.data) {
+        setTimetableData(ttRes.data)
+        if (ttRes.data.examName) setExamName(ttRes.data.examName)
+        if (Array.isArray(ttRes.data.schedule)) {
+          setScheduleInputs(ttRes.data.schedule)
+        }
+      } else {
+        const baseDate = new Date()
+        baseDate.setDate(baseDate.getDate() + 10)
+        const initialSched = subs.map((s, idx) => {
+          const d = new Date(baseDate)
+          d.setDate(d.getDate() + idx)
+          return {
+            slNo: idx + 1,
+            subjectId: s.id,
+            subjectCode: s.code,
+            subjectName: s.name,
+            examDate: d.toISOString().split('T')[0],
+            timeSlot: '10:00 AM - 11:30 AM',
+            hallNo: idx < 2 ? 'Block-A Room 302' : 'Block-B Room 405',
+            totalMarks: 50
+          }
+        })
+        setScheduleInputs(initialSched)
+      }
+    }).finally(() => setLoading(false))
+  }, [])
+
+  function handleScheduleChange(index, field, value) {
+    const updated = [...scheduleInputs]
+    updated[index] = { ...updated[index], [field]: value }
+    setScheduleInputs(updated)
+  }
+
+  async function handlePublishInternalTimetable() {
+    setPublishMsg('Publishing internal exam timetable...')
+    try {
+      const res = await api.post('/hod/internal-timetable', {
+        examName,
+        schedule: scheduleInputs
+      })
+      setPublishMsg('✅ Internal Exam Timetable published successfully! Attendance cutoff rule enforced: Only students maintaining ≥75% attendance can view this timetable and write internal exams.')
+      if (res.data?.timetable) setTimetableData(res.data.timetable)
+    } catch (err) {
+      setPublishMsg(`❌ ${err.response?.data?.error || 'Failed to publish timetable'}`)
+    }
+  }
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
+      {/* Subject Details & Department Roster Overview */}
+      <div className="hod-card">
+        <h3 className="hod-card-title">📚 Department Subject Details & Faculty Assignments</h3>
+        <p style={{ color: '#94a3b8', fontSize: 13, margin: '4px 0 16px 0' }}>
+          {overview?.department_name || 'Master of Computer Applications (MCA)'} · Academic Course Catalogue
+        </p>
+
+        <table className="hod-table">
+          <thead>
+            <tr>
+              <th>SUBJECT CODE</th>
+              <th>SUBJECT NAME</th>
+              <th>SEMESTER</th>
+              <th>CREDITS</th>
+              <th>ASSIGNED FACULTY</th>
+            </tr>
+          </thead>
+          <tbody>
+            {subjectDetails.map((sub) => (
+              <tr key={sub.id}>
+                <td style={{ fontWeight: 700, color: '#38bdf8' }}>{sub.code}</td>
+                <td style={{ fontWeight: 600 }}>{sub.name}</td>
+                <td>{sub.semester}</td>
+                <td>{sub.credits} Credits</td>
+                <td style={{ color: '#34d399', fontWeight: 600 }}>{sub.faculty_name}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+
+      {/* Internal Timetable Generator & Publisher */}
+      <div className="hod-card">
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+          <div>
+            <h3 className="hod-card-title" style={{ margin: 0 }}>📅 Generate & Publish Internal Exam Timetable</h3>
+            <p style={{ color: '#94a3b8', fontSize: 13, margin: '4px 0 0 0' }}>
+              Set examination dates, time slots, and room allocations. Enforces 75% attendance rule automatically.
+            </p>
+          </div>
+          <span style={{ padding: '6px 14px', borderRadius: 20, background: 'rgba(56,189,248,0.15)', color: '#38bdf8', fontWeight: 800, fontSize: 12 }}>
+            🔒 Attendance Cutoff: 75% Rule Enforced
+          </span>
+        </div>
+
+        <div style={{ marginBottom: 20 }}>
+          <label style={{ display: 'block', fontSize: 13, color: '#c4b5fd', marginBottom: 6, fontWeight: 700 }}>
+            Internal Exam Series Name:
+          </label>
+          <input
+            type="text"
+            value={examName}
+            onChange={(e) => setExamName(e.target.value)}
+            style={{ width: '100%', padding: '10px 14px', borderRadius: 8, border: '1px solid rgba(255,255,255,0.15)', background: 'rgba(0,0,0,0.4)', color: '#fff', fontSize: 14, fontWeight: 600 }}
+          />
+        </div>
+
+        {publishMsg && (
+          <p style={{ padding: '12px 16px', borderRadius: 8, background: publishMsg.includes('❌') ? 'rgba(239,68,68,0.2)' : 'rgba(16,185,129,0.2)', color: publishMsg.includes('❌') ? '#fca5a5' : '#6ee7b7', fontSize: 13, fontWeight: 700, marginBottom: 20 }}>
+            {publishMsg}
+          </p>
+        )}
+
+        <div style={{ overflowX: 'auto', marginBottom: 20 }}>
+          <table className="hod-table">
+            <thead>
+              <tr>
+                <th>SL NO</th>
+                <th>CODE</th>
+                <th>SUBJECT NAME</th>
+                <th>EXAM DATE</th>
+                <th>TIME SLOT</th>
+                <th>EXAM HALL</th>
+                <th>MAX MARKS</th>
+              </tr>
+            </thead>
+            <tbody>
+              {scheduleInputs.map((row, idx) => (
+                <tr key={idx}>
+                  <td>#{row.slNo || idx + 1}</td>
+                  <td style={{ fontWeight: 700, color: '#38bdf8' }}>{row.subjectCode}</td>
+                  <td style={{ fontWeight: 600 }}>{row.subjectName}</td>
+                  <td>
+                    <input
+                      type="date"
+                      value={row.examDate}
+                      onChange={(e) => handleScheduleChange(idx, 'examDate', e.target.value)}
+                      style={{ padding: '6px 10px', borderRadius: 6, border: '1px solid rgba(255,255,255,0.2)', background: 'rgba(0,0,0,0.5)', color: '#fff', fontSize: 13 }}
+                    />
+                  </td>
+                  <td>
+                    <input
+                      type="text"
+                      value={row.timeSlot}
+                      onChange={(e) => handleScheduleChange(idx, 'timeSlot', e.target.value)}
+                      style={{ width: 150, padding: '6px 10px', borderRadius: 6, border: '1px solid rgba(255,255,255,0.2)', background: 'rgba(0,0,0,0.5)', color: '#fff', fontSize: 13 }}
+                    />
+                  </td>
+                  <td>
+                    <input
+                      type="text"
+                      value={row.hallNo}
+                      onChange={(e) => handleScheduleChange(idx, 'hallNo', e.target.value)}
+                      style={{ width: 160, padding: '6px 10px', borderRadius: 6, border: '1px solid rgba(255,255,255,0.2)', background: 'rgba(0,0,0,0.5)', color: '#fff', fontSize: 13 }}
+                    />
+                  </td>
+                  <td>
+                    <strong>{row.totalMarks || 50} M</strong>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+
+        <button
+          onClick={handlePublishInternalTimetable}
+          style={{ width: '100%', padding: '14px', borderRadius: 10, border: 'none', background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)', color: '#fff', fontWeight: 800, fontSize: 15, cursor: 'pointer', boxShadow: '0 4px 14px rgba(16,185,129,0.3)' }}
+        >
+          🚀 Generate & Publish Internal Exam Timetable
+        </button>
+      </div>
+    </div>
+  )
+}
+
+function HodAttendanceSection() {
+  const [data, setData] = useState(null)
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    api.get('/hod/attendance')
+      .then((res) => setData(res.data))
       .catch(() => {})
       .finally(() => setLoading(false))
   }, [])
 
+  if (loading) return <p className="hod-loading">Loading student attendance data...</p>
+
+  const students = data?.students || []
+  const lowAttendanceCount = data?.lowAttendanceCount ?? 0
+  const avgDepartmentAttendance = data?.avgDepartmentAttendance ?? 85
+
   return (
-    <div className="hod-card">
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
-        <div>
-          <h3 className="hod-card-title" style={{ margin: 0 }}>📅 Department Main Examination Schedule & Hall Tickets</h3>
-          <p style={{ color: '#94a3b8', fontSize: 13, margin: '4px 0 0' }}>
-            {overview?.department_name || 'Master of Computer Applications (MCA)'} · Official Timetable for Enrolled Students
-          </p>
-        </div>
-        <button
-          onClick={() => window.print()}
-          style={{ padding: '8px 16px', borderRadius: 8, border: 'none', background: 'linear-gradient(135deg, #7c3aed 0%, #db2777 100%)', color: '#fff', fontWeight: 700, fontSize: 13, cursor: 'pointer' }}
-        >
-          📥 Print Department Timetable & Admit Cards
-        </button>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
+      {/* Attendance KPI Cards */}
+      <div className="hod-stat-grid">
+        <StatCard icon="👥" label="Total Department Students" value={data?.totalStudents || students.length} tone="blue" />
+        <StatCard icon="⚠️" label="Attendance Shortage (<75%)" value={lowAttendanceCount} tone="purple" note="Barred from Internal Exams" />
+        <StatCard icon="📊" label="Average Department Attendance" value={`${avgDepartmentAttendance}%`} tone="green" />
       </div>
 
-      {loading ? (
-        <p>Loading schedule...</p>
-      ) : (
+      {/* Student Attendance Roster & Eligibility Breakdown */}
+      <div className="hod-card">
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+          <div>
+            <h3 className="hod-card-title" style={{ margin: 0 }}>📊 Real-Time Student Attendance Monitoring</h3>
+            <p style={{ color: '#94a3b8', fontSize: 13, margin: '4px 0 0 0' }}>
+              Attendance percentages updated directly by subject faculty. Students with &lt; 75% attendance are automatically barred.
+            </p>
+          </div>
+          {lowAttendanceCount > 0 && (
+            <div style={{ background: 'rgba(239,68,68,0.2)', color: '#fca5a5', padding: '6px 14px', borderRadius: 20, fontSize: 12, fontWeight: 800, border: '1px solid rgba(239,68,68,0.4)' }}>
+              ⚠️ {lowAttendanceCount} Student(s) Below 75% Cutoff
+            </div>
+          )}
+        </div>
+
         <table className="hod-table">
           <thead>
             <tr>
-              <th>SL NO</th>
-              <th>SUBJECT CODE</th>
-              <th>SUBJECT NAME</th>
-              <th>EXAM DATE</th>
-              <th>TIME SLOT</th>
-              <th>EXAMINATION HALL</th>
-              <th>ADMIT CARD STATUS</th>
+              <th>REGISTRATION NO</th>
+              <th>STUDENT NAME</th>
+              <th>SEMESTER</th>
+              <th>OVERALL ATTENDANCE %</th>
+              <th>EXAM ELIGIBILITY</th>
             </tr>
           </thead>
           <tbody>
-            {timetable.map((row, idx) => (
-              <tr key={idx}>
-                <td>#{row.slNo}</td>
-                <td style={{ fontWeight: 700, color: '#c4b5fd' }}>{row.subjectCode}</td>
-                <td style={{ fontWeight: 600 }}>{row.subjectName}</td>
-                <td style={{ color: '#34d399', fontWeight: 700 }}>{row.examDate}</td>
-                <td>{row.timeSlot}</td>
-                <td>{row.hallNo}</td>
+            {students.map((st) => (
+              <tr key={st.studentId} style={{ background: !st.isEligible ? 'rgba(239,68,68,0.06)' : 'transparent' }}>
+                <td style={{ fontWeight: 700, color: '#38bdf8' }}>{st.registrationNo}</td>
+                <td style={{ fontWeight: 600 }}>{st.studentName}</td>
+                <td>{st.semester}</td>
+                <td style={{ fontWeight: 900, fontSize: 15, color: st.isEligible ? '#34d399' : '#f87171' }}>
+                  {st.overallPercentage}%
+                </td>
                 <td>
-                  <span style={{ padding: '3px 10px', borderRadius: 12, fontSize: 12, fontWeight: 700, background: 'rgba(52,211,153,0.15)', color: '#34d399' }}>
-                    ✓ Issued & Published
-                  </span>
+                  {st.isEligible ? (
+                    <span style={{ padding: '4px 12px', borderRadius: 12, background: 'rgba(16,185,129,0.15)', color: '#34d399', fontSize: 12, fontWeight: 800 }}>
+                      ✓ ELIGIBLE FOR INTERNALS
+                    </span>
+                  ) : (
+                    <span style={{ padding: '4px 12px', borderRadius: 12, background: 'rgba(239,68,68,0.2)', color: '#f87171', fontSize: 12, fontWeight: 800 }}>
+                      ⛔ BARRED (&lt; 75% ATTENDANCE)
+                    </span>
+                  )}
                 </td>
               </tr>
             ))}
-            {timetable.length === 0 && (
-              <tr><td colSpan={7} className="hod-empty">No exam schedule published yet for this department.</td></tr>
-            )}
           </tbody>
         </table>
-      )}
+      </div>
     </div>
   )
 }

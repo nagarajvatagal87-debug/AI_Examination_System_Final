@@ -33,9 +33,19 @@ router.post("/", requireRole("faculty", "hod"), async (req, res) => {
     const { name, code, departmentId } = req.body;
     if (!name) return res.status(400).json({ error: "name is required" });
 
+    let targetDeptId = departmentId;
+    if (!targetDeptId) {
+      const { data: prof } = await supabaseAdmin
+        .from("profiles")
+        .select("department_id")
+        .eq("id", req.user.id)
+        .maybeSingle();
+      targetDeptId = prof?.department_id || null;
+    }
+
     const { data, error } = await supabaseAdmin
       .from("subjects")
-      .insert({ name, code: code || null, department_id: departmentId || null, faculty_id: req.user.id })
+      .insert({ name, code: code || null, department_id: targetDeptId, faculty_id: req.user.id })
       .select()
       .single();
     if (error) throw error;

@@ -8,9 +8,37 @@ const { computeRankings } = require("../services/ranking.service.js");
 const { notifyResultsPublished } = require("../services/notification.service.js");
 const { storePdf, getPdfBuffer } = require("../services/pdfStore.js");
 const { evaluateWithRag } = require("../services/ragEvaluator.js");
+const { getSubjectAttendance, updateSubjectAttendance } = require("../services/academicStore.js");
 
 const router = express.Router();
 const upload = multer({ storage: multer.memoryStorage() });
+
+// GET /api/faculty/attendance?subjectId=xxx
+router.get("/attendance", async (req, res) => {
+  try {
+    const { subjectId } = req.query;
+    if (!subjectId) return res.status(400).json({ error: "subjectId is required" });
+    const records = await getSubjectAttendance(subjectId);
+    res.json(records);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// POST /api/faculty/attendance
+router.post("/attendance", async (req, res) => {
+  try {
+    const { subjectId, attendanceList } = req.body;
+    if (!subjectId || !Array.isArray(attendanceList)) {
+      return res.status(400).json({ error: "subjectId and attendanceList are required" });
+    }
+    const updated = await updateSubjectAttendance(subjectId, attendanceList);
+    res.json({ success: true, updatedCount: updated.length, records: updated });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 
 // Public iframe PDF preview stream
 router.get("/submissions/:submissionId/pdf", async (req, res) => {
@@ -77,6 +105,9 @@ router.post("/course-materials", upload.single("file"), async (req, res) => {
         file_path: path,
         uploaded_by: req.user.id,
         kind: kind === "previous_paper" ? "previous_paper" : "course_pdf",
+        published: true,
+        processed: true,
+        ingestion_status: "INDEXED",
       })
       .select()
       .single();
@@ -574,36 +605,10 @@ router.post("/subjects/:subjectId/internal-marks", async (req, res) => {
       return res.status(400).json({ error: "marks must be an array" });
     }
 
-    const rows = marks.map((m) => {
-      const i1 = Number(m.internal1 || 0);
-      const i2 = Number(m.internal2 || 0);
-      const ass = Number(m.assignment || 0);
-      const prj = Number(m.project || 0);
-      const total = i1 + i2 + ass + prj;
-      const eligible = total >= 25;
+    const { saveInternalMarks } = require("../services/internalMarksStore");
+    const saved = await saveInternalMarks(subjectId, marks);
 
-      return {
-        subject_id: subjectId,
-        student_id: m.studentId,
-        faculty_id: req.user.id,
-        internal1_marks: i1,
-        internal2_marks: i2,
-        assignment_marks: ass,
-        project_marks: prj,
-        total_internal_marks: total,
-        is_eligible: eligible,
-        status: "draft",
-        updated_at: new Date().toISOString(),
-      };
-    });
-
-    try {
-      await supabaseAdmin.from("internal_marks").upsert(rows, { onConflict: "subject_id,student_id" });
-    } catch (e) {
-      console.warn("internal_marks table upsert note:", e.message);
-    }
-
-    res.json({ status: "success", count: rows.length });
+    res.json({ status: "success", count: saved.length });
   } catch (err) {
     res.status(400).json({ error: err.message });
   }

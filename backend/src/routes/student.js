@@ -38,28 +38,58 @@ router.get("/dashboard", async (req, res) => {
   }
 });
 
-// GET /api/student/subjects -> subjects in the student's department, for the study chatbot's subject picker
+// GET /api/student/subjects -> subjects in the student's department or enrolled, for student dashboard & chatbot
 router.get("/subjects", async (req, res) => {
   try {
-    const { data: profile, error: profileError } = await supabaseAdmin
+    const studentId = req.user.id;
+    const { data: profile } = await supabaseAdmin
       .from("profiles")
       .select("department_id")
-      .eq("id", req.user.id)
-      .single();
-    if (profileError) throw profileError;
+      .eq("id", studentId)
+      .maybeSingle();
 
-    if (!profile.department_id) {
-      return res.json([]); // student has no department set yet — nothing to show
+    // 1. Get subjects explicitly assigned to this student via student_subjects table
+    let studentSubjIds = [];
+    try {
+      const { data: ss } = await supabaseAdmin
+        .from("student_subjects")
+        .select("subject_id")
+        .eq("student_id", studentId);
+      if (ss && ss.length > 0) {
+        studentSubjIds = ss.map((s) => s.subject_id);
+      }
+    } catch (e) {}
+
+    let subjects = [];
+    if (studentSubjIds.length > 0) {
+      const { data } = await supabaseAdmin
+        .from("subjects")
+        .select("id, name, code, department_id, faculty_id")
+        .in("id", studentSubjIds)
+        .order("name");
+      subjects = data || [];
     }
 
-    const { data: subjects, error } = await supabaseAdmin
-      .from("subjects")
-      .select("id, name, code")
-      .eq("department_id", profile.department_id)
-      .order("name");
-    if (error) throw error;
+    // 2. If no explicit student_subjects, fetch subjects by student's department_id
+    if (subjects.length === 0 && profile?.department_id) {
+      const { data } = await supabaseAdmin
+        .from("subjects")
+        .select("id, name, code, department_id, faculty_id")
+        .eq("department_id", profile.department_id)
+        .order("name");
+      subjects = data || [];
+    }
 
-    res.json(subjects || []);
+    // 3. Fallback: if still no subjects found, return all available subjects created by faculty
+    if (subjects.length === 0) {
+      const { data: allSubjects } = await supabaseAdmin
+        .from("subjects")
+        .select("id, name, code, department_id, faculty_id")
+        .order("name");
+      subjects = allSubjects || [];
+    }
+
+    res.json(subjects);
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
@@ -72,7 +102,6 @@ router.get("/materials", async (req, res) => {
     let query = supabaseAdmin
       .from("course_materials")
       .select("*, subjects(name, code)")
-      .eq("published", true)
       .order("created_at", { ascending: false });
 
     if (subjectId) {
@@ -226,16 +255,57 @@ router.get("/main-results", async (req, res) => {
 router.get("/internal-marks", async (req, res) => {
   try {
     const studentId = req.user.id;
-    const { data, error } = await supabaseAdmin
-      .from("internal_marks")
-      .select("*, subjects(id, name, code)")
-      .eq("student_id", studentId);
-
-    if (error) throw error;
-    res.json(data || []);
+    const { getStudentInternalMarks } = require("../services/internalMarksStore");
+    const marks = await getStudentInternalMarks(studentId);
+    res.json(marks || []);
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
 });
 
-module.exports = router;
+// GET /api/student/attendance -> student's attendance summary & subject breakdown
+router.get("/attendance", async (req, res) => {
+  try {
+    const studentId = req.user.id;
+    const { getStudentAttendanceSummary } = require("../services/academicStore.js");
+    const summary = await getStudentAttendanceSummary(studentId);
+    res.json(summary);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// GET /api/student/internal-timetable -> internal timetable with < 75% attendance eligibility restriction
+router.get("/internal-timetable", async (req, res) => {
+  try {
+    const studentId = req.user.id;
+    const { getStudentAttendanceSummary, getInternalTimetable } = require("../services/academicStore.js");
+    const summary = await getStudentAttendanceSummary(studentId);
+    const overallPct = summary.overallPercentage;
+
+    const timetableData = getInternalTimetable();
+
+    if (overallPct < 75) {
+      return res.json({
+        eligible: false,
+        attendancePercentage: overallPct,
+        minRequired: 75,
+        message: `⚠️ ATTENDANCE SHORTAGE ALERT: Your overall attendance is ${overallPct}% (Minimum required: 75%). As per academic regulations, you are NOT ELIGIBLE to view the internal examination timetable or sit for internal exams.`,
+        timetable: []
+      });
+    }
+
+    res.json({
+      eligible: true,
+      attendancePercentage: overallPct,
+      minRequired: 75,
+      examName: timetableData.examName,
+      publishedAt: timetableData.publishedAt,
+      timetable: timetableData.schedule
+    });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+module.exports = router;

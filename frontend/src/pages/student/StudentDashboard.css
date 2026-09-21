@@ -110,7 +110,7 @@
   flex: 1;
   display: flex;
   flex-direction: column;
-  background: #f1f5f9;
+  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
   overflow-y: auto;
 }
 
@@ -122,6 +122,7 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
+  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.03);
 }
 
 .search-bar-wrap {
@@ -129,10 +130,16 @@
   align-items: center;
   gap: 10px;
   background: #f8fafc;
-  border: 1px solid #e2e8f0;
+  border: 1px solid #cbd5e1;
   border-radius: 10px;
   padding: 8px 16px;
   width: 320px;
+  transition: all 0.2s ease;
+}
+
+.search-bar-wrap:focus-within {
+  border-color: #2563eb;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
 }
 
 .search-bar-wrap input {
@@ -140,7 +147,8 @@
   background: transparent !important;
   outline: none !important;
   font-size: 13px !important;
-  color: #334155 !important;
+  color: #0f172a !important;
+  font-weight: 600 !important;
   width: 100%;
 }
 
@@ -152,7 +160,7 @@
 
 .header-icon-btn {
   font-size: 18px;
-  color: #64748b;
+  color: #475569;
   cursor: pointer;
   padding: 6px;
   border-radius: 8px;
@@ -169,29 +177,31 @@
   width: 38px;
   height: 38px;
   border-radius: 50%;
-  background: #2563eb;
+  background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
   color: #ffffff;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-weight: 700;
+  font-weight: 800;
   font-size: 15px;
+  box-shadow: 0 4px 10px rgba(37, 99, 235, 0.3);
 }
 
 .user-name-title {
   font-size: 13px;
-  font-weight: 700;
+  font-weight: 800;
   color: #0f172a;
 }
 
 .user-sub-title {
   font-size: 11px;
-  color: #64748b;
+  color: #475569;
+  font-weight: 600;
 }
 
 .caret-down {
   font-size: 12px;
-  color: #94a3b8;
+  color: #64748b;
 }
 
 /* Body Content */
@@ -208,28 +218,31 @@
 }
 
 .greeting-title {
-  font-size: 22px;
-  font-weight: 800;
+  font-size: 24px;
+  font-weight: 900;
   color: #0f172a;
   margin: 0;
+  letter-spacing: -0.02em;
 }
 
 .greeting-sub {
   font-size: 13px;
-  color: #64748b;
+  color: #475569;
   margin-top: 4px;
+  font-weight: 500;
 }
 
 .motivation-quote-box {
-  background: #eff6ff;
+  background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
   border: 1px solid #bfdbfe;
-  color: #1d4ed8;
-  padding: 10px 18px;
+  color: #1e40af;
+  padding: 12px 20px;
   border-radius: 12px;
   font-size: 12px;
-  font-weight: 600;
+  font-weight: 700;
   font-style: italic;
-  max-width: 320px;
+  max-width: 340px;
+  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.08);
 }
 
 /* Stats Cards */
@@ -243,22 +256,28 @@
 .stat-box {
   background: #ffffff;
   border: 1px solid #e2e8f0;
-  border-radius: 14px;
-  padding: 20px;
+  border-radius: 16px;
+  padding: 22px;
   display: flex;
   align-items: center;
   gap: 16px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.02);
+  box-shadow: 0 8px 20px rgba(15, 23, 42, 0.04);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.stat-box:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 28px rgba(15, 23, 42, 0.08);
 }
 
 .stat-icon-square {
-  width: 44px;
-  height: 44px;
-  border-radius: 10px;
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 22px;
+  font-size: 24px;
 }
 
 .stat-box.blue .stat-icon-square { background: #eff6ff; color: #2563eb; }
@@ -266,17 +285,17 @@
 .stat-box.green .stat-icon-square { background: #ecfdf5; color: #10b981; }
 
 .stat-number {
-  font-size: 24px;
-  font-weight: 800;
+  font-size: 26px;
+  font-weight: 900;
   color: #0f172a;
   line-height: 1;
 }
 
 .stat-label {
   font-size: 12px;
-  color: #64748b;
+  color: #475569;
   margin-top: 4px;
-  font-weight: 500;
+  font-weight: 600;
 }
 
 .stat-box.progress-box {
@@ -292,10 +311,15 @@
 
 .content-card {
   background: #ffffff;
-  border: 1px solid #e2e8f0;
-  border-radius: 14px;
-  padding: 20px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.02);
+  border: 1px solid #cbd5e1;
+  border-radius: 16px;
+  padding: 22px;
+  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.04);
+  transition: border-color 0.2s ease;
+}
+
+.content-card:hover {
+  border-color: #94a3b8;
 }
 
 .card-header-line {
@@ -570,4 +594,60 @@
   font-size: 13px;
   cursor: pointer;
   align-self: flex-start;
+}
+
+/* Fix text contrast in Student Dashboard on light background */
+.eduexam-shell h1,
+.eduexam-shell h2,
+.eduexam-shell h3,
+.eduexam-shell h4,
+.eduexam-shell h5,
+.eduexam-shell h6 {
+  color: #0f172a !important;
+}
+
+.eduexam-shell p,
+.sub-detail-desc {
+  color: #475569 !important;
+}
+
+.eduexam-shell .content-card h2,
+.eduexam-shell .content-card h3,
+.eduexam-shell .content-card h4 {
+  color: #0f172a !important;
+}
+
+/* Fix input, dropdown select and text contrast overrides */
+.eduexam-shell input[type="text"],
+.eduexam-shell input[type="number"],
+.eduexam-shell input[type="email"],
+.eduexam-shell input[type="password"],
+.eduexam-shell select,
+.eduexam-shell textarea,
+.subject-dropdown-select {
+  background: #ffffff !important;
+  color: #0f172a !important;
+  border: 1px solid #cbd5e1 !important;
+  font-size: 13px !important;
+  font-weight: 600 !important;
+}
+
+.eduexam-shell input::placeholder,
+.eduexam-shell textarea::placeholder {
+  color: #94a3b8 !important;
+}
+
+/* Ensure table headers and cell text are high contrast */
+.results-data-table th {
+  color: #475569 !important;
+  font-weight: 700 !important;
+  background: #f8fafc !important;
+}
+
+.results-data-table td {
+  color: #0f172a !important;
+}
+
+.results-data-table td strong {
+  color: #0f172a !important;
 }

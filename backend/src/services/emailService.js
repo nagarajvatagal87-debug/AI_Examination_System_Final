@@ -12,7 +12,8 @@ module.exports = {
       `Hello ${studentName},\n\nNew course material "${materialTitle}" has been published for ${subjectName}.\nLog in to your Student Portal to view the document and ask questions via the Grounded AI Study Assistant.`
     );
   },
-  sendInternalResultEmail: async (toEmail, studentName, examTitle, score, maxScore) => {
+  sendInternalResultEmail: async (toEmail, studentName, examTitle, score, maxScore, subjectName = '') => {
+    const courseLabel = subjectName || 'Course Subject';
     const isPass = Number(score) >= (Number(maxScore) * 0.4);
     const html = `
       <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f1f5f9; padding: 30px 10px;">
@@ -22,9 +23,14 @@ module.exports = {
             <p style="margin: 4px 0 0 0; font-size: 12px; opacity: 0.9;">Autonomous Institute under VTU | Department of MCA</p>
           </div>
           <div style="padding: 24px; color: #334155;">
-            <h3 style="margin-top: 0; color: #1e293b; font-size: 18px;">Answer Sheet Evaluated</h3>
+            <div style="background: #eff6ff; border-left: 4px solid #2563eb; padding: 12px 16px; margin-bottom: 20px; border-radius: 0 8px 8px 0;">
+              <span style="font-size: 11px; text-transform: uppercase; color: #2563eb; font-weight: 800; letter-spacing: 0.5px;">Subject Course</span>
+              <h3 style="margin: 2px 0 0 0; color: #1e3a8a; font-size: 18px; font-weight: 800;">${courseLabel}</h3>
+            </div>
+
+            <h4 style="margin-top: 0; color: #1e293b; font-size: 16px;">Internal Evaluation Results Verified</h4>
             <p style="font-size: 14px; line-height: 1.6;">Hi <strong>${studentName}</strong>,</p>
-            <p style="font-size: 14px; line-height: 1.6;">Your answer sheet for <strong>${examTitle}</strong> has been evaluated and verified by your Subject Faculty using RAG AI Course Notes Grounding.</p>
+            <p style="font-size: 14px; line-height: 1.6;">Your answer sheet for <strong>${courseLabel}</strong> (${examTitle}) has been evaluated and verified by your Subject Faculty using RAG AI Course Notes Grounding.</p>
             
             <div style="background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 10px; padding: 20px; text-align: center; margin: 20px 0;">
               <div style="font-size: 12px; text-transform: uppercase; letter-spacing: 1px; color: #64748b; font-weight: 600;">Evaluated Score</div>
@@ -35,7 +41,7 @@ module.exports = {
             </div>
 
             <p style="font-size: 13px; line-height: 1.6; color: #64748b;">
-              <strong>RAG Grounding:</strong> Answers evaluated against official Subject Course Notes & VTU Rubric.
+              <strong>RAG Grounding:</strong> Answers evaluated against official ${courseLabel} Course Notes & VTU Rubric.
             </p>
 
             <div style="text-align: center; margin-top: 24px;">
@@ -53,8 +59,8 @@ module.exports = {
 
     return sendEmail(
       toEmail,
-      `Answer Sheet Evaluated - ${examTitle}`,
-      `Hi ${studentName},\n\nYour answer sheet for "${examTitle}" has been evaluated by your Subject Faculty.\n\nEvaluated Score: ${score} / ${maxScore}\n\nLog in to your DSATM Student Portal to view detailed question-by-question feedback.`,
+      `[${courseLabel}] Answer Sheet Evaluated - ${examTitle}`,
+      `Hi ${studentName},\n\nYour answer sheet for "${courseLabel}" (${examTitle}) has been evaluated by your Subject Faculty.\n\nEvaluated Score: ${score} / ${maxScore}\n\nLog in to your DSATM Student Portal to view detailed question-by-question feedback.`,
       html
     );
   },

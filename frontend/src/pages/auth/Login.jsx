@@ -14,8 +14,8 @@ const ROLE_LABELS = {
 }
 
 const ROLE_PRESETS = {
-  student: { email: 'ameer_test@college.edu', label: '🎓 Student Account' },
-  faculty: { email: 'faculty_demo@college.edu', label: '🛡️ Faculty Account' },
+  student: { email: '1dt25mc036@dsatm.edu.in', label: '🎓 Student Account' },
+  faculty: { email: 'priya@gmail.com', label: '🛡️ Faculty Account' },
   hod: { email: 'naga2003@gmail.com', label: '🏛️ HOD Account' },
   principal: { email: 'nagarajvatagal8@gmail.com', label: '👑 Principal Account' },
 }

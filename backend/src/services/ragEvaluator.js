@@ -24,8 +24,18 @@ async function evaluateWithRag(questionText, marks, ocrText, subjectId, studentS
   // 2. Call Groq API if GROQ_API_KEY is configured
   const groqApiKey = process.env.GROQ_API_KEY;
   if (groqApiKey) {
-    try {
-      const prompt = `You are an expert academic evaluator for DSATM University RAG Examination System.
+    const primaryEvalModel = process.env.EVALUATION_MODEL || 'openai/gpt-oss-120b';
+    const primaryVisionModel = process.env.VISION_MODEL || 'qwen/qwen3.8-27b';
+    const modelsToTry = [
+      primaryEvalModel,
+      primaryVisionModel,
+      'qwen-2.5-32b',
+      'llama-3.3-70b-versatile',
+      'llama-3.1-8b-instant'
+    ];
+    for (const modelId of modelsToTry) {
+      try {
+        const prompt = `You are an expert academic evaluator for DSATM University RAG Examination System.
 Evaluate this specific student's handwritten answer sheet against the uploaded subject course notes.
 
 QUESTION (${marks} Marks): ${questionText}
@@ -42,37 +52,38 @@ CRITICAL RAG EVALUATION INSTRUCTIONS:
 - DO NOT return a fixed or generic score for all students. Differentiate good answers from partial answers based on notes context.
 - Return ONLY a JSON object: {"suggested_marks": number, "confidence": number, "evidence": string}. No markdown fences.`;
 
-      const response = await axios.post(
-        'https://api.groq.com/openai/v1/chat/completions',
-        {
-          model: 'llama-3.3-70b-versatile',
-          messages: [{ role: 'user', content: prompt }],
-          temperature: 0.4,
-          response_format: { type: 'json_object' },
-        },
-        {
-          headers: {
-            Authorization: `Bearer ${groqApiKey}`,
-            'Content-Type': 'application/json',
+        const response = await axios.post(
+          'https://api.groq.com/openai/v1/chat/completions',
+          {
+            model: modelId,
+            messages: [{ role: 'user', content: prompt }],
+            temperature: 0.4,
+            response_format: { type: 'json_object' },
           },
-          timeout: 10000,
-        }
-      );
+          {
+            headers: {
+              Authorization: `Bearer ${groqApiKey}`,
+              'Content-Type': 'application/json',
+            },
+            timeout: 15000,
+          }
+        );
 
-      const content = response.data?.choices?.[0]?.message?.content;
-      if (content) {
-        const parsed = JSON.parse(content);
-        const score = Number(parsed.suggested_marks);
-        if (!isNaN(score)) {
-          return {
-            suggested_marks: Math.max(1, Math.min(marks, Math.round(score * 10) / 10)),
-            confidence: Number(parsed.confidence || 0.93),
-            evidence: String(parsed.evidence || `RAG Grounded Review: Answer evaluated against subject course notes. Partial credit assigned.`),
-          };
+        const content = response.data?.choices?.[0]?.message?.content;
+        if (content) {
+          const parsed = JSON.parse(content);
+          const score = Number(parsed.suggested_marks);
+          if (!isNaN(score)) {
+            return {
+              suggested_marks: Math.max(1, Math.min(marks, Math.round(score * 10) / 10)),
+              confidence: Number(parsed.confidence || 0.93),
+              evidence: String(parsed.evidence || `RAG Grounded Review: Answer evaluated against subject course notes. Partial credit assigned.`),
+            };
+          }
         }
+      } catch (err) {
+        console.warn(`Groq RAG evaluation note with model ${modelId}:`, err.message);
       }
-    } catch (err) {
-      console.warn('Groq RAG evaluation note:', err.message);
     }
   }
 
