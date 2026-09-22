@@ -68,14 +68,16 @@ export default function FacultyLayout() {
             <div className="fl-brand-text">Faculty Portal<br /><span style={{ fontSize: 11, color: 'var(--text-sub)' }}>Academic LMS & AI</span></div>
           </div>
 
-          <div className="fl-profile">
-            <div className="fl-avatar">
-              {user?.avatarUrl ? <img src={user.avatarUrl} alt="" /> : (facultyName[0] || 'F')}
+          <NavLink to="/faculty/settings" style={{ textDecoration: 'none' }}>
+            <div className="fl-profile" style={{ cursor: 'pointer' }}>
+              <div className="fl-avatar" style={{ overflow: 'hidden', padding: 0 }}>
+                {user?.avatarUrl ? <img src={user.avatarUrl} alt="Avatar" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : (facultyName[0] || 'F')}
+              </div>
+              <div className="fl-profile-name">{facultyName}</div>
+              <div className="fl-profile-role">Assistant Professor · {user?.departmentName || 'MCA'}</div>
+              <div className="fl-online"><span className="fl-dot" /> Online</div>
             </div>
-            <div className="fl-profile-name">{facultyName}</div>
-            <div className="fl-profile-role">Assistant Professor · {user?.departmentName || 'MCA'}</div>
-            <div className="fl-online"><span className="fl-dot" /> Online</div>
-          </div>
+          </NavLink>
 
           <nav className="fl-nav">
             {NAV_ITEMS.map((item) => (

@@ -46,9 +46,9 @@ async function getSubjectInternalMarks(subjectId) {
 
     const i1 = Number(rec.internal1_marks ?? 0);
     const i2 = Number(rec.internal2_marks ?? 0);
+    const i3 = Number(rec.internal3_marks ?? rec.project_marks ?? 0);
     const ass = Number(rec.assignment_marks ?? 0);
-    const proj = Number(rec.project_marks ?? 0);
-    const tot = i1 + i2 + ass + proj;
+    const tot = i1 + i2 + i3 + ass;
     const isEligible = tot >= 25;
 
     return {
@@ -57,8 +57,8 @@ async function getSubjectInternalMarks(subjectId) {
       student_id: s.id,
       internal1_marks: i1,
       internal2_marks: i2,
+      internal3_marks: i3,
       assignment_marks: ass,
-      project_marks: proj,
       total_internal_marks: tot,
       is_eligible: isEligible,
       status: rec.status || subjectStatus,
@@ -72,9 +72,9 @@ async function saveInternalMarks(subjectId, marksArray) {
   const rows = marksArray.map((m) => {
     const i1 = Number(m.internal1 || m.internal1_marks || 0);
     const i2 = Number(m.internal2 || m.internal2_marks || 0);
+    const i3 = Number(m.internal3 || m.internal3_marks || m.project || m.project_marks || 0);
     const ass = Number(m.assignment || m.assignment_marks || 0);
-    const proj = Number(m.project || m.project_marks || 0);
-    const tot = i1 + i2 + ass + proj;
+    const tot = i1 + i2 + i3 + ass;
     const isEligible = tot >= 25;
 
     return {
@@ -82,8 +82,8 @@ async function saveInternalMarks(subjectId, marksArray) {
       student_id: m.studentId || m.student_id,
       internal1_marks: i1,
       internal2_marks: i2,
+      internal3_marks: i3,
       assignment_marks: ass,
-      project_marks: proj,
       total_internal_marks: tot,
       is_eligible: isEligible,
       status: "draft",

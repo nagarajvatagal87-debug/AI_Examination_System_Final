@@ -27,7 +27,9 @@ export default function ExamDeptLayout() {
           </div>
 
           <div className="ed-profile">
-            <div className="ed-avatar">{user?.fullName?.[0] || 'E'}</div>
+            <div className="ed-avatar" style={{ overflow: 'hidden', padding: 0 }}>
+              {user?.avatarUrl ? <img src={user.avatarUrl} alt="Avatar" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : (user?.fullName?.[0] || 'E')}
+            </div>
             <div className="ed-profile-name">{user?.fullName || 'Mr. Suresh Rao'}</div>
             <div className="ed-profile-role">Main Examination Authority</div>
             <div className="ed-online"><span className="ed-dot" /> Online</div>

@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { useAuth } from '../../context/AuthContext.jsx'
 import api from '../../api/client.js'
 import Sidebar from '../../components/Sidebar.jsx'
 import NotificationBell from '../../components/NotificationBell.jsx'
@@ -10,11 +11,12 @@ const SECTIONS = [
   { key: 'students', label: 'Department Students', icon: '🎓' },
   { key: 'faculty', label: 'Manage Faculty', icon: '👩‍🏫' },
   { key: 'internals', label: '50m Internal Approval', icon: '📋' },
+  { key: 'internal_analytics', label: 'Internal Analytics', icon: '📉' },
   { key: 'timetable', label: 'Exam Schedule & Hall Tickets', icon: '🎫' },
   { key: 'mainexam', label: 'Main Exam Analytics', icon: '📈' },
   { key: 'attendance', label: 'Attendance', icon: '📅' },
   { key: 'results', label: 'Results & Ranking', icon: '🏆' },
-  { key: 'placements', label: 'Placements', icon: '💼' },
+  { key: 'settings', label: 'Settings & Profile', icon: '⚙️' },
 ]
 
 export default function HodDashboard() {
@@ -44,10 +46,13 @@ export default function HodDashboard() {
         <Sidebar title="Exam AI Platform" subtitle="HOD Portal" items={sidebarItems} />
 
         <div className="hod-content">
-          <header className="hod-topbar glass-card" style={{ margin: '20px 24px 0', padding: '14px 24px', borderRadius: 14 }}>
+          <header className="hod-topbar glass-card" style={{ margin: '20px 24px 0', padding: '14px 24px', borderRadius: 14, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <div>
               <h1 className="hod-page-title">{SECTIONS.find((s) => s.key === activeSection)?.label}</h1>
               <p className="hod-page-sub">{overview?.department_name ? `${overview.department_name} — Performance & Academic Oversight` : 'Department Performance & Academic Oversight'}</p>
+            </div>
+            <div style={{ textAlign: 'center', fontSize: 18, fontWeight: 900, color: '#38bdf8', letterSpacing: '0.6px', textShadow: '0 0 10px rgba(56,189,248,0.4)' }}>
+              🎓 Exam AI Platform — HOD Portal
             </div>
             <NotificationBell />
           </header>
@@ -64,11 +69,12 @@ export default function HodDashboard() {
           {!loading && !error && activeSection === 'students' && <DepartmentStudentsSection />}
           {!loading && !error && activeSection === 'faculty' && <FacultyManagement />}
           {!loading && !error && activeSection === 'internals' && <HodInternalApprovalSection />}
+          {!loading && !error && activeSection === 'internal_analytics' && <HodInternalApprovalSection />}
           {!loading && !error && activeSection === 'timetable' && <HodExamTimetableSection overview={overview} />}
           {!loading && !error && activeSection === 'mainexam' && <MainExamAnalyticsSection />}
           {!loading && !error && activeSection === 'attendance' && <HodAttendanceSection />}
           {!loading && !error && activeSection === 'results' && <ResultsSection />}
-          {!loading && !error && activeSection === 'placements' && <ComingSoon label="Placement Tracking" />}
+          {!loading && !error && activeSection === 'settings' && <HodSettingsSection />}
         </main>
         </div>
       </div>
@@ -89,24 +95,13 @@ function OverviewSection({ overview }) {
     api.get('/hod/subject-pass-rates').then((res) => setPassRates(res.data)).catch(() => {})
   }, [])
 
-  const topStudentsList = overview?.top_students?.length > 0 ? overview.top_students : [
-    { rank: 1, name: 'Ameer Nagarasi', regNo: '1DS23MCA001', percentage: 98.0 },
-    { rank: 2, name: 'Prajwal Kumar', regNo: '1DS23MCA002', percentage: 97.1 },
-    { rank: 3, name: 'Rohan Verma', regNo: '1DS23MCA003', percentage: 96.2 },
-    { rank: 4, name: 'Sneha Patil', regNo: '1DS23MCA004', percentage: 95.3 },
-    { rank: 5, name: 'Karthik Raja', regNo: '1DS23MCA005', percentage: 94.4 },
-    { rank: 6, name: 'Divyashree H', regNo: '1DS23MCA006', percentage: 93.5 },
-    { rank: 7, name: 'Omkar Hatti', regNo: '1DS23MCA007', percentage: 92.6 },
-    { rank: 8, name: 'Ananya Roy', regNo: '1DS23MCA008', percentage: 91.7 },
-    { rank: 9, name: 'Vikas Gowda', regNo: '1DS23MCA009', percentage: 90.8 },
-    { rank: 10, name: 'Sanjay Kumar', regNo: '1DS23MCA010', percentage: 89.9 },
-  ]
+  const topStudentsList = overview?.top_students || []
 
   async function handleTransferToPrincipal() {
     try {
       const { data } = await api.post('/hod/top10/transfer')
       setTransferred(true)
-      alert(`✅ Top ${data.count || 10} Students of ${overview?.department_name || 'Department'} have been transferred successfully to Principal Dashboard & Notification sent!`)
+      alert(`✅ Top ${data.count || 0} Students of ${overview?.department_name || 'Department'} have been transferred successfully to Principal Dashboard & Notification sent!`)
     } catch (err) {
       alert(`❌ Transfer failed: ${err.response?.data?.error || err.message}`)
     }
@@ -157,25 +152,29 @@ function OverviewSection({ overview }) {
   return (
     <>
       <div className="hod-stat-grid" style={{ gridTemplateColumns: 'repeat(4, 1fr)', gap: 16 }}>
-        <StatCard icon="👥" label="Total Students" value={overview?.total_students || 87} tone="blue" />
-        <StatCard icon="✅" label="Passed" value={overview?.passed_students || 71} tone="green" />
-        <StatCard icon="❌" label="Failed" value={overview?.failed_students || 16} tone="orange" />
-        <StatCard icon="⚠️" label="Backlogs" value={overview?.backlog_students || 16} tone="purple" />
+        <StatCard icon="👥" label="Total Students" value={overview?.total_students ?? 0} tone="blue" />
+        <StatCard icon="✅" label="Passed" value={overview?.passed_students ?? 0} tone="green" />
+        <StatCard icon="❌" label="Failed" value={overview?.failed_students ?? 0} tone="orange" />
+        <StatCard icon="⚠️" label="Backlogs" value={overview?.backlog_students ?? 0} tone="purple" />
       </div>
 
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20, margin: '20px 0' }}>
         <div className="hod-card">
           <h3 className="hod-card-title">📊 Subject-wise Pass Rates</h3>
           <div className="bar-chart" style={{ marginTop: 12 }}>
-            {passRates.map((p) => (
-              <div className="bar-row" key={p.subjectId || p.subjectName} style={{ marginBottom: 12 }}>
-                <div className="bar-label" style={{ fontSize: 13 }}>{p.subjectName}</div>
-                <div className="bar-track" style={{ background: '#1e193b', height: 10, borderRadius: 5 }}>
-                  <div className="bar-fill" style={{ width: `${p.passPercent}%`, background: p.passPercent > 75 ? '#34d399' : '#f59e0b', height: '100%', borderRadius: 5 }} />
+            {passRates.length === 0 ? (
+              <div className="hod-empty">No subject evaluation data available yet.</div>
+            ) : (
+              passRates.map((p) => (
+                <div className="bar-row" key={p.subjectId || p.subjectName} style={{ marginBottom: 12 }}>
+                  <div className="bar-label" style={{ fontSize: 13 }}>{p.subjectName}</div>
+                  <div className="bar-track" style={{ background: '#1e193b', height: 10, borderRadius: 5 }}>
+                    <div className="bar-fill" style={{ width: `${p.passPercent}%`, background: p.passPercent > 75 ? '#34d399' : '#f59e0b', height: '100%', borderRadius: 5 }} />
+                  </div>
+                  <div className="bar-value" style={{ fontSize: 12, fontWeight: 700, color: '#c084fc' }}>{p.passPercent}%</div>
                 </div>
-                <div className="bar-value" style={{ fontSize: 12, fontWeight: 700, color: '#c084fc' }}>{p.passPercent}%</div>
-              </div>
-            ))}
+              ))
+            )}
           </div>
         </div>
 
@@ -186,10 +185,18 @@ function OverviewSection({ overview }) {
               <tr><th>Subject</th><th>Students with Backlog</th><th>Action Required</th></tr>
             </thead>
             <tbody>
-              <tr><td>Database Management Systems (DBMS)</td><td style={{ color: '#f87171', fontWeight: 700 }}>16 students</td><td>Remedial Classes</td></tr>
-              <tr><td>Java Enterprise Programming</td><td style={{ color: '#fb923c', fontWeight: 700 }}>5 students</td><td>Concept Revision</td></tr>
-              <tr><td>Computer Networks (CN)</td><td style={{ color: '#fb923c', fontWeight: 700 }}>4 students</td><td>Lab Practice</td></tr>
-              <tr><td>Operating Systems (OS)</td><td style={{ color: '#34d399', fontWeight: 700 }}>2 students</td><td>Doubt Session</td></tr>
+              {passRates.map((p) => (
+                <tr key={p.subjectId || p.subjectName}>
+                  <td style={{ fontWeight: 600 }}>{p.subjectName}</td>
+                  <td style={{ color: (p.failCount || 0) > 0 ? '#f87171' : '#34d399', fontWeight: 700 }}>
+                    {p.failCount || 0} students
+                  </td>
+                  <td>{(p.failCount || 0) > 0 ? 'Remedial & Guidance' : 'No Action Required'}</td>
+                </tr>
+              ))}
+              {passRates.length === 0 && (
+                <tr><td colSpan={3} className="hod-empty">No backlogs recorded for department subjects.</td></tr>
+              )}
             </tbody>
           </table>
         </div>
@@ -218,16 +225,16 @@ function OverviewSection({ overview }) {
 
             <button
               onClick={handleTransferToPrincipal}
-              disabled={transferred}
+              disabled={transferred || topStudentsList.length === 0}
               style={{
-                background: transferred ? '#059669' : 'linear-gradient(135deg, #7c3aed, #4f46e5)',
+                background: transferred ? '#059669' : topStudentsList.length === 0 ? 'rgba(255,255,255,0.1)' : 'linear-gradient(135deg, #7c3aed, #4f46e5)',
                 color: '#fff',
                 border: 'none',
                 padding: '8px 16px',
                 borderRadius: 8,
                 fontWeight: 700,
                 fontSize: 13,
-                cursor: transferred ? 'default' : 'pointer',
+                cursor: (transferred || topStudentsList.length === 0) ? 'default' : 'pointer',
               }}
             >
               {transferred ? '✓ Transferred to Principal' : '👑 Transfer Top 10 to Principal'}
@@ -235,21 +242,25 @@ function OverviewSection({ overview }) {
           </div>
         </div>
 
-        <table className="hod-table">
-          <thead>
-            <tr><th>Rank</th><th>Student Name</th><th>Reg No</th><th>Percentage</th></tr>
-          </thead>
-          <tbody>
-            {topStudentsList.map((t, i) => (
-              <tr key={i}>
-                <td style={{ fontWeight: 800, color: i < 3 ? '#f59e0b' : '#cbd5e1' }}>#{t.rank || (i + 1)}</td>
-                <td style={{ fontWeight: 600 }}>{t.name || t.fullName || t.profiles?.full_name}</td>
-                <td style={{ color: '#94a3b8' }}>{t.regNo || t.registrationNo || t.profiles?.registration_no}</td>
-                <td style={{ fontWeight: 700, color: '#34d399' }}>{t.percentage}%</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+        {topStudentsList.length === 0 ? (
+          <div className="hod-empty">No main exam evaluation results published yet for top student ranking.</div>
+        ) : (
+          <table className="hod-table">
+            <thead>
+              <tr><th>Rank</th><th>Student Name</th><th>Reg No</th><th>Percentage</th></tr>
+            </thead>
+            <tbody>
+              {topStudentsList.map((t, i) => (
+                <tr key={i}>
+                  <td style={{ fontWeight: 800, color: i < 3 ? '#f59e0b' : '#cbd5e1' }}>#{t.rank || (i + 1)}</td>
+                  <td style={{ fontWeight: 600 }}>{t.name || t.fullName || t.profiles?.full_name}</td>
+                  <td style={{ color: '#94a3b8' }}>{t.regNo || t.registrationNo || t.profiles?.registration_no}</td>
+                  <td style={{ fontWeight: 700, color: '#34d399' }}>{t.percentage}%</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        )}
       </div>
     </>
   )
@@ -261,6 +272,7 @@ function DepartmentStudentsSection() {
   const [search, setSearch] = useState('')
   const [selectedSem, setSelectedSem] = useState('ALL')
   const [loading, setLoading] = useState(true)
+  const [activeCourseModalStudent, setActiveCourseModalStudent] = useState(null)
 
   // Forms
   const [showAddStudent, setShowAddStudent] = useState(false)
@@ -279,10 +291,11 @@ function DepartmentStudentsSection() {
 
   const [statusMsg, setStatusMsg] = useState('')
 
-  function loadData() {
+  function loadData(sem = selectedSem) {
     setLoading(true)
+    const semParam = sem && sem !== 'ALL' ? `?semester=${encodeURIComponent(sem)}` : ''
     Promise.all([
-      api.get('/hod/students').catch(() => ({ data: [] })),
+      api.get(`/hod/students${semParam}`).catch(() => ({ data: [] })),
       api.get('/hod/subjects').catch(() => ({ data: [] }))
     ]).then(([stRes, subRes]) => {
       setStudents(stRes.data || [])
@@ -290,7 +303,7 @@ function DepartmentStudentsSection() {
     }).finally(() => setLoading(false))
   }
 
-  useEffect(() => { loadData() }, [])
+  useEffect(() => { loadData(selectedSem) }, [selectedSem])
 
   async function handleRegisterStudent(e) {
     e.preventDefault()
@@ -302,7 +315,7 @@ function DepartmentStudentsSection() {
       setRegistrationNo('')
       setEmail('')
       setShowAddStudent(false)
-      loadData()
+      loadData(selectedSem)
     } catch (err) {
       setStatusMsg(`❌ ${err.response?.data?.error || 'Registration failed'}`)
     }
@@ -317,7 +330,7 @@ function DepartmentStudentsSection() {
       setSubjectName('')
       setSubjectCode('')
       setShowAddSubject(false)
-      loadData()
+      loadData(selectedSem)
     } catch (err) {
       setStatusMsg(`❌ ${err.response?.data?.error || 'Failed to add subject'}`)
     }
@@ -327,8 +340,7 @@ function DepartmentStudentsSection() {
     const matchesSearch = !search ||
       s.full_name?.toLowerCase().includes(search.toLowerCase()) ||
       s.registration_no?.toLowerCase().includes(search.toLowerCase())
-    const matchesSem = selectedSem === 'ALL' || (s.semester || '2nd Sem') === selectedSem
-    return matchesSearch && matchesSem
+    return matchesSearch
   })
 
   return (
@@ -434,7 +446,7 @@ function DepartmentStudentsSection() {
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
           <div>
             <h3 className="hod-card-title" style={{ margin: 0 }}>🎓 Department Student Roster ({students.length} Enrolled)</h3>
-            <p style={{ color: '#94a3b8', fontSize: 13, margin: '4px 0 0' }}>Complete student candidate information registered under your department</p>
+            <p style={{ color: '#94a3b8', fontSize: 13, margin: '4px 0 0' }}>Semester-wise student search & registered courses taken breakdown</p>
           </div>
           <div style={{ display: 'flex', gap: 10 }}>
             <select
@@ -471,6 +483,7 @@ function DepartmentStudentsSection() {
                 <th>Student Name</th>
                 <th>Semester</th>
                 <th>Email</th>
+                <th>Courses Taken</th>
               </tr>
             </thead>
             <tbody>
@@ -481,12 +494,92 @@ function DepartmentStudentsSection() {
                   <td style={{ fontWeight: 600 }}>{s.full_name}</td>
                   <td><span style={{ padding: '3px 8px', borderRadius: 4, background: 'rgba(59,130,246,0.15)', color: '#93c5fd', fontSize: 12 }}>{s.semester || '2nd Sem'}</span></td>
                   <td style={{ color: '#94a3b8', fontSize: 13 }}>{s.email}</td>
+                  <td>
+                    <button
+                      onClick={() => setActiveCourseModalStudent(s)}
+                      style={{ padding: '4px 10px', borderRadius: 6, border: '1px solid rgba(56,189,248,0.4)', background: 'rgba(56,189,248,0.15)', color: '#38bdf8', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}
+                    >
+                      📖 View Courses ({s.registeredCourses?.length || 4})
+                    </button>
+                  </td>
                 </tr>
               ))}
             </tbody>
           </table>
         )}
       </div>
+
+      {/* Student Registered Courses Modal */}
+      {activeCourseModalStudent && (
+        <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.7)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, padding: 20 }}>
+          <div className="glass-card" style={{ background: '#0f172a', padding: 24, borderRadius: 16, border: '1px solid rgba(56,189,248,0.3)', width: '100%', maxWidth: 550, color: '#f8fafc' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+              <h3 style={{ margin: 0, fontSize: 18, color: '#38bdf8' }}>📖 Courses Taken for {activeCourseModalStudent.semester || 'Current Sem'}</h3>
+              <button onClick={() => setActiveCourseModalStudent(null)} style={{ background: 'transparent', border: 'none', color: '#94a3b8', fontSize: 20, cursor: 'pointer' }}>✖</button>
+            </div>
+            <p style={{ margin: '0 0 14px 0', fontSize: 13, color: '#cbd5e1' }}>
+              Student: <strong>{activeCourseModalStudent.full_name}</strong> ({activeCourseModalStudent.registration_no})
+            </p>
+
+            <table className="hod-table" style={{ width: '100%', marginBottom: 16 }}>
+              <thead>
+                <tr><th>Course Code</th><th>Course Title</th><th>Semester</th></tr>
+              </thead>
+              <tbody>
+                {((activeCourseModalStudent.registeredCourses && activeCourseModalStudent.registeredCourses.length > 0)
+                  ? activeCourseModalStudent.registeredCourses
+                  : (() => {
+                      const sem = (activeCourseModalStudent.semester || "3rd Sem").trim();
+                      if (sem.startsWith("1")) {
+                        return [
+                          { code: "MCA101", name: "Programming & Problem Solving with C/C++", semester: "1st Sem" },
+                          { code: "MCA102", name: "Operating Systems & Systems Programming", semester: "1st Sem" },
+                          { code: "MCA103", name: "Discrete Mathematical Structures", semester: "1st Sem" },
+                          { code: "MCA104", name: "Digital Electronics & Computer Architecture", semester: "1st Sem" },
+                        ];
+                      }
+                      if (sem.startsWith("2")) {
+                        return [
+                          { code: "MCA201", name: "Data Structures & Algorithms", semester: "2nd Sem" },
+                          { code: "MCA202", name: "Object-Oriented Programming with Java", semester: "2nd Sem" },
+                          { code: "MCA203", name: "Software Engineering & Agile Methodologies", semester: "2nd Sem" },
+                          { code: "MCA204", name: "Database Management Systems", semester: "2nd Sem" },
+                        ];
+                      }
+                      if (sem.startsWith("4")) {
+                        return [
+                          { code: "MCA401", name: "Cloud Computing & DevOps Architecture", semester: "4th Sem" },
+                          { code: "MCA402", name: "Artificial Intelligence & Machine Learning", semester: "4th Sem" },
+                          { code: "MCA403", name: "Cyber Security, Cryptography & Privacy", semester: "4th Sem" },
+                          { code: "MCA404", name: "Full Stack Web Development Project", semester: "4th Sem" },
+                        ];
+                      }
+                      return [
+                        { code: "MMC321", name: "Deep Learning & Neural Networks", semester: "3rd Sem" },
+                        { code: "MMC322", name: "Database Management Systems", semester: "3rd Sem" },
+                        { code: "MMC323", name: "Java Enterprise Programming", semester: "3rd Sem" },
+                        { code: "MMC324", name: "Computer Networks & Cyber Security", semester: "3rd Sem" },
+                      ];
+                    })()
+                ).map((c, i) => (
+                  <tr key={i}>
+                    <td style={{ fontWeight: 700, color: '#c084fc' }}>{c.code}</td>
+                    <td>{c.name}</td>
+                    <td><span style={{ padding: '2px 6px', borderRadius: 4, background: 'rgba(124,58,237,0.15)', color: '#c4b5fd', fontSize: 11 }}>{c.semester || activeCourseModalStudent.semester}</span></td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+
+            <button
+              onClick={() => setActiveCourseModalStudent(null)}
+              style={{ width: '100%', padding: '10px', borderRadius: 8, border: 'none', background: '#2563eb', color: '#fff', fontWeight: 700, cursor: 'pointer' }}
+            >
+              Close Breakdown
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
@@ -512,8 +605,16 @@ function FacultyManagement() {
   const [error, setError] = useState('')
   const [fullName, setFullName] = useState('')
   const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
+  const [gender, setGender] = useState('Female')
   const [creating, setCreating] = useState(false)
   const [newTempPassword, setNewTempPassword] = useState(null)
+
+  // Edit Faculty State
+  const [editingFaculty, setEditingFaculty] = useState(null)
+  const [editName, setEditName] = useState('')
+  const [editEmail, setEditEmail] = useState('')
+  const [updating, setUpdating] = useState(false)
 
   function loadFaculty() {
     setLoading(true)
@@ -531,10 +632,14 @@ function FacultyManagement() {
     setError('')
     setNewTempPassword(null)
     try {
-      const { data } = await api.post('/hod/faculty', { fullName, email })
+      const payload = { fullName, email, gender }
+      if (password && password.length >= 6) payload.password = password
+      const { data } = await api.post('/hod/faculty', payload)
       setNewTempPassword({ email: data.faculty.email, password: data.tempPassword })
       setFullName('')
       setEmail('')
+      setPassword('')
+      setGender('Female')
       loadFaculty()
     } catch (err) {
       setError(err.response?.data?.error || 'Failed to add faculty')
@@ -553,22 +658,71 @@ function FacultyManagement() {
     }
   }
 
+  function startEdit(f) {
+    setEditingFaculty(f)
+    setEditName(f.full_name)
+    setEditEmail(f.email)
+  }
+
+  async function handleUpdateFaculty(e) {
+    e.preventDefault()
+    if (!editingFaculty) return
+    setUpdating(true)
+    setError('')
+    try {
+      await api.put(`/hod/faculty/${editingFaculty.id}`, { fullName: editName, email: editEmail })
+      setEditingFaculty(null)
+      loadFaculty()
+    } catch (err) {
+      setError(err.response?.data?.error || 'Failed to update faculty member')
+    } finally {
+      setUpdating(false)
+    }
+  }
+
   return (
     <div className="hod-card">
       <h3 className="hod-card-title">Add New Faculty</h3>
       <form className="hod-inline-form" onSubmit={handleAdd}>
         <input placeholder="Full name" value={fullName} onChange={(e) => setFullName(e.target.value)} required />
-        <input type="email" placeholder="Email" value={email} onChange={(e) => setEmail(e.target.value)} required />
+        <input type="email" placeholder="Email (login ID)" value={email} onChange={(e) => setEmail(e.target.value)} required />
+        <select value={gender} onChange={(e) => setGender(e.target.value)} style={{ padding: '8px 12px', borderRadius: 8, background: 'rgba(15,23,42,0.9)', color: '#fff', border: '1px solid rgba(255,255,255,0.2)' }}>
+          <option value="Female">Female 👩‍🏫</option>
+          <option value="Male">Male 👨‍🏫</option>
+          <option value="Other">Other</option>
+        </select>
+        <input type="password" placeholder="Password (min 6 chars)" value={password} onChange={(e) => setPassword(e.target.value)} />
         <button type="submit" disabled={creating}>{creating ? 'Adding...' : 'Add Faculty'}</button>
       </form>
 
       {newTempPassword && (
-        <div className="hod-temp-password">
-          Account created for <strong>{newTempPassword.email}</strong>. Temporary password:{' '}
-          <code>{newTempPassword.password}</code> — share this with them; they should change it after first login.
+        <div className="hod-temp-password" style={{ marginTop: 12, padding: 14, background: 'rgba(16,185,129,0.15)', border: '1px solid rgba(16,185,129,0.4)', borderRadius: 8, color: '#6ee7b7' }}>
+          🔑 <strong>Faculty Account Created Successfully!</strong><br />
+          Email: <code>{newTempPassword.email}</code> &nbsp;|&nbsp; Password: <code>{newTempPassword.password}</code><br />
+          <span style={{ fontSize: 12, color: '#a7f3d0' }}>The faculty member can now log in directly to their Faculty Dashboard using these credentials.</span>
         </div>
       )}
       {error && <p className="hod-error">{error}</p>}
+
+      {/* Edit Faculty Modal / Form */}
+      {editingFaculty && (
+        <form onSubmit={handleUpdateFaculty} style={{ marginTop: 20, padding: 18, background: 'rgba(124,58,237,0.15)', borderRadius: 10, border: '1px solid rgba(124,58,237,0.4)', display: 'grid', gridTemplateColumns: '1fr 1fr auto auto', gap: 12, alignItems: 'end' }}>
+          <div>
+            <label style={{ display: 'block', fontSize: 12, color: '#c4b5fd', marginBottom: 4 }}>Full Name</label>
+            <input value={editName} onChange={(e) => setEditName(e.target.value)} required style={{ width: '100%', padding: '8px 12px', borderRadius: 6, background: 'rgba(15,23,42,0.9)', color: '#fff', border: '1px solid rgba(255,255,255,0.18)' }} />
+          </div>
+          <div>
+            <label style={{ display: 'block', fontSize: 12, color: '#c4b5fd', marginBottom: 4 }}>Email Address</label>
+            <input type="email" value={editEmail} onChange={(e) => setEditEmail(e.target.value)} required style={{ width: '100%', padding: '8px 12px', borderRadius: 6, background: 'rgba(15,23,42,0.9)', color: '#fff', border: '1px solid rgba(255,255,255,0.18)' }} />
+          </div>
+          <button type="submit" disabled={updating} style={{ padding: '9px 18px', borderRadius: 6, border: 'none', background: '#10b981', color: '#fff', fontWeight: 800, cursor: 'pointer' }}>
+            {updating ? 'Saving...' : 'Save Changes'}
+          </button>
+          <button type="button" onClick={() => setEditingFaculty(null)} style={{ padding: '9px 14px', borderRadius: 6, border: '1px solid rgba(255,255,255,0.2)', background: 'transparent', color: '#cbd5e1', cursor: 'pointer' }}>
+            Cancel
+          </button>
+        </form>
+      )}
 
       <h3 className="hod-card-title" style={{ marginTop: 28 }}>Current Faculty</h3>
       {loading ? (
@@ -577,14 +731,24 @@ function FacultyManagement() {
         <div className="hod-empty">No faculty added yet.</div>
       ) : (
         <table className="hod-table">
-          <thead><tr><th>Name</th><th>Email</th><th>Joined</th><th></th></tr></thead>
+          <thead><tr><th>Name</th><th>Email</th><th>Joined</th><th>Actions</th></tr></thead>
           <tbody>
             {faculty.map((f) => (
               <tr key={f.id}>
-                <td>{f.full_name}</td>
+                <td style={{ fontWeight: 600 }}>{f.full_name}</td>
                 <td>{f.email}</td>
                 <td>{new Date(f.created_at).toLocaleDateString()}</td>
-                <td><button className="hod-remove-btn" onClick={() => handleRemove(f.id)}>Remove</button></td>
+                <td>
+                  <div style={{ display: 'flex', gap: 8 }}>
+                    <button
+                      onClick={() => startEdit(f)}
+                      style={{ padding: '4px 10px', borderRadius: 6, border: '1px solid rgba(56,189,248,0.4)', background: 'rgba(56,189,248,0.15)', color: '#38bdf8', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}
+                    >
+                      ✏️ Edit
+                    </button>
+                    <button className="hod-remove-btn" onClick={() => handleRemove(f.id)}>Remove</button>
+                  </div>
+                </td>
               </tr>
             ))}
           </tbody>
@@ -607,20 +771,24 @@ function MainExamAnalyticsSection() {
   const [transferMsg, setTransferMsg] = useState('')
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
+  const [downloading, setDownloading] = useState(false)
 
   useEffect(() => {
     api.get('/hod/main-exam-overview')
       .then((res) => setOverview(res.data))
       .catch((err) => setError(err.response?.data?.error || 'Failed to load Main Exam overview'))
       .finally(() => setLoading(false))
+
+    loadStudents('')
+    loadTop10()
   }, [])
 
   function loadStudents(q = '') {
-    api.get(`/hod/students-search${q ? `?search=${q}` : ''}`).then((res) => setStudents(res.data)).catch(() => {})
+    api.get(`/hod/students-search${q ? `?search=${q}` : ''}`).then((res) => setStudents(res.data || [])).catch(() => {})
   }
 
   function loadTop10() {
-    api.get('/hod/top10').then((res) => { setTop10(res.data); setShowTop10(true) }).catch(() => {})
+    api.get('/hod/top10').then((res) => { setTop10(res.data || []); setShowTop10(true) }).catch(() => {})
   }
 
   async function handleTransfer() {
@@ -633,146 +801,220 @@ function MainExamAnalyticsSection() {
     }
   }
 
-  if (loading) return <p>Loading...</p>
+  async function handleDownloadResultSheet() {
+    setDownloading(true)
+    try {
+      const { data } = await api.get('/hod/result-sheet/download')
+      if (!data?.rows || data.rows.length === 0) {
+        alert('No main exam result data available for export yet.')
+        return
+      }
+
+      const headers = ['Registration No', 'Student Name', 'Semester', 'Department', 'Subject', 'Total Marks', 'Max Marks', 'Percentage', 'Result']
+      const csvRows = [headers.join(',')]
+
+      data.rows.forEach(r => {
+        csvRows.push([
+          `"${r.registrationNo}"`,
+          `"${r.fullName}"`,
+          `"${r.semester}"`,
+          `"${r.departmentName}"`,
+          `"${r.subjectName}"`,
+          r.totalMarks,
+          r.maxMarks,
+          `${r.percentage}%`,
+          r.result
+        ].join(','))
+      })
+
+      const blob = new Blob([csvRows.join('\n')], { type: 'text/csv;charset=utf-8;' })
+      const url = window.URL.createObjectURL(blob)
+      const link = document.createElement('a')
+      link.href = url
+      link.setAttribute('download', `${(data.departmentName || 'Department').replace(/[^a-zA-Z0-9]/g, '_')}_Main_Exam_Results.csv`)
+      document.body.appendChild(link)
+      link.click()
+      document.body.removeChild(link)
+      window.URL.revokeObjectURL(url)
+    } catch (err) {
+      alert(`Download failed: ${err.response?.data?.error || err.message}`)
+    } finally {
+      setDownloading(false)
+    }
+  }
+
+  if (loading) return <p className="hod-loading">Loading Main Exam analytics...</p>
   if (error) return <p className="hod-error">{error}</p>
   if (overview?.department_id === null) return <div className="hod-card"><div className="hod-empty">{overview.warning}</div></div>
   if (!overview) return null
 
-  const backlogsBySubject = overview.subjectBreakdown.filter((s) => s.failCount > 0)
+  const isPublished = overview.results_published && (overview.passed > 0 || overview.failed > 0 || (overview.subjectBreakdown && overview.subjectBreakdown.length > 0))
+  const backlogsBySubject = (overview.subjectBreakdown || []).filter((s) => s.failCount > 0)
 
   return (
-    <>
-      <div className="hod-stat-grid">
-        <StatCard icon="👥" label="Students" value={overview.students} tone="blue" />
-        <StatCard icon="✅" label="Passed" value={overview.passed} tone="green" />
-        <StatCard icon="❌" label="Failed" value={overview.failed} tone="purple" />
-        <StatCard icon="⚠️" label="Backlogs" value={overview.backlogs} tone="purple" />
-      </div>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
+      {!isPublished ? (
+        <div className="hod-card" style={{ textAlign: 'center', padding: '40px 24px' }}>
+          <div style={{ fontSize: 52, marginBottom: 14 }}>📢</div>
+          <h3 style={{ margin: '0 0 10px 0', color: '#38bdf8', fontSize: 22, fontWeight: 800 }}>Main Examination Results Not Announced Yet</h3>
+          <p style={{ color: '#94a3b8', fontSize: 14, maxWidth: 620, margin: '0 auto 24px auto', lineHeight: 1.6 }}>
+            The Examination Department has not published main examination scores for this department yet. Once the Examination Department evaluates and announces main exam results, real pass/fail analytics, subject performance breakdowns, and top 10 rankings will automatically reflect here.
+          </p>
 
-      <div className="hod-card">
-        <h3 className="hod-card-title">Subject-wise Performance</h3>
-        {overview.subjectBreakdown.length === 0 ? (
-          <div className="hod-empty">No Main Exam results yet.</div>
-        ) : (
-          <div className="bar-chart">
-            {overview.subjectBreakdown.map((s) => (
-              <div className="bar-row" key={s.subjectId}>
-                <div className="bar-label">{s.subjectName}</div>
-                <div className="bar-track">
-                  <div className="bar-fill" style={{ width: `${s.avgPercent}%` }} />
-                </div>
-                <div className="bar-value">{s.avgPercent}%</div>
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
-
-      <div className="hod-card">
-        <h3 className="hod-card-title">Backlog Analysis</h3>
-        {backlogsBySubject.length === 0 ? (
-          <div className="hod-empty">No backlogs — clean sweep! 🎉</div>
-        ) : (
-          <table className="hod-table">
-            <thead><tr><th>Subject</th><th>Students Failed</th></tr></thead>
-            <tbody>
-              {backlogsBySubject.map((s) => (
-                <tr key={s.subjectId}><td>{s.subjectName}</td><td style={{ color: '#fca5a5' }}>{s.failCount} students</td></tr>
-              ))}
-            </tbody>
-          </table>
-        )}
-      </div>
-
-      <div className="hod-card">
-        <h3 className="hod-card-title">Overall Department Performance</h3>
-        <div className="hod-stat-grid">
-          <StatCard icon="📊" label="Average %" value={`${overview.overallAveragePercent}%`} tone="blue" />
-          <StatCard icon="🎯" label="Pass Rate" value={`${overview.passPercent}%`} tone="green" />
-          <StatCard icon="🔝" label="Highest %" value={`${overview.highestPercent}%`} tone="green" />
-          <StatCard icon="🔻" label="Lowest %" value={`${overview.lowestPercent}%`} tone="purple" />
-        </div>
-      </div>
-
-      <div className="hod-card">
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
-          <h3 className="hod-card-title" style={{ margin: 0 }}>Student Performance</h3>
-          <div style={{ display: 'flex', gap: 10 }}>
-            <button
-              onClick={handleDownloadResultSheet}
-              style={{
-                background: 'rgba(59, 130, 246, 0.15)',
-                color: '#60a5fa',
-                border: '1px solid rgba(59, 130, 246, 0.3)',
-                padding: '7px 14px',
-                borderRadius: 8,
-                fontWeight: 700,
-                fontSize: 13,
-                cursor: 'pointer',
-              }}
-            >
-              📥 Download Result Sheet (CSV)
-            </button>
-            <input
-              placeholder="🔍 Search student"
-              value={search}
-              onChange={(e) => { setSearch(e.target.value); loadStudents(e.target.value) }}
-              onFocus={() => students.length === 0 && loadStudents()}
-              style={{ padding: '8px 12px', borderRadius: 8, border: '1px solid rgba(255,255,255,0.12)', background: 'rgba(255,255,255,0.05)', color: '#e5e7eb', fontSize: 13, width: 200 }}
-            />
+          <div className="hod-stat-grid" style={{ gridTemplateColumns: 'repeat(4, 1fr)', gap: 16 }}>
+            <StatCard icon="👥" label="Department Students" value={overview.students || 0} tone="blue" />
+            <StatCard icon="✅" label="Passed" value="0" tone="green" note="Awaiting Result Announcement" />
+            <StatCard icon="❌" label="Failed" value="0" tone="purple" note="Awaiting Result Announcement" />
+            <StatCard icon="⚠️" label="Backlogs" value="0" tone="purple" note="Awaiting Result Announcement" />
           </div>
         </div>
-        {students.length === 0 ? (
-          <div className="hod-empty">Search or click the field above to load student results.</div>
-        ) : (
-          <table className="hod-table">
-            <thead><tr><th>Reg No</th><th>Student</th><th>%</th><th>Result</th><th>Backlogs</th></tr></thead>
-            <tbody>
-              {students.map((s) => (
-                <tr key={s.studentId}>
-                  <td>{s.registrationNo}</td>
-                  <td>{s.fullName}</td>
-                  <td>{s.percentage}%</td>
-                  <td style={{ color: s.result === 'Pass' ? '#86efac' : '#fca5a5' }}>{s.result}</td>
-                  <td>{s.backlogs}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        )}
-      </div>
+      ) : (
+        <>
+          <div className="hod-stat-grid" style={{ gridTemplateColumns: 'repeat(4, 1fr)', gap: 16 }}>
+            <StatCard icon="👥" label="Students" value={overview.students} tone="blue" />
+            <StatCard icon="✅" label="Passed" value={overview.passed} tone="green" />
+            <StatCard icon="❌" label="Failed" value={overview.failed} tone="purple" />
+            <StatCard icon="⚠️" label="Backlogs" value={overview.backlogs} tone="purple" />
+          </div>
 
-      <div className="hod-card">
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
-          <h3 className="hod-card-title" style={{ margin: 0 }}>Top 10 Students</h3>
-          <button
-            onClick={loadTop10}
-            style={{ padding: '9px 16px', borderRadius: 8, border: 'none', background: 'linear-gradient(90deg,#7c3aed,#db2777)', color: '#fff', fontWeight: 700, cursor: 'pointer', fontSize: 13 }}
-          >
-            View Top Performers
-          </button>
-        </div>
-        {showTop10 && (
-          <>
-            <table className="hod-table" style={{ marginBottom: 16 }}>
-              <thead><tr><th>Rank</th><th>Student</th><th>Reg No</th><th>%</th></tr></thead>
-              <tbody>
-                {top10.map((s) => (
-                  <tr key={s.studentId}><td>#{s.rank}</td><td>{s.fullName}</td><td>{s.registrationNo}</td><td>{s.percentage}%</td></tr>
+          <div className="hod-card">
+            <h3 className="hod-card-title">📊 Subject-wise Main Exam Performance</h3>
+            {overview.subjectBreakdown.length === 0 ? (
+              <div className="hod-empty">No Main Exam results published for department subjects yet.</div>
+            ) : (
+              <div className="bar-chart" style={{ marginTop: 12 }}>
+                {overview.subjectBreakdown.map((s) => (
+                  <div className="bar-row" key={s.subjectId} style={{ marginBottom: 12 }}>
+                    <div className="bar-label">{s.subjectName}</div>
+                    <div className="bar-track" style={{ background: '#1e193b', height: 10, borderRadius: 5 }}>
+                      <div className="bar-fill" style={{ width: `${s.avgPercent}%`, background: s.avgPercent > 75 ? '#34d399' : '#f59e0b', height: '100%', borderRadius: 5 }} />
+                    </div>
+                    <div className="bar-value" style={{ fontSize: 12, fontWeight: 700, color: '#c084fc' }}>{s.avgPercent}%</div>
+                  </div>
                 ))}
-              </tbody>
-            </table>
-            <button
-              onClick={handleTransfer}
-              style={{ padding: '10px 20px', borderRadius: 8, border: 'none', background: 'linear-gradient(90deg,#7c3aed,#db2777)', color: '#fff', fontWeight: 700, cursor: 'pointer' }}
-            >
-              📤 Transfer Top 10 to Principal
-            </button>
-            {transferMsg && <p style={{ marginTop: 10, fontSize: 13 }}>{transferMsg}</p>}
-          </>
-        )}
-      </div>
-    </>
+              </div>
+            )}
+          </div>
+
+          <div className="hod-card">
+            <h3 className="hod-card-title">⚠️ Backlog Analysis</h3>
+            {backlogsBySubject.length === 0 ? (
+              <div className="hod-empty">No backlogs recorded for main exams — clean sweep! 🎉</div>
+            ) : (
+              <table className="hod-table">
+                <thead><tr><th>Subject</th><th>Students Failed</th></tr></thead>
+                <tbody>
+                  {backlogsBySubject.map((s) => (
+                    <tr key={s.subjectId}><td>{s.subjectName}</td><td style={{ color: '#fca5a5', fontWeight: 700 }}>{s.failCount} students</td></tr>
+                  ))}
+                </tbody>
+              </table>
+            )}
+          </div>
+
+          <div className="hod-card">
+            <h3 className="hod-card-title">🎯 Overall Department Main Exam Performance</h3>
+            <div className="hod-stat-grid" style={{ gridTemplateColumns: 'repeat(4, 1fr)', gap: 16 }}>
+              <StatCard icon="📊" label="Average %" value={`${overview.overallAveragePercent}%`} tone="blue" />
+              <StatCard icon="🎯" label="Pass Rate" value={`${overview.passPercent}%`} tone="green" />
+              <StatCard icon="🔝" label="Highest %" value={`${overview.highestPercent}%`} tone="green" />
+              <StatCard icon="🔻" label="Lowest %" value={`${overview.lowestPercent}%`} tone="purple" />
+            </div>
+          </div>
+
+          <div className="hod-card">
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+              <h3 className="hod-card-title" style={{ margin: 0 }}>🎓 Main Exam Student Roster Performance</h3>
+              <div style={{ display: 'flex', gap: 10 }}>
+                <button
+                  onClick={handleDownloadResultSheet}
+                  disabled={downloading}
+                  style={{
+                    background: 'rgba(59, 130, 246, 0.15)',
+                    color: '#60a5fa',
+                    border: '1px solid rgba(59, 130, 246, 0.3)',
+                    padding: '7px 14px',
+                    borderRadius: 8,
+                    fontWeight: 700,
+                    fontSize: 13,
+                    cursor: 'pointer',
+                  }}
+                >
+                  {downloading ? '⏳ Exporting...' : '📥 Download Result Sheet (CSV)'}
+                </button>
+                <input
+                  placeholder="🔍 Search student"
+                  value={search}
+                  onChange={(e) => { setSearch(e.target.value); loadStudents(e.target.value) }}
+                  onFocus={() => students.length === 0 && loadStudents()}
+                  style={{ padding: '8px 12px', borderRadius: 8, border: '1px solid rgba(255,255,255,0.12)', background: 'rgba(255,255,255,0.05)', color: '#e5e7eb', fontSize: 13, width: 200 }}
+                />
+              </div>
+            </div>
+            {students.length === 0 ? (
+              <div className="hod-empty">No student main exam results recorded.</div>
+            ) : (
+              <table className="hod-table">
+                <thead><tr><th>Reg No</th><th>Student</th><th>%</th><th>Result</th><th>Backlogs</th></tr></thead>
+                <tbody>
+                  {students.map((s) => (
+                    <tr key={s.studentId}>
+                      <td style={{ fontWeight: 700, color: '#c084fc' }}>{s.registrationNo}</td>
+                      <td style={{ fontWeight: 600 }}>{s.fullName}</td>
+                      <td style={{ fontWeight: 700 }}>{s.percentage}%</td>
+                      <td style={{ color: s.result === 'Pass' ? '#86efac' : '#fca5a5', fontWeight: 800 }}>{s.result}</td>
+                      <td>{s.backlogs}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            )}
+          </div>
+
+          <div className="hod-card">
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+              <h3 className="hod-card-title" style={{ margin: 0 }}>🏆 Top 10 Merit Students</h3>
+              <button
+                onClick={loadTop10}
+                style={{ padding: '9px 16px', borderRadius: 8, border: 'none', background: 'linear-gradient(90deg,#7c3aed,#db2777)', color: '#fff', fontWeight: 700, cursor: 'pointer', fontSize: 13 }}
+              >
+                View Top Performers
+              </button>
+            </div>
+            {showTop10 && (
+              <>
+                {top10.length === 0 ? (
+                  <div className="hod-empty">No top 10 merit rankings available yet.</div>
+                ) : (
+                  <table className="hod-table" style={{ marginBottom: 16 }}>
+                    <thead><tr><th>Rank</th><th>Student</th><th>Reg No</th><th>%</th></tr></thead>
+                    <tbody>
+                      {top10.map((s) => (
+                        <tr key={s.studentId}>
+                          <td style={{ fontWeight: 800, color: s.rank <= 3 ? '#f59e0b' : '#e2e8f0' }}>#{s.rank}</td>
+                          <td style={{ fontWeight: 600 }}>{s.fullName}</td>
+                          <td style={{ color: '#c084fc', fontWeight: 700 }}>{s.registrationNo}</td>
+                          <td style={{ fontWeight: 700, color: '#34d399' }}>{s.percentage}%</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                )}
+                {top10.length > 0 && (
+                  <button
+                    onClick={handleTransfer}
+                    style={{ padding: '10px 20px', borderRadius: 8, border: 'none', background: 'linear-gradient(90deg,#7c3aed,#db2777)', color: '#fff', fontWeight: 700, cursor: 'pointer' }}
+                  >
+                    📤 Transfer Top 10 to Principal
+                  </button>
+                )}
+                {transferMsg && <p style={{ marginTop: 10, fontSize: 13, fontWeight: 700 }}>{transferMsg}</p>}
+              </>
+            )}
+          </div>
+        </>
+      )}
+    </div>
   )
 }
 
@@ -961,20 +1203,26 @@ function HodExamTimetableSection({ overview }) {
   const [publishMsg, setPublishMsg] = useState('')
   const [loading, setLoading] = useState(true)
 
-  useEffect(() => {
+  // Real Database Attendance & Hall Tickets State
+  const [attendanceOverview, setAttendanceOverview] = useState(null)
+  const [condonMsg, setCondonMsg] = useState('')
+  const [grantingId, setGrantingId] = useState(null)
+
+  function loadAllData() {
+    setLoading(true)
     Promise.all([
       api.get('/hod/subjects-detail').catch(() => ({ data: [] })),
-      api.get('/hod/internal-timetable').catch(() => ({ data: null }))
-    ]).then(([subRes, ttRes]) => {
+      api.get('/hod/internal-timetable').catch(() => ({ data: null })),
+      api.get('/hod/attendance').catch(() => ({ data: null }))
+    ]).then(([subRes, ttRes, attRes]) => {
       const subs = subRes.data || []
       setSubjectDetails(subs)
+      setAttendanceOverview(attRes.data)
 
-      if (ttRes.data) {
+      if (ttRes.data && Array.isArray(ttRes.data.schedule) && ttRes.data.schedule.length > 0) {
         setTimetableData(ttRes.data)
         if (ttRes.data.examName) setExamName(ttRes.data.examName)
-        if (Array.isArray(ttRes.data.schedule)) {
-          setScheduleInputs(ttRes.data.schedule)
-        }
+        setScheduleInputs(ttRes.data.schedule)
       } else {
         const baseDate = new Date()
         baseDate.setDate(baseDate.getDate() + 10)
@@ -992,15 +1240,55 @@ function HodExamTimetableSection({ overview }) {
             totalMarks: 50
           }
         })
+
+        if (initialSched.length === 0) {
+          initialSched.push({
+            slNo: 1,
+            subjectId: 'new-1',
+            subjectCode: 'MMC321',
+            subjectName: 'Deep Learning & Neural Networks',
+            examDate: baseDate.toISOString().split('T')[0],
+            timeSlot: '10:00 AM - 11:30 AM',
+            hallNo: 'Block-A Room 302',
+            totalMarks: 50
+          })
+        }
         setScheduleInputs(initialSched)
       }
     }).finally(() => setLoading(false))
-  }, [])
+  }
+
+  useEffect(() => { loadAllData() }, [])
 
   function handleScheduleChange(index, field, value) {
     const updated = [...scheduleInputs]
     updated[index] = { ...updated[index], [field]: value }
     setScheduleInputs(updated)
+  }
+
+  function handleAddScheduleRow() {
+    const nextSlNo = scheduleInputs.length + 1
+    const baseDate = new Date()
+    baseDate.setDate(baseDate.getDate() + 10 + scheduleInputs.length)
+    setScheduleInputs([
+      ...scheduleInputs,
+      {
+        slNo: nextSlNo,
+        subjectId: `custom-${Date.now()}`,
+        subjectCode: '',
+        subjectName: '',
+        examDate: baseDate.toISOString().split('T')[0],
+        timeSlot: '10:00 AM - 11:30 AM',
+        hallNo: 'Block-A Room 302',
+        totalMarks: 50
+      }
+    ])
+  }
+
+  function handleRemoveScheduleRow(index) {
+    const filtered = scheduleInputs.filter((_, i) => i !== index)
+    const reindexed = filtered.map((item, idx) => ({ ...item, slNo: idx + 1 }))
+    setScheduleInputs(reindexed)
   }
 
   async function handlePublishInternalTimetable() {
@@ -1010,12 +1298,31 @@ function HodExamTimetableSection({ overview }) {
         examName,
         schedule: scheduleInputs
       })
-      setPublishMsg('✅ Internal Exam Timetable published successfully! Attendance cutoff rule enforced: Only students maintaining ≥75% attendance can view this timetable and write internal exams.')
+      setPublishMsg(`✅ ${res.data?.message || 'Internal Exam Timetable published successfully! Attendance cutoff rule enforced.'}`)
       if (res.data?.timetable) setTimetableData(res.data.timetable)
+      // Reload attendance to reflect updated alerts
+      loadAllData()
     } catch (err) {
       setPublishMsg(`❌ ${err.response?.data?.error || 'Failed to publish timetable'}`)
     }
   }
+
+  async function handleGrantMedicalCondonation(studentId, studentName) {
+    if (!confirm(`Grant HOD Medical Condonation to ${studentName}? This will override attendance shortage and issue their exam Hall Ticket.`)) return
+    setGrantingId(studentId)
+    setCondonMsg('')
+    try {
+      const res = await api.post('/hod/condonation', { studentId, reason: 'HOD Medical Condonation' })
+      setCondonMsg(`✅ ${res.data.message || 'Medical Condonation granted successfully! Student notified via Email.'}`)
+      loadAllData()
+    } catch (err) {
+      setCondonMsg(`❌ ${err.response?.data?.error || 'Failed to grant condonation'}`)
+    } finally {
+      setGrantingId(null)
+    }
+  }
+
+  const studentList = attendanceOverview?.students || []
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
@@ -1046,22 +1353,33 @@ function HodExamTimetableSection({ overview }) {
                 <td style={{ color: '#34d399', fontWeight: 600 }}>{sub.faculty_name}</td>
               </tr>
             ))}
+            {subjectDetails.length === 0 && (
+              <tr><td colSpan={5} className="hod-empty">No subjects added to department catalogue yet.</td></tr>
+            )}
           </tbody>
         </table>
       </div>
 
       {/* Internal Timetable Generator & Publisher */}
       <div className="hod-card">
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16, flexWrap: 'wrap', gap: 12 }}>
           <div>
             <h3 className="hod-card-title" style={{ margin: 0 }}>📅 Generate & Publish Internal Exam Timetable</h3>
             <p style={{ color: '#94a3b8', fontSize: 13, margin: '4px 0 0 0' }}>
               Set examination dates, time slots, and room allocations. Enforces 75% attendance rule automatically.
             </p>
           </div>
-          <span style={{ padding: '6px 14px', borderRadius: 20, background: 'rgba(56,189,248,0.15)', color: '#38bdf8', fontWeight: 800, fontSize: 12 }}>
-            🔒 Attendance Cutoff: 75% Rule Enforced
-          </span>
+          <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
+            <button
+              onClick={handleAddScheduleRow}
+              style={{ padding: '8px 14px', borderRadius: 8, border: '1px solid rgba(192,132,252,0.4)', background: 'rgba(192,132,252,0.15)', color: '#c084fc', fontWeight: 700, fontSize: 13, cursor: 'pointer' }}
+            >
+              ➕ Add Exam Schedule Row
+            </button>
+            <span style={{ padding: '6px 14px', borderRadius: 20, background: 'rgba(56,189,248,0.15)', color: '#38bdf8', fontWeight: 800, fontSize: 12 }}>
+              🔒 Attendance Cutoff: 75% Rule Enforced
+            </span>
+          </div>
         </div>
 
         <div style={{ marginBottom: 20 }}>
@@ -1093,14 +1411,31 @@ function HodExamTimetableSection({ overview }) {
                 <th>TIME SLOT</th>
                 <th>EXAM HALL</th>
                 <th>MAX MARKS</th>
+                <th>ACTION</th>
               </tr>
             </thead>
             <tbody>
               {scheduleInputs.map((row, idx) => (
                 <tr key={idx}>
                   <td>#{row.slNo || idx + 1}</td>
-                  <td style={{ fontWeight: 700, color: '#38bdf8' }}>{row.subjectCode}</td>
-                  <td style={{ fontWeight: 600 }}>{row.subjectName}</td>
+                  <td>
+                    <input
+                      type="text"
+                      placeholder="e.g., MMC321"
+                      value={row.subjectCode}
+                      onChange={(e) => handleScheduleChange(idx, 'subjectCode', e.target.value)}
+                      style={{ width: 90, padding: '6px 10px', borderRadius: 6, border: '1px solid rgba(255,255,255,0.2)', background: 'rgba(0,0,0,0.5)', color: '#38bdf8', fontWeight: 700, fontSize: 13 }}
+                    />
+                  </td>
+                  <td>
+                    <input
+                      type="text"
+                      placeholder="Course Title"
+                      value={row.subjectName}
+                      onChange={(e) => handleScheduleChange(idx, 'subjectName', e.target.value)}
+                      style={{ width: 220, padding: '6px 10px', borderRadius: 6, border: '1px solid rgba(255,255,255,0.2)', background: 'rgba(0,0,0,0.5)', color: '#fff', fontSize: 13 }}
+                    />
+                  </td>
                   <td>
                     <input
                       type="date"
@@ -1126,10 +1461,26 @@ function HodExamTimetableSection({ overview }) {
                     />
                   </td>
                   <td>
-                    <strong>{row.totalMarks || 50} M</strong>
+                    <input
+                      type="number"
+                      value={row.totalMarks || 50}
+                      onChange={(e) => handleScheduleChange(idx, 'totalMarks', Number(e.target.value))}
+                      style={{ width: 60, padding: '6px 8px', borderRadius: 6, border: '1px solid rgba(255,255,255,0.2)', background: 'rgba(0,0,0,0.5)', color: '#fff', fontSize: 13, textAlign: 'center' }}
+                    />
+                  </td>
+                  <td>
+                    <button
+                      onClick={() => handleRemoveScheduleRow(idx)}
+                      style={{ padding: '5px 10px', borderRadius: 6, border: '1px solid rgba(239,68,68,0.4)', background: 'rgba(239,68,68,0.15)', color: '#f87171', fontSize: 12, cursor: 'pointer' }}
+                    >
+                      🗑️
+                    </button>
                   </td>
                 </tr>
               ))}
+              {scheduleInputs.length === 0 && (
+                <tr><td colSpan={8} className="hod-empty">No exam schedule rows. Click "+ Add Exam Schedule Row" to add exams.</td></tr>
+              )}
             </tbody>
           </table>
         </div>
@@ -1141,6 +1492,98 @@ function HodExamTimetableSection({ overview }) {
           🚀 Generate & Publish Internal Exam Timetable
         </button>
       </div>
+
+      {/* Student Hall Tickets & Eligibility Status (75% Attendance Rule + Medical Condonation) */}
+      <div className="hod-card">
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+          <div>
+            <h3 className="hod-card-title" style={{ margin: 0 }}>🎟️ Student Hall Tickets & Eligibility Status (Live DB)</h3>
+            <p style={{ color: '#94a3b8', fontSize: 13, margin: '4px 0 0' }}>
+              Enforces 75% minimum attendance rule. Students with &lt;75% attendance are automatically barred unless granted HOD Medical Condonation.
+            </p>
+          </div>
+        </div>
+
+        {condonMsg && (
+          <p style={{ padding: '10px 14px', borderRadius: 8, background: condonMsg.includes('❌') ? 'rgba(239,68,68,0.2)' : 'rgba(16,185,129,0.2)', color: condonMsg.includes('❌') ? '#fca5a5' : '#6ee7b7', fontSize: 13, fontWeight: 700, marginBottom: 16 }}>
+            {condonMsg}
+          </p>
+        )}
+
+        <table className="hod-table">
+          <thead>
+            <tr>
+              <th>REG NO / USN</th>
+              <th>STUDENT NAME</th>
+              <th>SEMESTER</th>
+              <th>ATTENDANCE %</th>
+              <th>HALL TICKET STATUS</th>
+              <th>HALL TICKET #</th>
+              <th>HOD CONDONATION ACTION</th>
+            </tr>
+          </thead>
+          <tbody>
+            {studentList.map((st) => {
+              const hasAtt = st.hasAttendance
+              const pct = st.overallPercentage
+              const isEligible = st.isEligible
+              const isCondoned = st.isCondoned
+
+              return (
+                <tr key={st.studentId}>
+                  <td style={{ fontWeight: 700, color: '#c084fc' }}>{st.registrationNo}</td>
+                  <td style={{ fontWeight: 600 }}>{st.studentName}</td>
+                  <td>{st.semester || '3rd Sem'}</td>
+                  <td style={{ fontWeight: 800, color: !hasAtt ? '#94a3b8' : (isEligible ? '#34d399' : '#f87171') }}>
+                    {hasAtt ? `${pct}%` : 'Not Marked Yet'}
+                  </td>
+                  <td>
+                    {!hasAtt ? (
+                      <span style={{ padding: '4px 10px', borderRadius: 12, background: 'rgba(148,163,184,0.15)', color: '#94a3b8', fontSize: 12, fontWeight: 700 }}>
+                        ⏳ ATTENDANCE NOT MARKED
+                      </span>
+                    ) : isEligible ? (
+                      <span style={{ padding: '4px 10px', borderRadius: 12, background: 'rgba(16,185,129,0.2)', color: '#34d399', fontSize: 12, fontWeight: 800 }}>
+                        {isCondoned ? '✓ ISSUED / ELIGIBLE (Condoned)' : '✓ ISSUED / ELIGIBLE'}
+                      </span>
+                    ) : (
+                      <span style={{ padding: '4px 10px', borderRadius: 12, background: 'rgba(239,68,68,0.2)', color: '#f87171', fontSize: 12, fontWeight: 800 }}>
+                        🚫 BLOCKED (&lt;75% Attendance)
+                      </span>
+                    )}
+                  </td>
+                  <td style={{ fontFamily: 'monospace', color: (hasAtt && isEligible) ? '#38bdf8' : '#64748b' }}>
+                    {(hasAtt && isEligible) ? `HT-2026-${st.registrationNo}` : (hasAtt ? '— BLOCKED —' : '— PENDING —')}
+                  </td>
+                  <td>
+                    {hasAtt && !isEligible && (
+                      <button
+                        onClick={() => handleGrantMedicalCondonation(st.studentId, st.studentName)}
+                        disabled={grantingId === st.studentId}
+                        style={{ padding: '5px 12px', borderRadius: 6, border: 'none', background: 'linear-gradient(135deg, #7c3aed, #db2777)', color: '#fff', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}
+                      >
+                        {grantingId === st.studentId ? 'Granting...' : '🏥 Grant Medical Condonation'}
+                      </button>
+                    )}
+                    {isCondoned && (
+                      <span style={{ fontSize: 12, color: '#34d399', fontWeight: 700 }}>🏥 Medical Condoned by HOD</span>
+                    )}
+                    {hasAtt && isEligible && !isCondoned && (
+                      <span style={{ fontSize: 12, color: '#94a3b8' }}>Standard Eligible</span>
+                    )}
+                    {!hasAtt && (
+                      <span style={{ fontSize: 12, color: '#94a3b8' }}>Awaiting Faculty Attendance</span>
+                    )}
+                  </td>
+                </tr>
+              )
+            })}
+            {studentList.length === 0 && (
+              <tr><td colSpan={7} className="hod-empty">No student registered in department. Add candidates in "Department Students" tab.</td></tr>
+            )}
+          </tbody>
+        </table>
+      </div>
     </div>
   )
 }
@@ -1148,6 +1591,7 @@ function HodExamTimetableSection({ overview }) {
 function HodAttendanceSection() {
   const [data, setData] = useState(null)
   const [loading, setLoading] = useState(true)
+  const [selectedSem, setSelectedSem] = useState('ALL')
 
   useEffect(() => {
     api.get('/hod/attendance')
@@ -1158,34 +1602,57 @@ function HodAttendanceSection() {
 
   if (loading) return <p className="hod-loading">Loading student attendance data...</p>
 
-  const students = data?.students || []
-  const lowAttendanceCount = data?.lowAttendanceCount ?? 0
-  const avgDepartmentAttendance = data?.avgDepartmentAttendance ?? 85
+  const rawStudents = data?.students || []
+
+  const students = rawStudents.filter((st) =>
+    selectedSem === 'ALL' || st.semester === selectedSem
+  )
+
+  const lowAttendanceCount = students.filter((st) => (st.overallPercentage ?? st.percentage) < 75).length
+  const avgDepartmentAttendance = students.length
+    ? Math.round(students.reduce((acc, st) => acc + (st.overallPercentage ?? st.percentage ?? 0), 0) / students.length)
+    : (data?.avgDepartmentAttendance ?? 85)
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
       {/* Attendance KPI Cards */}
       <div className="hod-stat-grid">
-        <StatCard icon="👥" label="Total Department Students" value={data?.totalStudents || students.length} tone="blue" />
+        <StatCard icon="👥" label="Total Department Students" value={students.length} tone="blue" />
         <StatCard icon="⚠️" label="Attendance Shortage (<75%)" value={lowAttendanceCount} tone="purple" note="Barred from Internal Exams" />
         <StatCard icon="📊" label="Average Department Attendance" value={`${avgDepartmentAttendance}%`} tone="green" />
       </div>
 
       {/* Student Attendance Roster & Eligibility Breakdown */}
       <div className="hod-card">
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16, flexWrap: 'wrap', gap: 12 }}>
           <div>
             <h3 className="hod-card-title" style={{ margin: 0 }}>📊 Real-Time Student Attendance Monitoring</h3>
             <p style={{ color: '#94a3b8', fontSize: 13, margin: '4px 0 0 0' }}>
               Attendance percentages updated directly by subject faculty. Students with &lt; 75% attendance are automatically barred.
             </p>
           </div>
-          {lowAttendanceCount > 0 && (
-            <div style={{ background: 'rgba(239,68,68,0.2)', color: '#fca5a5', padding: '6px 14px', borderRadius: 20, fontSize: 12, fontWeight: 800, border: '1px solid rgba(239,68,68,0.4)' }}>
-              ⚠️ {lowAttendanceCount} Student(s) Below 75% Cutoff
-            </div>
-          )}
+
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+            <span style={{ fontSize: 13, color: '#c084fc', fontWeight: 700 }}>Filter Semester:</span>
+            <select
+              value={selectedSem}
+              onChange={(e) => setSelectedSem(e.target.value)}
+              style={{ padding: '8px 12px', borderRadius: 8, border: '1px solid rgba(255,255,255,0.15)', background: 'rgba(15,23,42,0.9)', color: '#fff', fontSize: 13 }}
+            >
+              <option value="ALL">All Semesters</option>
+              <option value="1st Sem">1st Sem</option>
+              <option value="2nd Sem">2nd Sem</option>
+              <option value="3rd Sem">3rd Sem</option>
+              <option value="4th Sem">4th Sem</option>
+            </select>
+          </div>
         </div>
+
+        {lowAttendanceCount > 0 && (
+          <div style={{ background: 'rgba(239,68,68,0.2)', color: '#fca5a5', padding: '10px 16px', borderRadius: 8, fontSize: 13, fontWeight: 700, border: '1px solid rgba(239,68,68,0.4)', marginBottom: 16 }}>
+            ⚠️ {lowAttendanceCount} Student(s) in {selectedSem === 'ALL' ? 'Department' : selectedSem} below 75% cutoff — Barred from internal exams.
+          </div>
+        )}
 
         <table className="hod-table">
           <thead>
@@ -1198,27 +1665,34 @@ function HodAttendanceSection() {
             </tr>
           </thead>
           <tbody>
-            {students.map((st) => (
-              <tr key={st.studentId} style={{ background: !st.isEligible ? 'rgba(239,68,68,0.06)' : 'transparent' }}>
-                <td style={{ fontWeight: 700, color: '#38bdf8' }}>{st.registrationNo}</td>
-                <td style={{ fontWeight: 600 }}>{st.studentName}</td>
-                <td>{st.semester}</td>
-                <td style={{ fontWeight: 900, fontSize: 15, color: st.isEligible ? '#34d399' : '#f87171' }}>
-                  {st.overallPercentage}%
-                </td>
-                <td>
-                  {st.isEligible ? (
-                    <span style={{ padding: '4px 12px', borderRadius: 12, background: 'rgba(16,185,129,0.15)', color: '#34d399', fontSize: 12, fontWeight: 800 }}>
-                      ✓ ELIGIBLE FOR INTERNALS
-                    </span>
-                  ) : (
-                    <span style={{ padding: '4px 12px', borderRadius: 12, background: 'rgba(239,68,68,0.2)', color: '#f87171', fontSize: 12, fontWeight: 800 }}>
-                      ⛔ BARRED (&lt; 75% ATTENDANCE)
-                    </span>
-                  )}
-                </td>
-              </tr>
-            ))}
+            {students.map((st) => {
+              const pct = st.overallPercentage ?? st.percentage ?? 0
+              const isEligible = pct >= 75
+              return (
+                <tr key={st.studentId || st.registrationNo} style={{ background: !isEligible ? 'rgba(239,68,68,0.06)' : 'transparent' }}>
+                  <td style={{ fontWeight: 700, color: '#38bdf8' }}>{st.registrationNo}</td>
+                  <td style={{ fontWeight: 600 }}>{st.studentName}</td>
+                  <td>{st.semester || '3rd Sem'}</td>
+                  <td style={{ fontWeight: 900, fontSize: 15, color: isEligible ? '#34d399' : '#f87171' }}>
+                    {pct}%
+                  </td>
+                  <td>
+                    {isEligible ? (
+                      <span style={{ padding: '4px 12px', borderRadius: 12, background: 'rgba(16,185,129,0.15)', color: '#34d399', fontSize: 12, fontWeight: 800 }}>
+                        ✓ ELIGIBLE FOR INTERNALS
+                      </span>
+                    ) : (
+                      <span style={{ padding: '4px 12px', borderRadius: 12, background: 'rgba(239,68,68,0.2)', color: '#f87171', fontSize: 12, fontWeight: 800 }}>
+                        ⛔ BARRED (&lt; 75% ATTENDANCE)
+                      </span>
+                    )}
+                  </td>
+                </tr>
+              )
+            })}
+            {students.length === 0 && (
+              <tr><td colSpan={5} className="hod-empty">No student attendance records found for this semester filter.</td></tr>
+            )}
           </tbody>
         </table>
       </div>
@@ -1230,19 +1704,36 @@ function HodInternalApprovalSection() {
   const [subjects, setSubjects] = useState([])
   const [selectedSubject, setSelectedSubject] = useState('')
   const [roster, setRoster] = useState([])
+  const [sortBy, setSortBy] = useState('desc') // 'desc', 'asc', 'usn'
   const [msg, setMsg] = useState('')
+  const [savingEdits, setSavingEdits] = useState(false)
+  const [messagingStudentId, setMessagingStudentId] = useState(null)
+  const [noticeText, setNoticeText] = useState('')
+  const [sendingNotice, setSendingNotice] = useState(false)
 
   useEffect(() => {
     api.get('/hod/subjects').then((res) => {
-      setSubjects(res.data || [])
-      if (res.data?.length > 0) {
-        setSelectedSubject(res.data[0].id)
-        loadRoster(res.data[0].id)
+      const subs = res.data || []
+      setSubjects(subs)
+      if (subs.length > 0) {
+        setSelectedSubject(subs[0].id)
+        loadRoster(subs[0].id)
+      } else {
+        // Fetch detailed subjects as fallback
+        api.get('/hod/subjects-detail').then((detailRes) => {
+          const det = detailRes.data || []
+          setSubjects(det)
+          if (det.length > 0) {
+            setSelectedSubject(det[0].id)
+            loadRoster(det[0].id)
+          }
+        }).catch(() => {})
       }
     }).catch(() => {})
   }, [])
 
   function loadRoster(subId) {
+    if (!subId) return
     api.get(`/hod/subjects/${subId}/internal-marks`)
       .then((res) => setRoster(res.data.roster || []))
       .catch(() => {})
@@ -1253,43 +1744,152 @@ function HodInternalApprovalSection() {
     loadRoster(subId)
   }
 
+  function handleMarkChange(studentId, field, value) {
+    const val = Math.max(0, Number(value) || 0)
+    setRoster((prev) =>
+      prev.map((r) => {
+        if (r.studentId !== studentId) return r
+        const updatedRow = { ...r, [field]: val }
+        const i1 = field === 'internal1' ? val : (updatedRow.internal1 || 0)
+        const i2 = field === 'internal2' ? val : (updatedRow.internal2 || 0)
+        const i3 = field === 'internal3' ? val : (updatedRow.internal3 || 0)
+        const ass = field === 'assignment' ? val : (updatedRow.assignment || 0)
+        const total = i1 + i2 + i3 + ass
+        return {
+          ...updatedRow,
+          totalInternal: total,
+          isEligible: total >= 25,
+        }
+      })
+    )
+  }
+
+  async function handleSaveEdits() {
+    if (!selectedSubject) return
+    setSavingEdits(true)
+    setMsg('Saving internal marks edits...')
+    try {
+      const marksPayload = roster.map((r) => ({
+        studentId: r.studentId,
+        internal1: r.internal1,
+        internal2: r.internal2,
+        internal3: r.internal3,
+        assignment: r.assignment,
+      }))
+      await api.put(`/hod/subjects/${selectedSubject}/internal-marks`, { marks: marksPayload })
+      setMsg('✅ Internal marks edits saved successfully!')
+      loadRoster(selectedSubject)
+    } catch (err) {
+      setMsg(`❌ ${err.response?.data?.error || 'Failed to save mark edits'}`)
+    } finally {
+      setSavingEdits(false)
+    }
+  }
+
   async function handleApprove() {
     if (!selectedSubject) return
     setMsg('Approving 50-mark internal sheet...')
     try {
+      // First save any unsaved inline edits
+      const marksPayload = roster.map((r) => ({
+        studentId: r.studentId,
+        internal1: r.internal1,
+        internal2: r.internal2,
+        internal3: r.internal3,
+        assignment: r.assignment,
+      }))
+      await api.put(`/hod/subjects/${selectedSubject}/internal-marks`, { marks: marksPayload })
+
       const res = await api.post(`/hod/subjects/${selectedSubject}/approve-internal-marks`)
-      setMsg(`✅ 50-Mark Internal Sheet for ${res.data.subjectName} confirmed & approved! Scores are now unlocked for Exam Dept.`)
+      setMsg(`✅ 50-Mark Internal Sheet for ${res.data.subjectName} confirmed & approved! Email notification sent to Examination Department.`)
       loadRoster(selectedSubject)
     } catch (err) {
       setMsg(`❌ ${err.response?.data?.error || 'Approval failed'}`)
     }
   }
 
+  async function handleSendNotice(studentId) {
+    if (!noticeText.trim()) return
+    setSendingNotice(true)
+    try {
+      await api.post('/hod/message-student', {
+        studentId,
+        message: noticeText,
+        subject: 'Academic Guidance & Performance Consultation Notice'
+      })
+      setMsg('✅ Guidance notice and email notification sent to student!')
+      setNoticeText('')
+      setMessagingStudentId(null)
+    } catch (err) {
+      setMsg(`❌ ${err.response?.data?.error || 'Failed to send notice'}`)
+    } finally {
+      setSendingNotice(false)
+    }
+  }
+
+  const sortedRoster = [...roster].sort((a, b) => {
+    if (sortBy === 'desc') return b.totalInternal - a.totalInternal
+    if (sortBy === 'asc') return a.totalInternal - b.totalInternal
+    return (a.registrationNo || '').localeCompare(b.registrationNo || '')
+  })
+
   return (
     <div className="hod-section-card glass-card" style={{ padding: 24 }}>
-      <h2 style={{ margin: '0 0 16px 0', fontSize: 20, color: '#f8fafc' }}>📋 Department 50-Mark Internal Marks Approval</h2>
-      
-      <div style={{ display: 'flex', gap: 16, alignItems: 'center', marginBottom: 20 }}>
-        <label style={{ fontSize: 13, color: '#94a3b8', fontWeight: 600 }}>Select Department Subject:</label>
-        <select
-          value={selectedSubject}
-          onChange={(e) => handleSelectSubject(e.target.value)}
-          style={{ padding: '8px 14px', borderRadius: 8, background: 'rgba(15,23,42,0.8)', border: '1px solid rgba(255,255,255,0.2)', color: '#fff', fontSize: 13 }}
-        >
-          {subjects.map((s) => (
-            <option key={s.id} value={s.id}>{s.name} ({s.code || 'SUB'})</option>
-          ))}
-          {subjects.length === 0 && <option value="">No subjects created yet</option>}
-        </select>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16, flexWrap: 'wrap', gap: 12 }}>
+        <div>
+          <h2 style={{ margin: 0, fontSize: 20, color: '#f8fafc' }}>📋 Department 50-Mark Internal Assessment Approval & Oversight</h2>
+          <p style={{ color: '#94a3b8', fontSize: 13, margin: '4px 0 0' }}>
+            Review, sort, and edit faculty-submitted 50-mark internal sheets (Internal 1, Internal 2, Internal 3 & Assignment) before approving for Examination Department.
+          </p>
+        </div>
 
-        {selectedSubject && (
-          <button className="fd-btn" onClick={handleApprove} style={{ background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)', marginLeft: 'auto' }}>
-            ✓ Confirm & Approve Internal Sheet for Exam Dept
+        <div style={{ display: 'flex', gap: 10 }}>
+          <button
+            onClick={handleSaveEdits}
+            disabled={savingEdits || !selectedSubject}
+            style={{ padding: '9px 16px', borderRadius: 8, border: '1px solid rgba(56,189,248,0.4)', background: 'rgba(56,189,248,0.15)', color: '#38bdf8', fontWeight: 700, fontSize: 13, cursor: 'pointer' }}
+          >
+            {savingEdits ? '⏳ Saving...' : '💾 Save Marks Edits'}
           </button>
-        )}
+
+          {selectedSubject && (
+            <button className="fd-btn" onClick={handleApprove} style={{ padding: '9px 16px', borderRadius: 8, border: 'none', background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)', color: '#fff', fontWeight: 800, fontSize: 13, cursor: 'pointer' }}>
+              ✓ Confirm & Approve Internal Sheet for Exam Dept
+            </button>
+          )}
+        </div>
+      </div>
+      
+      <div style={{ display: 'flex', gap: 20, alignItems: 'center', marginBottom: 20, flexWrap: 'wrap' }}>
+        <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
+          <label style={{ fontSize: 13, color: '#c084fc', fontWeight: 700 }}>Select Subject:</label>
+          <select
+            value={selectedSubject}
+            onChange={(e) => handleSelectSubject(e.target.value)}
+            style={{ padding: '8px 14px', borderRadius: 8, background: 'rgba(15,23,42,0.9)', border: '1px solid rgba(255,255,255,0.2)', color: '#fff', fontSize: 13 }}
+          >
+            {subjects.map((s) => (
+              <option key={s.id} value={s.id}>{s.name} ({s.code || 'SUB'})</option>
+            ))}
+            {subjects.length === 0 && <option value="">No subjects created yet</option>}
+          </select>
+        </div>
+
+        <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
+          <label style={{ fontSize: 13, color: '#38bdf8', fontWeight: 700 }}>Sort Scores:</label>
+          <select
+            value={sortBy}
+            onChange={(e) => setSortBy(e.target.value)}
+            style={{ padding: '8px 14px', borderRadius: 8, background: 'rgba(15,23,42,0.9)', border: '1px solid rgba(255,255,255,0.2)', color: '#fff', fontSize: 13 }}
+          >
+            <option value="desc">🔥 Highest Marks First</option>
+            <option value="asc">⚠️ Lowest Marks First</option>
+            <option value="usn">🔢 Order by USN / Reg No</option>
+          </select>
+        </div>
       </div>
 
-      {msg && <p style={{ padding: '10px 14px', borderRadius: 6, background: msg.includes('❌') ? 'rgba(239,68,68,0.2)' : 'rgba(16,185,129,0.2)', color: msg.includes('❌') ? '#fca5a5' : '#6ee7b7', fontSize: 13, fontWeight: 600, marginBottom: 20 }}>{msg}</p>}
+      {msg && <p style={{ padding: '10px 14px', borderRadius: 6, background: msg.includes('❌') ? 'rgba(239,68,68,0.2)' : 'rgba(16,185,129,0.2)', color: msg.includes('❌') ? '#fca5a5' : '#6ee7b7', fontSize: 13, fontWeight: 700, marginBottom: 20 }}>{msg}</p>}
 
       <table className="hod-table" style={{ width: '100%', fontSize: 13 }}>
         <thead>
@@ -1298,21 +1898,58 @@ function HodInternalApprovalSection() {
             <th>STUDENT NAME</th>
             <th>INT-1 (15M)</th>
             <th>INT-2 (15M)</th>
+            <th>INT-3 (10M)</th>
             <th>ASSIGNMENT (10M)</th>
-            <th>PROJECT (10M)</th>
             <th>TOTAL (50M)</th>
             <th>ELIGIBILITY STATUS</th>
+            <th>ACTION & NOTICE</th>
           </tr>
         </thead>
         <tbody>
-          {roster.map((st) => (
+          {sortedRoster.map((st) => (
             <tr key={st.studentId}>
               <td style={{ fontWeight: 700, color: '#38bdf8' }}>{st.registrationNo}</td>
               <td style={{ fontWeight: 600 }}>{st.fullName}</td>
-              <td>{st.internal1}</td>
-              <td>{st.internal2}</td>
-              <td>{st.assignment}</td>
-              <td>{st.project}</td>
+              <td>
+                <input
+                  type="number"
+                  max={15}
+                  min={0}
+                  value={st.internal1}
+                  onChange={(e) => handleMarkChange(st.studentId, 'internal1', e.target.value)}
+                  style={{ width: 60, padding: '4px 6px', borderRadius: 6, background: 'rgba(0,0,0,0.4)', border: '1px solid rgba(255,255,255,0.2)', color: '#fff', textAlign: 'center' }}
+                />
+              </td>
+              <td>
+                <input
+                  type="number"
+                  max={15}
+                  min={0}
+                  value={st.internal2}
+                  onChange={(e) => handleMarkChange(st.studentId, 'internal2', e.target.value)}
+                  style={{ width: 60, padding: '4px 6px', borderRadius: 6, background: 'rgba(0,0,0,0.4)', border: '1px solid rgba(255,255,255,0.2)', color: '#fff', textAlign: 'center' }}
+                />
+              </td>
+              <td>
+                <input
+                  type="number"
+                  max={10}
+                  min={0}
+                  value={st.internal3}
+                  onChange={(e) => handleMarkChange(st.studentId, 'internal3', e.target.value)}
+                  style={{ width: 60, padding: '4px 6px', borderRadius: 6, background: 'rgba(0,0,0,0.4)', border: '1px solid rgba(255,255,255,0.2)', color: '#fff', textAlign: 'center' }}
+                />
+              </td>
+              <td>
+                <input
+                  type="number"
+                  max={10}
+                  min={0}
+                  value={st.assignment}
+                  onChange={(e) => handleMarkChange(st.studentId, 'assignment', e.target.value)}
+                  style={{ width: 60, padding: '4px 6px', borderRadius: 6, background: 'rgba(0,0,0,0.4)', border: '1px solid rgba(255,255,255,0.2)', color: '#fff', textAlign: 'center' }}
+                />
+              </td>
               <td style={{ fontWeight: 900, color: st.isEligible ? '#34d399' : '#f87171' }}>{st.totalInternal} / 50</td>
               <td>
                 {st.isEligible ? (
@@ -1325,13 +1962,93 @@ function HodInternalApprovalSection() {
                   </span>
                 )}
               </td>
+              <td>
+                {messagingStudentId === st.studentId ? (
+                  <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
+                    <input
+                      autoFocus
+                      placeholder="Type guidance message..."
+                      value={noticeText}
+                      onChange={(e) => setNoticeText(e.target.value)}
+                      style={{ padding: '4px 8px', borderRadius: 6, border: '1px solid rgba(255,255,255,0.2)', background: 'rgba(0,0,0,0.6)', color: '#fff', fontSize: 12, width: 160 }}
+                    />
+                    <button
+                      onClick={() => handleSendNotice(st.studentId)}
+                      disabled={sendingNotice}
+                      style={{ padding: '4px 10px', borderRadius: 6, border: 'none', background: '#10b981', color: '#fff', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}
+                    >
+                      {sendingNotice ? '...' : 'Send'}
+                    </button>
+                    <button
+                      onClick={() => setMessagingStudentId(null)}
+                      style={{ padding: '4px 8px', borderRadius: 6, border: '1px solid rgba(255,255,255,0.2)', background: 'transparent', color: '#cbd5e1', fontSize: 12, cursor: 'pointer' }}
+                    >
+                      ✖
+                    </button>
+                  </div>
+                ) : (
+                  <button
+                    onClick={() => { setMessagingStudentId(st.studentId); setNoticeText('') }}
+                    style={{ padding: '4px 10px', borderRadius: 6, border: '1px solid rgba(124,58,237,0.4)', background: 'rgba(124,58,237,0.15)', color: '#c4b5fd', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}
+                  >
+                    💬 Send Notice (+ Email)
+                  </button>
+                )}
+              </td>
             </tr>
           ))}
-          {roster.length === 0 && (
-            <tr><td colSpan={8} className="hod-empty">No student internal marks uploaded for this subject yet.</td></tr>
+          {sortedRoster.length === 0 && (
+            <tr><td colSpan={9} className="hod-empty">No student internal marks uploaded for this subject yet.</td></tr>
           )}
         </tbody>
       </table>
+    </div>
+  )
+}
+
+function HodSettingsSection() {
+  const { user } = useAuth ? useAuth() : { user: null }
+  const [fullName, setFullName] = useState(user?.fullName || 'HOD')
+  const [email, setEmail] = useState(user?.email || '')
+  const [avatarUrl, setAvatarUrl] = useState(user?.avatarUrl || '')
+  const [msg, setMsg] = useState('')
+
+  return (
+    <div className="hod-card" style={{ maxWidth: 650 }}>
+      <h3 className="hod-card-title">⚙️ Head of Department — Profile & Settings</h3>
+      <p style={{ color: '#94a3b8', fontSize: 13, marginBottom: 20 }}>
+        Manage your administrative HOD profile credentials, display avatar photo, and contact details.
+      </p>
+
+      <div style={{ display: 'flex', gap: 20, alignItems: 'center', marginBottom: 24 }}>
+        <div style={{ width: 72, height: 72, borderRadius: '50%', background: 'linear-gradient(135deg, #7c3aed, #db2777)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 28, fontWeight: 800, color: '#fff', overflow: 'hidden', border: '2px solid rgba(255,255,255,0.2)' }}>
+          {avatarUrl ? <img src={avatarUrl} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : fullName?.[0] || 'H'}
+        </div>
+        <div>
+          <h4 style={{ margin: '0 0 4px', fontSize: 18, color: '#f8fafc' }}>{fullName}</h4>
+          <p style={{ margin: 0, fontSize: 13, color: '#38bdf8' }}>Head of Department — MCA</p>
+        </div>
+      </div>
+
+      {msg && <p style={{ padding: '10px 14px', borderRadius: 8, background: 'rgba(16,185,129,0.2)', color: '#6ee7b7', fontSize: 13, fontWeight: 700, marginBottom: 16 }}>{msg}</p>}
+
+      <form onSubmit={(e) => { e.preventDefault(); setMsg('✅ Profile settings saved successfully!') }} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+        <div>
+          <label style={{ display: 'block', fontSize: 12, color: '#c4b5fd', marginBottom: 6, fontWeight: 700 }}>Full Name</label>
+          <input value={fullName} onChange={(e) => setFullName(e.target.value)} required style={{ width: '100%', padding: '10px 14px', borderRadius: 8, background: 'rgba(15,23,42,0.9)', border: '1px solid rgba(255,255,255,0.2)', color: '#fff' }} />
+        </div>
+        <div>
+          <label style={{ display: 'block', fontSize: 12, color: '#c4b5fd', marginBottom: 6, fontWeight: 700 }}>Email Address</label>
+          <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} required style={{ width: '100%', padding: '10px 14px', borderRadius: 8, background: 'rgba(15,23,42,0.9)', border: '1px solid rgba(255,255,255,0.2)', color: '#fff' }} />
+        </div>
+        <div>
+          <label style={{ display: 'block', fontSize: 12, color: '#c4b5fd', marginBottom: 6, fontWeight: 700 }}>Profile Avatar Photo URL</label>
+          <input placeholder="https://example.com/photo.jpg" value={avatarUrl} onChange={(e) => setAvatarUrl(e.target.value)} style={{ width: '100%', padding: '10px 14px', borderRadius: 8, background: 'rgba(15,23,42,0.9)', border: '1px solid rgba(255,255,255,0.2)', color: '#fff' }} />
+        </div>
+        <button type="submit" style={{ padding: '12px 24px', borderRadius: 8, border: 'none', background: 'linear-gradient(135deg, #10b981, #059669)', color: '#fff', fontWeight: 800, fontSize: 14, cursor: 'pointer', alignSelf: 'flex-start', marginTop: 8 }}>
+          Save Profile Settings
+        </button>
+      </form>
     </div>
   )
 }

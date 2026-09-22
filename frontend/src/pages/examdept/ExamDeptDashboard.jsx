@@ -21,6 +21,10 @@ export default function ExamDeptDashboard() {
   const [modalStatus, setModalStatus] = useState('')
   const [creating, setCreating] = useState(false)
 
+  const [deptInternalScores, setDeptInternalScores] = useState([])
+  const [selectedSemFilter, setSelectedSemFilter] = useState('ALL')
+  const [loadingInternals, setLoadingInternals] = useState(false)
+
   function loadDashboard(deptId = selectedDeptId) {
     setLoading(true)
     const url = deptId && deptId !== 'ALL' ? `/examdept/dashboard-summary?departmentId=${deptId}` : '/examdept/dashboard-summary'
@@ -42,11 +46,21 @@ export default function ExamDeptDashboard() {
       .catch(() => {})
   }
 
+  function loadDepartmentInternalScores(deptId = selectedDeptId, sem = selectedSemFilter) {
+    setLoadingInternals(true)
+    const semParam = sem && sem !== 'ALL' ? `?semester=${encodeURIComponent(sem)}` : ''
+    api.get(`/examdept/departments/${deptId}/internal-marks${semParam}`)
+      .then((res) => setDeptInternalScores(res.data?.students || []))
+      .catch(() => setDeptInternalScores([]))
+      .finally(() => setLoadingInternals(false))
+  }
+
   useEffect(() => {
     loadDashboard(selectedDeptId)
     loadDepartments()
     loadSubjects()
-  }, [selectedDeptId])
+    loadDepartmentInternalScores(selectedDeptId, selectedSemFilter)
+  }, [selectedDeptId, selectedSemFilter])
 
   async function handleCreateSchedule(e) {
     e.preventDefault()
@@ -271,6 +285,79 @@ export default function ExamDeptDashboard() {
             📢 Publish Results
           </Link>
         </div>
+      </div>
+
+      {/* HOD-APPROVED 50m INTERNAL MARKS PANEL */}
+      <div className="pd-panel glass-card" style={{ margin: 0 }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 18, flexWrap: 'wrap', gap: 12 }}>
+          <div>
+            <h3 style={{ fontSize: 18, margin: 0, color: '#f8fafc' }}>📋 HOD-Approved 50-Mark Internal Scores ({selectedDeptId === 'ALL' ? 'All Departments' : activeDeptObj?.name || 'Department'})</h3>
+            <p style={{ color: '#94a3b8', fontSize: 13, margin: '4px 0 0' }}>
+              Automatic data stream of 50-mark internal evaluation scores submitted & approved by HOD for Examination Department.
+            </p>
+          </div>
+
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+            <span style={{ fontSize: 13, color: '#c084fc', fontWeight: 700 }}>Filter Semester:</span>
+            <select
+              value={selectedSemFilter}
+              onChange={(e) => setSelectedSemFilter(e.target.value)}
+              style={{ padding: '8px 12px', borderRadius: 8, background: 'rgba(15,23,42,0.9)', border: '1px solid rgba(255,255,255,0.15)', color: '#fff', fontSize: 13 }}
+            >
+              <option value="ALL">All Semesters</option>
+              <option value="1st Sem">1st Sem</option>
+              <option value="2nd Sem">2nd Sem</option>
+              <option value="3rd Sem">3rd Sem</option>
+              <option value="4th Sem">4th Sem</option>
+            </select>
+          </div>
+        </div>
+
+        {loadingInternals ? (
+          <p>Loading internal marks data...</p>
+        ) : deptInternalScores.length === 0 ? (
+          <div style={{ padding: 24, textAlign: 'center', color: '#94a3b8' }}>
+            No internal mark submissions approved by HOD yet for this department filter.
+          </div>
+        ) : (
+          <table className="pd-table" style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', fontSize: 13 }}>
+            <thead>
+              <tr style={{ borderBottom: '1px solid rgba(255,255,255,0.1)', color: '#c084fc', fontSize: 12 }}>
+                <th style={{ padding: 10 }}>#</th>
+                <th style={{ padding: 10 }}>REG NO / USN</th>
+                <th style={{ padding: 10 }}>STUDENT NAME</th>
+                <th style={{ padding: 10 }}>SEMESTER</th>
+                <th style={{ padding: 10 }}>AVG INTERNAL SCORE (50M)</th>
+                <th style={{ padding: 10 }}>STATUS</th>
+              </tr>
+            </thead>
+            <tbody>
+              {deptInternalScores.map((st, idx) => (
+                <tr key={st.studentId || idx} style={{ borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
+                  <td style={{ padding: 10, color: '#94a3b8' }}>{idx + 1}</td>
+                  <td style={{ padding: 10, fontWeight: 700, color: '#38bdf8' }}>{st.registrationNo}</td>
+                  <td style={{ padding: 10, fontWeight: 600 }}>{st.fullName}</td>
+                  <td style={{ padding: 10 }}>{st.semester}</td>
+                  <td style={{ padding: 10, fontWeight: 900, color: st.avgInternal50 >= 25 ? '#34d399' : '#f87171' }}>
+                    {st.avgInternal50} / 50
+                  </td>
+                  <td style={{ padding: 10 }}>
+                    <span style={{
+                      padding: '3px 10px',
+                      borderRadius: 12,
+                      fontSize: 11,
+                      fontWeight: 800,
+                      background: 'rgba(16,185,129,0.15)',
+                      color: '#34d399',
+                    }}>
+                      ✓ Unlocked by HOD
+                    </span>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        )}
       </div>
 
       {/* CREATE EXAM SCHEDULE MODAL */}

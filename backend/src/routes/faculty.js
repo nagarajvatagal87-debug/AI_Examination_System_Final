@@ -619,6 +619,9 @@ router.post("/subjects/:subjectId/submit-internals-to-hod", async (req, res) => 
   try {
     const { subjectId } = req.params;
 
+    const { setSubjectStatus } = require("../services/internalMarksStore");
+    await setSubjectStatus(subjectId, "submitted_to_hod");
+
     const { data: subject } = await supabaseAdmin
       .from("subjects")
       .select("id, name, department_id, departments(hod_id, name)")
@@ -633,17 +636,64 @@ router.post("/subjects/:subjectId/submit-internals-to-hod", async (req, res) => 
     } catch (e) {}
 
     const hodId = subject?.departments?.hod_id;
+
+    // Get HOD email and profile
+    let hodEmail = null;
+    let hodName = "Department HOD";
+
     if (hodId) {
+      const { data: hodProfile } = await supabaseAdmin
+        .from("profiles")
+        .select("email, full_name")
+        .eq("id", hodId)
+        .maybeSingle();
+
+      if (hodProfile) {
+        hodEmail = hodProfile.email;
+        hodName = hodProfile.full_name || "Department HOD";
+      }
+
       const { notify } = require("../services/notification.service");
       await notify(
         hodId,
         "internal_marks_submitted",
-        `50-Mark Internal Sheet Submitted — ${subject.name}`,
-        `Faculty ${req.user.fullName || "Faculty"} has submitted 50-mark Internal evaluation sheets for ${subject.name}. Please review and approve for Exam Dept.`
+        `50-Mark Internal Sheet Submitted — ${subject?.name || "Subject"}`,
+        `Faculty ${req.user.fullName || "Faculty"} has submitted 50-mark Internal evaluation sheets for ${subject?.name || "Subject"}. Please review and approve for Exam Dept.`
       );
     }
 
-    res.json({ status: "submitted_to_hod", subjectName: subject?.name });
+    // Also fallback to any active HOD email in department if hodId wasn't direct
+    if (!hodEmail && subject?.department_id) {
+      const { data: deptHod } = await supabaseAdmin
+        .from("profiles")
+        .select("email, full_name")
+        .eq("role", "hod")
+        .eq("department_id", subject.department_id)
+        .maybeSingle();
+
+      if (deptHod?.email) {
+        hodEmail = deptHod.email;
+        hodName = deptHod.full_name || hodName;
+      }
+    }
+
+    // Send email notification to HOD
+    if (hodEmail) {
+      try {
+        await sendEmail(
+          hodEmail,
+          `📋 50-Mark Internal Sheet Submitted — ${subject?.name || "Subject"}`,
+          `Dear ${hodName},\n\n` +
+          `Faculty ${req.user.fullName || req.user.email} has completed and submitted the 50-mark student internal evaluation marks for ${subject?.name || "Subject"}.\n\n` +
+          `Please log in to your HOD Dashboard under '50m Internal Approval' to review, edit if required, and approve the internal marks so they can be transferred to the Examination Department.\n\n` +
+          `Regards,\nAI Examination Platform`
+        );
+      } catch (e) {
+        console.warn("HOD internal submission email dispatch note:", e.message);
+      }
+    }
+
+    res.json({ status: "submitted_to_hod", subjectName: subject?.name, emailSentToHod: Boolean(hodEmail) });
   } catch (err) {
     res.status(400).json({ error: err.message });
   }

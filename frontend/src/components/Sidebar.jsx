@@ -15,10 +15,16 @@ export default function Sidebar({ title, subtitle, items }) {
         </div>
       </div>
 
-      <div className="sidebar-user">
-        <div className="sidebar-avatar">{user?.fullName?.[0]?.toUpperCase() || '?'}</div>
+      <div className="sidebar-user" style={{ cursor: 'pointer' }}>
+        <div className="sidebar-avatar" style={{ overflow: 'hidden', padding: 0 }}>
+          {user?.avatarUrl ? (
+            <img src={user.avatarUrl} alt="Avatar" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+          ) : (
+            user?.fullName?.[0]?.toUpperCase() || '?'
+          )}
+        </div>
         <div>
-          <div className="sidebar-user-name">{user?.fullName}</div>
+          <div className="sidebar-user-name">{user?.fullName || 'User Profile'}</div>
           <div className="sidebar-user-status"><span className="dot" /> Online</div>
         </div>
       </div>

@@ -6,45 +6,8 @@ const attendanceStore = new Map();
 
 let internalTimetableStore = {
   examName: "Continuous Internal Assessment Test - 1 (IAT-1 2026)",
-  publishedAt: new Date().toISOString(),
-  schedule: [
-    {
-      slNo: 1,
-      subjectCode: "MMC321",
-      subjectName: "Deep Learning",
-      examDate: "2026-10-05",
-      timeSlot: "10:00 AM - 11:30 AM",
-      hallNo: "Block-A Room 302",
-      totalMarks: 50
-    },
-    {
-      slNo: 2,
-      subjectCode: "MMC322",
-      subjectName: "Database Management Systems",
-      examDate: "2026-10-06",
-      timeSlot: "10:00 AM - 11:30 AM",
-      hallNo: "Block-A Room 302",
-      totalMarks: 50
-    },
-    {
-      slNo: 3,
-      subjectCode: "MMC323",
-      subjectName: "Java Enterprise Programming",
-      examDate: "2026-10-07",
-      timeSlot: "10:00 AM - 11:30 AM",
-      hallNo: "Block-B Room 405",
-      totalMarks: 50
-    },
-    {
-      slNo: 4,
-      subjectCode: "MMC324",
-      subjectName: "Computer Networks",
-      examDate: "2026-10-08",
-      timeSlot: "10:00 AM - 11:30 AM",
-      hallNo: "Block-B Room 405",
-      totalMarks: 50
-    }
-  ]
+  publishedAt: null,
+  schedule: []
 };
 
 /**
@@ -142,6 +105,17 @@ async function updateSubjectAttendance(subjectId, attendanceList) {
   return updatedRecords;
 }
 
+const condonationSet = new Set(); // studentIds with medical condonation granted by HOD
+
+function grantCondonation(studentId) {
+  condonationSet.add(studentId);
+  return true;
+}
+
+function isCondoned(studentId) {
+  return condonationSet.has(studentId);
+}
+
 /**
  * Get student overall attendance percentage across all subjects (Student & HOD view)
  */
@@ -151,14 +125,6 @@ async function getStudentAttendanceSummary(studentId) {
     const { data } = await supabaseAdmin.from("subjects").select("id, name, code");
     subjects = data || [];
   } catch (e) {}
-
-  if (subjects.length === 0) {
-    subjects = [
-      { id: "sub-genai", name: "Introduction to Generative AI-Theory", code: "MMC311" },
-      { id: "sub-dl", name: "Deep Learning-Theory", code: "MMC321" },
-      { id: "sub-devops", name: "Devops-Theory", code: "MMC335" }
-    ];
-  }
 
   let grandTotalClasses = 0;
   let grandAttendedClasses = 0;
@@ -182,28 +148,21 @@ async function getStudentAttendanceSummary(studentId) {
 
     breakdown.push({
       subjectId: sub.id,
-      subjectName: `${sub.code} - ${sub.name}`,
-      subjectCode: sub.code,
+      subjectName: `${sub.code || 'SUB'} - ${sub.name}`,
+      subjectCode: sub.code || 'SUB',
       totalClasses: total,
       attendedClasses: attended,
       percentage: pctFloat,
       hasAttendance: hasRec,
       isShortage: hasRec && pctFloat < 75.0,
-      isEligible: hasRec && pctFloat >= 75.0
+      isEligible: hasRec && (pctFloat >= 75.0 || condonationSet.has(studentId))
     });
   }
 
   const grandAbsent = Math.max(0, grandTotalClasses - grandAttendedClasses);
   const overallPercentage = grandTotalClasses > 0 ? Math.round((grandAttendedClasses / grandTotalClasses) * 10000) / 100 : 0;
-  const isEligible = grandTotalClasses > 0 && overallPercentage >= 75.0;
-
-  // Daily logs generated strictly if attendance has been submitted by faculty
-  const dailyLogs = grandTotalClasses > 0 ? [
-    { date: "21-Sep-26", day: "Mon", slots: [{ text: "P", type: "present" }, { text: "P", type: "present" }, { text: "P", type: "present" }, { text: "-", type: "none" }] },
-    { date: "18-Sep-26", day: "Fri", slots: [{ text: "P", type: "present" }, { text: "P", type: "present" }, { text: "-", type: "none" }, { text: "-", type: "none" }] },
-    { date: "17-Sep-26", day: "Thu", slots: [{ text: "P", type: "present" }, { text: "P", type: "present" }, { text: "P", type: "present" }, { text: "-", type: "none" }] },
-    { date: "16-Sep-26", day: "Wed", slots: [{ text: "P", type: "present" }, { text: "P", type: "present" }, { text: "-", type: "none" }, { text: "-", type: "none" }] }
-  ] : [];
+  const isCondonedByHod = condonationSet.has(studentId);
+  const isEligible = (grandTotalClasses > 0 && overallPercentage >= 75.0) || isCondonedByHod;
 
   return {
     studentId,
@@ -217,9 +176,14 @@ async function getStudentAttendanceSummary(studentId) {
     pendingClasses: 0,
     noAttendanceClasses: 0,
     isEligible,
-    status: isEligible ? "ELIGIBLE" : "NOT_ELIGIBLE_ATTENDANCE_SHORTAGE",
+    isCondoned: isCondonedByHod,
+    status: !subjectsWithAttendance
+      ? "PENDING_ATTENDANCE_ENTRY"
+      : isEligible
+        ? (isCondonedByHod ? "ELIGIBLE_CONDONED_BY_HOD" : "ELIGIBLE")
+        : "NOT_ELIGIBLE_ATTENDANCE_SHORTAGE",
     subjectBreakdown: breakdown,
-    dailyLogs
+    dailyLogs: []
   };
 }
 
@@ -232,31 +196,49 @@ async function getHodAttendanceOverview(deptId = "dept-mca") {
     const { data } = await supabaseAdmin
       .from("profiles")
       .select("id, full_name, registration_no, semester")
-      .eq("role", "student");
+      .eq("role", "student")
+      .eq("department_id", deptId);
     students = data || [];
   } catch (e) {}
+
+  if (students.length === 0) {
+    try {
+      const { data } = await supabaseAdmin
+        .from("profiles")
+        .select("id, full_name, registration_no, semester")
+        .eq("role", "student");
+      students = data || [];
+    } catch (e) {}
+  }
 
   const studentSummaries = [];
   let lowAttendanceCount = 0;
   let totalPctSum = 0;
+  let studentsWithAttendance = 0;
 
   for (const s of students) {
     const summary = await getStudentAttendanceSummary(s.id);
+    if (summary.hasAnyAttendance) {
+      studentsWithAttendance++;
+      totalPctSum += summary.overallPercentage;
+      if (!summary.isEligible) lowAttendanceCount++;
+    }
     const item = {
       studentId: s.id,
       studentName: s.full_name || "Student",
-      registrationNo: s.registration_no || "1DS23MCA001",
+      registrationNo: s.registration_no || "USN101",
       semester: s.semester || "3rd Sem",
-      overallPercentage: summary.overallPercentage,
+      overallPercentage: summary.hasAnyAttendance ? summary.overallPercentage : null,
+      hasAttendance: summary.hasAnyAttendance,
       isEligible: summary.isEligible,
+      isCondoned: summary.isCondoned,
+      status: summary.status,
       subjectBreakdown: summary.subjectBreakdown
     };
-    if (!summary.isEligible) lowAttendanceCount++;
-    totalPctSum += summary.overallPercentage;
     studentSummaries.push(item);
   }
 
-  const avgDepartmentAttendance = students.length > 0 ? Math.round(totalPctSum / students.length) : 85;
+  const avgDepartmentAttendance = studentsWithAttendance > 0 ? Math.round(totalPctSum / studentsWithAttendance) : null;
 
   return {
     totalStudents: students.length,
@@ -275,7 +257,7 @@ function getInternalTimetable() {
 
 function publishInternalTimetable(examName, schedule) {
   if (examName) internalTimetableStore.examName = examName;
-  if (Array.isArray(schedule) && schedule.length > 0) {
+  if (Array.isArray(schedule)) {
     internalTimetableStore.schedule = schedule;
   }
   internalTimetableStore.publishedAt = new Date().toISOString();
@@ -288,5 +270,7 @@ module.exports = {
   getStudentAttendanceSummary,
   getHodAttendanceOverview,
   getInternalTimetable,
-  publishInternalTimetable
+  publishInternalTimetable,
+  grantCondonation,
+  isCondoned
 };

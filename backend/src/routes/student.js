@@ -308,4 +308,68 @@ router.get("/internal-timetable", async (req, res) => {
   }
 });
 
+// GET /api/student/messages -> List direct messages received by student (from HOD)
+router.get("/messages", async (req, res) => {
+  try {
+    const studentId = req.user.id;
+    const { data, error } = await supabaseAdmin
+      .from("messages")
+      .select("*, profiles!messages_sender_id_fkey(full_name, role)")
+      .eq("recipient_id", studentId)
+      .order("created_at", { ascending: false });
+
+    if (error) throw error;
+    res.json(data || []);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// POST /api/student/messages/reply -> Send direct reply to HOD
+router.post("/messages/reply", async (req, res) => {
+  try {
+    const studentId = req.user.id;
+    const { messageId, replyBody } = req.body;
+    if (!replyBody || !replyBody.trim()) {
+      return res.status(400).json({ error: "replyBody is required" });
+    }
+
+    let recipientId = null;
+    if (messageId) {
+      const { data: orig } = await supabaseAdmin.from("messages").select("sender_id").eq("id", messageId).maybeSingle();
+      recipientId = orig?.sender_id;
+    }
+
+    if (!recipientId) {
+      const { data: prof } = await supabaseAdmin.from("profiles").select("department_id").eq("id", studentId).maybeSingle();
+      if (prof?.department_id) {
+        const { data: hod } = await supabaseAdmin.from("profiles").select("id").eq("role", "hod").eq("department_id", prof.department_id).maybeSingle();
+        recipientId = hod?.id;
+      }
+    }
+
+    const { data: newMsg, error } = await supabaseAdmin
+      .from("messages")
+      .insert({
+        sender_id: studentId,
+        recipient_id: recipientId,
+        kind: "reply",
+        body: replyBody,
+      })
+      .select()
+      .single();
+
+    if (error) throw error;
+
+    if (recipientId) {
+      const { notify } = require("../services/notification.service");
+      await notify(recipientId, "student_reply", "💬 Student Reply Received", `A student sent a reply to your academic notice: "${replyBody.substring(0, 60)}..."`);
+    }
+
+    res.status(201).json({ status: "sent", message: newMsg });
+  } catch (err) {
+    res.status(400).json({ error: err.message });
+  }
+});
+
 module.exports = router;
