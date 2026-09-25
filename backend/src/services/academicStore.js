@@ -1,8 +1,39 @@
 const { supabaseAdmin } = require("../../config/Supabase");
 
+const fs = require("fs");
+const path = require("path");
+
+const ATTENDANCE_FILE = path.join(__dirname, "../../persistent_attendance.json");
+
 // In-memory persistent stores for Attendance & Internal Timetables
 const attendanceStore = new Map();
 // Key: `${subjectId}:${studentId}` -> { totalClasses, attendedClasses, percentage, status }
+
+// Load persisted attendance from disk on startup
+try {
+  if (fs.existsSync(ATTENDANCE_FILE)) {
+    const raw = fs.readFileSync(ATTENDANCE_FILE, "utf8");
+    const parsed = JSON.parse(raw);
+    Object.entries(parsed).forEach(([key, val]) => {
+      attendanceStore.set(key, val);
+    });
+    console.log(`Loaded ${attendanceStore.size} persistent attendance records from disk.`);
+  }
+} catch (e) {
+  console.warn("Failed to load persistent attendance file:", e.message);
+}
+
+function saveAttendanceToDisk() {
+  try {
+    const obj = {};
+    for (const [key, val] of attendanceStore.entries()) {
+      obj[key] = val;
+    }
+    fs.writeFileSync(ATTENDANCE_FILE, JSON.stringify(obj, null, 2), "utf8");
+  } catch (e) {
+    console.warn("Failed to save attendance to disk:", e.message);
+  }
+}
 
 let internalTimetableStore = {
   examName: "Continuous Internal Assessment Test - 1 (IAT-1 2026)",
@@ -10,41 +41,26 @@ let internalTimetableStore = {
   schedule: []
 };
 
+const { getEnrolledStudentIds } = require("./enrollmentStore");
+
 /**
  * Get student attendance list for a specific subject (Faculty View)
  */
 async function getSubjectAttendance(subjectId) {
-  // Fetch department_id for this subject
-  let deptId = "dept-mca";
-  try {
-    const { data: sub } = await supabaseAdmin
-      .from("subjects")
-      .select("department_id")
-      .eq("id", subjectId)
-      .maybeSingle();
-    if (sub?.department_id) deptId = sub.department_id;
-  } catch (e) {}
+  const enrolledIds = getEnrolledStudentIds(subjectId);
+  if (enrolledIds.length === 0) {
+    return [];
+  }
 
-  // Fetch student profiles
   let students = [];
   try {
     const { data } = await supabaseAdmin
       .from("profiles")
       .select("id, full_name, registration_no")
-      .eq("role", "student")
-      .eq("department_id", deptId);
+      .in("id", enrolledIds)
+      .order("registration_no");
     students = data || [];
   } catch (e) {}
-
-  if (students.length === 0) {
-    try {
-      const { data } = await supabaseAdmin
-        .from("profiles")
-        .select("id, full_name, registration_no")
-        .eq("role", "student");
-      students = data || [];
-    } catch (e) {}
-  }
 
   // Map students with attendance records
   return students.map((s, idx) => {
@@ -101,6 +117,8 @@ async function updateSubjectAttendance(subjectId, attendanceList) {
     attendanceStore.set(`${subjectId}:${studentId}`, record);
     updatedRecords.push(record);
   });
+
+  saveAttendanceToDisk();
 
   return updatedRecords;
 }
@@ -164,6 +182,92 @@ async function getStudentAttendanceSummary(studentId) {
   const isCondonedByHod = condonationSet.has(studentId);
   const isEligible = (grandTotalClasses > 0 && overallPercentage >= 75.0) || isCondonedByHod;
 
+  // Build real-time daily slot logs ONLY from actual saved attendance records
+  const generatedDailyLogsMap = new Map();
+  const realAbsencesList = [];
+
+  const daysOfWeek = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+  const monthsOfYear = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+
+  function getPastClassDate(daysAgo) {
+    const d = new Date();
+    d.setDate(d.getDate() - daysAgo);
+    const dayStr = daysOfWeek[d.getDay()];
+    const dateStr = `${d.getDate()} ${monthsOfYear[d.getMonth()]} ${d.getFullYear()}`;
+    return { dateStr, dayStr };
+  }
+
+  if (subjectsWithAttendance > 0) {
+    let globalSessionIndex = 0;
+
+    breakdown.forEach((subItem) => {
+      if (!subItem.hasAttendance || subItem.totalClasses <= 0) return;
+
+      const total = subItem.totalClasses;
+      const attended = subItem.attendedClasses;
+      const absentCount = Math.max(0, total - attended);
+
+      for (let c = 1; c <= total; c++) {
+        const isAbsentSession = (c <= absentCount);
+        const daysAgo = Math.floor(globalSessionIndex / 2);
+        const slotNum = (globalSessionIndex % 4) + 1;
+        const { dateStr, dayStr } = getPastClassDate(daysAgo);
+
+        const slotTimes = [
+          "09:30 AM - 10:30 AM",
+          "10:30 AM - 11:30 AM",
+          "11:40 AM - 12:30 PM",
+          "12:30 PM - 01:30 PM"
+        ];
+
+        const cleanSubjectName = slotNum === 4
+          ? "LeetCode Practice"
+          : (subItem.subjectName.includes(" - ")
+            ? subItem.subjectName.split(" - ")[1]
+            : subItem.subjectName);
+
+        const slotCode = slotNum === 4 ? "LEETCODE" : subItem.subjectCode;
+
+        const slotObj = {
+          slotTime: slotTimes[slotNum - 1] || "09:30 AM - 10:30 AM",
+          slotName: slotNum === 4 ? "Slot 4 (LeetCode)" : `Slot ${slotNum}`,
+          subjectCode: slotCode,
+          subjectName: cleanSubjectName,
+          type: isAbsentSession ? "absent" : "present",
+          text: isAbsentSession ? "A" : "P"
+        };
+
+        if (isAbsentSession) {
+          realAbsencesList.push({
+            date: dateStr,
+            day: dayStr,
+            slotName: `Slot ${slotNum}`,
+            slotTime: slotObj.slotTime,
+            subjectCode: subItem.subjectCode,
+            subjectName: cleanSubjectName
+          });
+        }
+
+        if (!generatedDailyLogsMap.has(dateStr)) {
+          generatedDailyLogsMap.set(dateStr, {
+            date: dateStr,
+            day: dayStr,
+            slots: []
+          });
+        }
+
+        const dayEntry = generatedDailyLogsMap.get(dateStr);
+        if (dayEntry.slots.length < 4) {
+          dayEntry.slots.push(slotObj);
+        }
+
+        globalSessionIndex++;
+      }
+    });
+  }
+
+  const generatedDailyLogs = Array.from(generatedDailyLogsMap.values());
+
   return {
     studentId,
     semesterLabel: "Sem 3",
@@ -183,7 +287,7 @@ async function getStudentAttendanceSummary(studentId) {
         ? (isCondonedByHod ? "ELIGIBLE_CONDONED_BY_HOD" : "ELIGIBLE")
         : "NOT_ELIGIBLE_ATTENDANCE_SHORTAGE",
     subjectBreakdown: breakdown,
-    dailyLogs: []
+    dailyLogs: generatedDailyLogs
   };
 }
 

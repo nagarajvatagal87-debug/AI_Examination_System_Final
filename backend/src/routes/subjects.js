@@ -15,6 +15,7 @@ router.get("/", async (req, res) => {
       .select("id, name, code, department_id, faculty_id")
       .eq("faculty_id", req.user.id)
       .order("name");
+
     if (error) return res.status(500).json({ error: error.message });
     return res.json(mySubs || []);
   }
@@ -25,6 +26,26 @@ router.get("/", async (req, res) => {
   const { data, error } = await query;
   if (error) return res.status(500).json({ error: error.message });
   res.json(data || []);
+});
+
+// POST /api/subjects/claim -> Faculty self-assigns / claims a subject
+router.post("/claim", requireRole("faculty"), async (req, res) => {
+  try {
+    const { subjectId } = req.body;
+    if (!subjectId) return res.status(400).json({ error: "subjectId is required" });
+
+    const { data, error } = await supabaseAdmin
+      .from("subjects")
+      .update({ faculty_id: req.user.id })
+      .eq("id", subjectId)
+      .select()
+      .single();
+    if (error) throw error;
+
+    res.json(data);
+  } catch (err) {
+    res.status(400).json({ error: err.message });
+  }
 });
 
 // POST /api/subjects  body: { name, code, departmentId }  -- faculty/hod create subjects
@@ -51,6 +72,18 @@ router.post("/", requireRole("faculty", "hod"), async (req, res) => {
     if (error) throw error;
 
     res.status(201).json(data);
+  } catch (err) {
+    res.status(400).json({ error: err.message });
+  }
+});
+
+// DELETE /api/subjects/:id -> faculty / hod deletes a subject
+router.delete("/:id", requireRole("faculty", "hod"), async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { error } = await supabaseAdmin.from("subjects").delete().eq("id", id);
+    if (error) throw error;
+    res.json({ message: "Subject deleted successfully" });
   } catch (err) {
     res.status(400).json({ error: err.message });
   }

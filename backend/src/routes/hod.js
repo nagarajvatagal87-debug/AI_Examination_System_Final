@@ -4,6 +4,7 @@ const { supabaseAdmin } = require("../../config/Supabase");
 const { requireAuth, requireRole } = require("../middleware/auth.js");
 const { sendEmail } = require("../services/emailService");
 const { getHodAttendanceOverview, getInternalTimetable, publishInternalTimetable } = require("../services/academicStore.js");
+const { getEnrolledStudentIds } = require("../services/enrollmentStore.js");
 
 const router = express.Router();
 
@@ -151,7 +152,7 @@ router.get("/overview", async (req, res) => {
       .select("id, full_name, registration_no, semester")
       .eq("role", "student");
 
-    const totalStudents = students?.length || 6;
+    const totalStudents = students?.length || 0;
 
     // Live department subjects
     const { data: dbSubjects } = await supabaseAdmin
@@ -245,38 +246,43 @@ router.get("/overview", async (req, res) => {
       .slice(0, 10)
       .map((s, idx) => ({ rank: idx + 1, ...s }));
 
-    // Count faculty members
+    // Count department faculty members (excluding dummy/system test faculty)
     const { data: facultyMembers } = await supabaseAdmin
       .from("profiles")
-      .select("id")
+      .select("id, email, department_id")
       .eq("role", "faculty");
+
+    const activeFaculty = (facultyMembers || []).filter((f) => {
+      const isDept = !f.department_id || f.department_id === departmentId || departmentId === "dept-mca";
+      const isDummy = f.email?.includes("faculty_pro_") || f.email?.includes("faculty_eval_");
+      return isDept && !isDummy;
+    });
+
+    let attendanceAvg = "Pending Upload";
+    try {
+      const { getHodAttendanceOverview } = require("../services/academicStore");
+      const attOverview = await getHodAttendanceOverview(departmentId);
+      if (attOverview.avgDepartmentAttendance !== null && attOverview.avgDepartmentAttendance !== undefined) {
+        attendanceAvg = `${attOverview.avgDepartmentAttendance}% Avg`;
+      }
+    } catch (e) {}
 
     res.json({
       department_id: departmentId || "dept-mca",
       department_name: deptName,
       total_students: totalStudents,
-      faculty_count: facultyMembers?.length || 0,
+      faculty_count: activeFaculty.length,
       passed_students: passedCount,
       failed_students: failedCount,
       backlog_students: failedCount,
       pass_percentage: passPct,
+      attendance_avg: attendanceAvg,
       subjects: subjects || [],
       top_students: topStudents,
       results_published: evaluatedStudentIds.length > 0,
     });
   } catch (err) {
-    res.json({
-      department_id: "dept-mca",
-      department_name: "Master of Computer Applications (MCA)",
-      total_students: 6,
-      passed_students: 5,
-      failed_students: 1,
-      backlog_students: 1,
-      pass_percentage: 83.3,
-      subjects: [],
-      top_students: [],
-      results_published: true,
-    });
+    res.status(500).json({ error: err.message });
   }
 });
 
@@ -326,17 +332,30 @@ router.get("/faculty", async (req, res) => {
   try {
     const departmentId = await getHodDepartmentId(req.user.id);
 
-    const { data, error } = await supabaseAdmin
+    const { data: facultyList, error } = await supabaseAdmin
       .from("profiles")
       .select("id, full_name, email, created_at, department_id")
       .eq("role", "faculty")
       .order("full_name");
     if (error) throw error;
 
-    const filtered = (data || []).filter((f) => {
+    const { data: deptSubjects } = await supabaseAdmin
+      .from("subjects")
+      .select("id, name, code, faculty_id")
+      .eq("department_id", departmentId);
+
+    const filtered = (facultyList || []).filter((f) => {
       const isDept = !f.department_id || f.department_id === departmentId || departmentId === "dept-mca";
       const isDummy = f.email?.includes("faculty_pro_") || f.email?.includes("faculty_eval_");
       return isDept && !isDummy;
+    }).map((f) => {
+      const assignedSub = (deptSubjects || []).find((s) => s.faculty_id === f.id);
+      return {
+        ...f,
+        subjectId: assignedSub?.id || null,
+        subjectName: assignedSub?.name || null,
+        subjectCode: assignedSub?.code || null,
+      };
     });
 
     res.json(filtered);
@@ -344,6 +363,49 @@ router.get("/faculty", async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 });
+
+// DELETE /api/hod/subjects/:id -> Remove department subject
+router.delete("/subjects/:id", async (req, res) => {
+  try {
+    const subjectId = req.params.id;
+    const departmentId = await getHodDepartmentId(req.user.id);
+
+    // Unlink or delete related materials and exams
+    try { await supabaseAdmin.from("course_materials").delete().eq("subject_id", subjectId); } catch (e) {}
+    try { await supabaseAdmin.from("exams").delete().eq("subject_id", subjectId); } catch (e) {}
+
+    const { error } = await supabaseAdmin
+      .from("subjects")
+      .delete()
+      .eq("id", subjectId);
+
+    if (error) throw error;
+    res.json({ status: "deleted", subjectId });
+  } catch (err) {
+    res.status(400).json({ error: err.message });
+  }
+});
+
+// PUT /api/hod/faculty/:id/assign-subject -> Assign or reassign subject to faculty member
+router.put("/faculty/:id/assign-subject", async (req, res) => {
+  try {
+    const facultyId = req.params.id;
+    const { subjectId } = req.body;
+
+    // Unlink previous subject for this faculty
+    await supabaseAdmin.from("subjects").update({ faculty_id: null }).eq("faculty_id", facultyId);
+
+    // Link new subject
+    if (subjectId) {
+      await supabaseAdmin.from("subjects").update({ faculty_id: facultyId }).eq("id", subjectId);
+    }
+
+    res.json({ status: "updated", facultyId, subjectId });
+  } catch (err) {
+    res.status(400).json({ error: err.message });
+  }
+});
+
 
 router.post("/faculty", async (req, res) => {
   try {
@@ -644,14 +706,14 @@ router.get("/subject-pass-rates", async (req, res) => {
       .select("id")
       .eq("role", "student");
 
-    const totalStudents = deptStudents?.length || 6;
+    const totalStudents = deptStudents?.length || 0;
 
     const { getSubjectInternalMarks } = require("../services/internalMarksStore");
 
     const passRates = await Promise.all(subjectList.map(async (sub) => {
       const marks = await getSubjectInternalMarks(sub.id);
       const eligibleCount = marks.filter((m) => m.is_eligible || (m.total_internal_marks ?? 0) >= 25).length;
-      const count = totalStudents > 0 ? totalStudents : (marks.length || 6);
+      const count = marks.length || totalStudents || 0;
       const passPct = count > 0 ? Math.round((eligibleCount / count) * 100) : 0;
       const failCount = Math.max(0, count - eligibleCount);
 
@@ -955,25 +1017,6 @@ router.get("/top10", async (req, res) => {
   }
 });
 
-// GET /api/hod/students -> full list of students registered under HOD's department
-router.get("/students", async (req, res) => {
-  try {
-    const departmentId = await getHodDepartmentId(req.user.id);
-    if (!departmentId) return res.json([]);
-
-    const { data: students, error } = await supabaseAdmin
-      .from("profiles")
-      .select("id, full_name, registration_no, email, semester, created_at")
-      .eq("role", "student")
-      .eq("department_id", departmentId)
-      .order("registration_no", { ascending: true });
-
-    if (error) throw error;
-    res.json(students || []);
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
-});
 
 // GET /api/hod/result-sheet/download -> detailed class result sheet for export / CSV download
 router.get("/result-sheet/download", async (req, res) => {
@@ -1284,6 +1327,86 @@ router.post("/students", async (req, res) => {
   }
 });
 
+function normalizeSem(sem) {
+  if (!sem) return "";
+  return sem.toString().toLowerCase().replace(/(st|nd|rd|th|\s|sem|semester)/g, "");
+}
+
+// GET /api/hod/subjects -> List all active department subjects
+router.get("/subjects", async (req, res) => {
+  try {
+    const departmentId = await getHodDepartmentId(req.user.id);
+    if (!departmentId) return res.json([]);
+
+    const { data, error } = await supabaseAdmin
+      .from("subjects")
+      .select("id, name, code, department_id, faculty_id")
+      .eq("department_id", departmentId)
+      .order("created_at", { ascending: false });
+
+    if (error) throw error;
+
+    const subjects = (data || []).map((s) => ({
+      ...s,
+      semester: s.semester || "3rd Sem"
+    }));
+
+    res.json(subjects);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// POST /api/hod/subjects -> Add new subject to department
+router.post("/subjects", async (req, res) => {
+  try {
+    const { name, code, semester } = req.body;
+    if (!name || !code) {
+      return res.status(400).json({ error: "Subject name and code are required" });
+    }
+
+    const departmentId = await getHodDepartmentId(req.user.id);
+    if (!departmentId) {
+      return res.status(400).json({ error: "No department assigned to your HOD profile" });
+    }
+
+    const { data, error } = await supabaseAdmin
+      .from("subjects")
+      .insert({
+        name,
+        code,
+        department_id: departmentId,
+        faculty_id: req.user.id,
+      })
+      .select()
+      .single();
+
+    if (error) throw error;
+    res.status(201).json({ ...data, semester: semester || "3rd Sem" });
+  } catch (err) {
+    res.status(400).json({ error: err.message });
+  }
+});
+
+// DELETE /api/hod/subjects/:id -> Remove subject from department
+router.delete("/subjects/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
+    const departmentId = await getHodDepartmentId(req.user.id);
+
+    const { error } = await supabaseAdmin
+      .from("subjects")
+      .delete()
+      .eq("id", id)
+      .eq("department_id", departmentId);
+
+    if (error) throw error;
+    res.json({ success: true, message: "Subject removed successfully" });
+  } catch (err) {
+    res.status(400).json({ error: err.message });
+  }
+});
+
 // GET /api/hod/students -> List all students registered in this department with semester filter & course breakdown
 router.get("/students", async (req, res) => {
   try {
@@ -1309,15 +1432,30 @@ router.get("/students", async (req, res) => {
     // Fetch department subjects for course taken breakdown
     const { data: deptSubjects } = await supabaseAdmin
       .from("subjects")
-      .select("id, name, code, semester")
+      .select("id, name, code, department_id")
       .eq("department_id", departmentId);
 
     const subjectsList = deptSubjects || [];
 
     const enriched = (students || []).map((s) => {
-      const studentSem = s.semester || "3rd Sem";
-      const semMatches = subjectsList.filter((sub) => !sub.semester || sub.semester === studentSem);
-      const courses = semMatches.length > 0 ? semMatches : subjectsList;
+      const courses = subjectsList.map((sub) => ({
+        ...sub,
+        semester: sub.semester || "3rd Sem"
+      })).filter((sub) => {
+        const enrolledIds = getEnrolledStudentIds(sub.id);
+        const isExplicitlyEnrolled = enrolledIds.includes(s.id);
+        
+        // If subject has explicit student enrollments recorded, strictly check if student is enrolled
+        if (enrolledIds.length > 0) {
+          return isExplicitlyEnrolled;
+        }
+
+        // Default fallback matching if a subject has not had specific enrollments configured yet
+        const stdSemNorm = normalizeSem(s.semester || "3rd Sem");
+        const subSemNorm = normalizeSem(sub.semester || "3rd Sem");
+        return stdSemNorm === subSemNorm;
+      });
+
       return {
         ...s,
         registeredCourses: courses
@@ -1335,7 +1473,57 @@ router.get("/students", async (req, res) => {
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
+});// GET /api/hod/subjects/:subjectId/internal-marks -> Internal marks roster for HOD subject analytics
+router.get("/subjects/:subjectId/internal-marks", async (req, res) => {
+  try {
+    const { subjectId } = req.params;
+    const departmentId = await getHodDepartmentId(req.user.id);
+
+    const { getSubjectInternalMarks } = require("../services/internalMarksStore");
+    const marks = await getSubjectInternalMarks(subjectId);
+
+    // Fetch department students
+    const { data: deptStudents } = await supabaseAdmin
+      .from("profiles")
+      .select("id, full_name, registration_no, semester")
+      .eq("role", "student");
+
+    const students = (deptStudents && deptStudents.length > 0) ? deptStudents : [
+      { id: 'st-1', full_name: 'Bharath Kumar', registration_no: '1DS23MCA001', semester: '3rd Sem' },
+      { id: 'st-2', full_name: 'Priya Sharma', registration_no: '1DS23MCA002', semester: '3rd Sem' },
+      { id: 'st-3', full_name: 'Ananya Rao', registration_no: '1DS23MCA003', semester: '3rd Sem' },
+      { id: 'st-4', full_name: 'Kiran V', registration_no: '1DS23MCA004', semester: '3rd Sem' },
+      { id: 'st-5', full_name: 'Sneha Patil', registration_no: '1DS23MCA005', semester: '3rd Sem' },
+      { id: 'st-6', full_name: 'Rahul Mehta', registration_no: '1DS23MCA006', semester: '3rd Sem' },
+    ];
+
+    const roster = students.map((st, idx) => {
+      const markRec = (marks || []).find((m) => m.student_id === st.id) || {};
+      const i1 = Number(markRec.internal1_marks ?? 0);
+      const i2 = Number(markRec.internal2_marks ?? 0);
+      const ass = Number(markRec.assignment_marks ?? 0);
+      const tot = Number(markRec.total_internal_marks ?? (i1 + i2 + ass));
+
+      return {
+        studentId: st.id,
+        fullName: st.full_name || markRec.profiles?.full_name || 'Student Candidate',
+        registrationNo: st.registration_no || markRec.profiles?.registration_no || `USN00${idx + 1}`,
+        semester: st.semester || '3rd Sem',
+        internal1: i1,
+        internal2: i2,
+        assignment: ass,
+        total: tot,
+        isEligible: tot >= 25,
+        status: markRec.status || 'submitted_to_hod',
+      };
+    });
+
+    res.json({ subjectId, roster });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 });
+
 
 // POST /api/hod/message-student -> Direct HOD intervention message & email to a student
 router.post("/message-student", async (req, res) => {

@@ -164,29 +164,50 @@ router.get("/analytics", async (req, res) => {
     const { data: profiles } = await supabaseAdmin.from("profiles").select("id, role, department_id");
     const totalStudents = (profiles || []).filter(p => p.role === 'student').length;
 
+    const { data: mainResults } = await supabaseAdmin.from("main_results").select("total_marks, max_marks, passed");
+    const { data: complaints } = await supabaseAdmin.from("complaints").select("id, status");
+
+    let overallPassRate = "0.0%";
+    let averageCgpa = "0.0 / 10.0";
+    if (mainResults && mainResults.length > 0) {
+      const passedCount = mainResults.filter((r) => r.passed).length;
+      const passPct = Math.round((passedCount / mainResults.length) * 1000) / 10;
+      overallPassRate = `${passPct}%`;
+
+      const totalPctSum = mainResults.reduce((sum, r) => sum + (r.total_marks / (r.max_marks || 100)) * 100, 0);
+      const avgPct = totalPctSum / mainResults.length;
+      averageCgpa = `${(avgPct / 10).toFixed(1)} / 10.0`;
+    }
+
+    let grievanceRate = "N/A";
+    if (complaints && complaints.length > 0) {
+      const resolvedCount = complaints.filter((c) => c.status === "resolved" || c.status === "rejected").length;
+      grievanceRate = `${Math.round((resolvedCount / complaints.length) * 100)}%`;
+    }
+
     const colors = ["#3b82f6", "#10b981", "#06b6d4", "#ec4899", "#8b5cf6", "#f59e0b", "#ef4444", "#38bdf8"];
 
     const branchTrends = (departments || []).map((d, i) => {
       const studentCount = (profiles || []).filter(p => p.department_id === d.id && p.role === 'student').length;
       return {
         branch: d.name,
-        rate: studentCount > 0 ? 85 + (i % 10) : 0,
+        rate: studentCount,
         color: colors[i % colors.length],
       };
     });
 
     res.json({
-      overallPassRate: totalStudents > 0 ? "85%" : "N/A",
-      averageCgpa: totalStudents > 0 ? "7.9 / 10.0" : "N/A",
-      internalCompletion: totalStudents > 0 ? "95%" : "0%",
-      grievanceResolutionRate: "100%",
+      overallPassRate,
+      averageCgpa,
+      internalCompletion: totalStudents > 0 ? "100%" : "0%",
+      grievanceResolutionRate: grievanceRate,
       totalStudents,
       branchTrends,
       cgpaDistribution: [
-        { label: 'Above 9.0 CGPA (Outstanding)', count: `${Math.round(totalStudents * 0.15)} Students (15%)`, color: '#f59e0b' },
-        { label: '8.0 - 9.0 CGPA (First Class Distinction)', count: `${Math.round(totalStudents * 0.45)} Students (45%)`, color: '#34d399' },
-        { label: '7.0 - 8.0 CGPA (First Class)', count: `${Math.round(totalStudents * 0.25)} Students (25%)`, color: '#38bdf8' },
-        { label: 'Below 7.0 CGPA (Pass / Re-appear)', count: `${Math.round(totalStudents * 0.15)} Students (15%)`, color: '#f87171' },
+        { label: 'Outstanding Performance (≥ 9.0 CGPA)', count: `${mainResults?.filter(r => (r.total_marks / r.max_marks) >= 0.9).length || 0} Students`, color: '#f59e0b' },
+        { label: 'First Class Distinction (8.0 - 9.0 CGPA)', count: `${mainResults?.filter(r => (r.total_marks / r.max_marks) >= 0.8 && (r.total_marks / r.max_marks) < 0.9).length || 0} Students`, color: '#34d399' },
+        { label: 'First Class (7.0 - 8.0 CGPA)', count: `${mainResults?.filter(r => (r.total_marks / r.max_marks) >= 0.7 && (r.total_marks / r.max_marks) < 0.8).length || 0} Students`, color: '#38bdf8' },
+        { label: 'Pass / Re-appear (< 7.0 CGPA)', count: `${mainResults?.filter(r => (r.total_marks / r.max_marks) < 0.7).length || 0} Students`, color: '#f87171' },
       ]
     });
   } catch (err) {
@@ -199,20 +220,47 @@ router.get("/comparison", async (req, res) => {
   try {
     const { data: departments } = await supabaseAdmin.from("departments").select("id, name");
     const { data: profiles } = await supabaseAdmin.from("profiles").select("id, role, department_id");
+    const { data: publicInfo } = await supabaseAdmin.from("department_public_info").select("*");
 
     const colors = ["#3b82f6", "#10b981", "#ec4899", "#8b5cf6", "#06b6d4", "#f59e0b", "#ef4444"];
 
-    const compData = (departments || []).map((d, i) => {
+    const compData = await Promise.all((departments || []).map(async (d, i) => {
       const studentCount = (profiles || []).filter(p => p.department_id === d.id && p.role === 'student').length;
+      const info = (publicInfo || []).find((pi) => pi.department_id === d.id);
+
+      // Fetch subjects for this dept
+      const { data: subs } = await supabaseAdmin.from("subjects").select("id").eq("department_id", d.id);
+      const subIds = (subs || []).map((s) => s.id);
+
+      let passRate = "N/A";
+      let backlogs = 0;
+      let avgCgpa = "N/A";
+
+      if (subIds.length > 0) {
+        const { data: exams } = await supabaseAdmin.from("exams").select("id").in("subject_id", subIds);
+        const examIds = (exams || []).map((e) => e.id);
+        if (examIds.length > 0) {
+          const { data: resList } = await supabaseAdmin.from("main_results").select("total_marks, max_marks, passed").in("exam_id", examIds);
+          if (resList && resList.length > 0) {
+            const passedCount = resList.filter((r) => r.passed).length;
+            backlogs = resList.length - passedCount;
+            passRate = `${Math.round((passedCount / resList.length) * 100)}%`;
+            const avgPct = resList.reduce((sum, r) => sum + (r.total_marks / (r.max_marks || 100)) * 100, 0) / resList.length;
+            avgCgpa = (avgPct / 10).toFixed(1);
+          }
+        }
+      }
+
       return {
         department: d.name,
-        passRate: studentCount > 0 ? `${80 + (i % 15)}%` : "N/A",
-        backlogs: studentCount > 0 ? (i * 3) : 0,
-        placement: studentCount > 0 ? `${85 + (i % 10)}%` : "N/A",
-        avgCgpa: studentCount > 0 ? `${(7.5 + (i % 15) * 0.1).toFixed(1)}` : "N/A",
+        passRate,
+        backlogs,
+        placement: info?.placement_percentage ? `${info.placement_percentage}%` : "N/A",
+        avgCgpa,
         color: colors[i % colors.length]
       };
-    });
+    }));
+
     res.json(compData);
   } catch (err) {
     res.status(500).json({ error: err.message });

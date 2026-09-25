@@ -148,10 +148,10 @@ router.get("/departments/:deptId/internal-marks", async (req, res) => {
           rec = storeRecs.find((m) => m.student_id === s.id) || {};
         }
 
-        const i1 = Number(rec?.internal1_marks ?? rec?.internal1 ?? 12);
-        const i2 = Number(rec?.internal2_marks ?? rec?.internal2 ?? 13);
-        const ass = Number(rec?.assignment_marks ?? rec?.assignment ?? 8);
-        const proj = Number(rec?.project_marks ?? rec?.project ?? 9);
+        const i1 = Number(rec?.internal1_marks ?? rec?.internal1 ?? 0);
+        const i2 = Number(rec?.internal2_marks ?? rec?.internal2 ?? 0);
+        const ass = Number(rec?.assignment_marks ?? rec?.assignment ?? 0);
+        const proj = Number(rec?.project_marks ?? rec?.project ?? 0);
         const tot = i1 + i2 + ass + proj;
 
         return {
@@ -310,7 +310,7 @@ router.get("/exams/:examId/students", async (req, res) => {
       const isVerified = submission?.status === 'verified' || submission?.status === 'evaluated' || (evals.length > 0 && evals.every((e) => e.final_marks !== null));
 
       const intRec = internalMarkRows.find((m) => m.student_id === s.id);
-      const internal50 = intRec ? (intRec.total_internal_marks || 0) : 38; // default sample internal
+      const internal50 = intRec ? (intRec.total_internal_marks || 0) : 0;
       const isEligible = intRec ? intRec.is_eligible : internal50 >= 25;
 
       return {
@@ -455,7 +455,7 @@ router.post("/exams/:examId/publish-main-result", async (req, res) => {
 
     for (const sub of submissions || []) {
       const intRec = internalMarkRows.find((m) => m.student_id === sub.student_id);
-      const internal50 = intRec ? (intRec.total_internal_marks || 0) : 38;
+      const internal50 = intRec ? (intRec.total_internal_marks || 0) : 0;
       const isEligible = intRec ? intRec.is_eligible : internal50 >= 25;
 
       const { data: evals } = await supabaseAdmin

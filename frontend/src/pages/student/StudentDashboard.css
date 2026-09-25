@@ -651,3 +651,16 @@
 .results-data-table td strong {
   color: #0f172a !important;
 }
+
+/* Attendance Hero Banner High-Contrast Header Override */
+.attendance-hero-header h2,
+.eduexam-shell .content-card .attendance-hero-header h2,
+.eduexam-shell .attendance-hero-header h2 {
+  color: #ffffff !important;
+}
+
+.attendance-hero-header p,
+.eduexam-shell .content-card .attendance-hero-header p,
+.eduexam-shell .attendance-hero-header p {
+  color: #38bdf8 !important;
+}

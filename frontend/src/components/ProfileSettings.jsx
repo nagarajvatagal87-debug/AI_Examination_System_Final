@@ -3,7 +3,7 @@ import api from '../api/client.js'
 import { useAuth } from '../context/AuthContext.jsx'
 
 export default function ProfileSettings({ mode = 'profile', onProfileUpdated }) {
-  const { user } = useAuth()
+  const { user, updateUser } = useAuth()
   const [profile, setProfile] = useState(null)
   const [fullName, setFullName] = useState(user?.fullName || '')
   const [newPassword, setNewPassword] = useState('')
@@ -26,6 +26,9 @@ export default function ProfileSettings({ mode = 'profile', onProfileUpdated }) 
       .then((res) => {
         setProfile(res.data)
         if (res.data.full_name) setFullName(res.data.full_name)
+        if (res.data.avatar_url && updateUser) {
+          updateUser({ avatarUrl: res.data.avatar_url })
+        }
         if (res.data.mobile || res.data.phone) {
           const ph = res.data.mobile || res.data.phone
           setMobile(ph)
@@ -37,11 +40,12 @@ export default function ProfileSettings({ mode = 'profile', onProfileUpdated }) 
         }
       })
       .catch(() => {
+        const isStudent = user?.role === 'student';
         setProfile({
-          full_name: user?.fullName || 'Student Candidate',
-          email: user?.email || 'student@dsatm.edu.in',
-          registration_no: user?.registrationNo || '1DS23MCA001',
-          role: user?.role || 'student',
+          full_name: user?.fullName || (isStudent ? 'Student Candidate' : (user?.role === 'hod' ? 'Department HOD' : 'Faculty Member')),
+          email: user?.email || 'user@dsatm.edu.in',
+          registration_no: user?.registrationNo || (isStudent ? 'N/A' : (user?.id ? 'EMP-' + String(user.id).substring(0, 6).toUpperCase() : 'FAC-DSATM')),
+          role: user?.role || 'faculty',
           semester: '3rd Sem',
           section: 'A',
           department_name: 'Computer Applications (MCA)',
@@ -63,6 +67,9 @@ export default function ProfileSettings({ mode = 'profile', onProfileUpdated }) 
       const res = await api.post('/profile/avatar', formData, { headers: { 'Content-Type': 'multipart/form-data' } })
       setStatus({ text: 'Profile photo updated successfully!', error: false })
       setProfile(res.data)
+      if (res.data?.avatar_url && updateUser) {
+        updateUser({ avatarUrl: res.data.avatar_url })
+      }
       if (onProfileUpdated) onProfileUpdated()
     } catch (err) {
       setStatus({ text: err.response?.data?.error || 'Upload photo failed', error: true })
@@ -112,10 +119,16 @@ export default function ProfileSettings({ mode = 'profile', onProfileUpdated }) 
     }
   }
 
-  const currentEmail = profile?.email || user?.email || 'student@dsatm.edu.in'
-  const currentName = profile?.full_name || user?.fullName || fullName || 'Nagaraj'
-  const regNo = profile?.registration_no || user?.registrationNo || '1DS23MCA001'
+  const isStudentRole = (profile?.role || user?.role) === 'student';
+  const currentEmail = profile?.email || user?.email || 'user@dsatm.edu.in'
+  const currentName = profile?.full_name || user?.fullName || fullName || (isStudentRole ? 'Student Candidate' : 'Faculty Member')
+  const regNo = profile?.registration_no || user?.registrationNo || (isStudentRole ? 'N/A' : (profile?.id || user?.id ? 'EMP-' + String(profile?.id || user?.id).substring(0, 6).toUpperCase() : 'FAC-DSATM'))
   const deptName = profile?.departments?.name || profile?.department_name || 'Master of Computer Applications (MCA)'
+
+  const idLabel = isStudentRole ? 'University USN / Reg No.' : (user?.role === 'hod' ? 'HOD / Employee ID' : (user?.role === 'principal' ? 'Principal / Executive ID' : (user?.role === 'examdept' ? 'Exam Controller ID' : 'Faculty / Employee ID')));
+  const idHeader = isStudentRole ? 'USN' : 'ID';
+  const formTitle = isStudentRole ? '📋 Candidate Personal Identity Information' : '📋 Faculty / Staff Identity Information';
+  const nameLabel = isStudentRole ? 'Full Candidate Name' : 'Full Name';
 
   if (mode === 'profile') {
     return (
@@ -128,7 +141,7 @@ export default function ProfileSettings({ mode = 'profile', onProfileUpdated }) 
 
         {/* Profile Photo Upload Panel */}
         <div style={{ background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: 14, padding: 24, boxShadow: '0 2px 4px rgba(0,0,0,0.02)' }}>
-          <h3 style={{ fontSize: 16, fontWeight: 800, color: '#0f172a', margin: '0 0 16px 0' }}>📷 Official Student Profile Photo</h3>
+          <h3 style={{ fontSize: 16, fontWeight: 800, color: '#0f172a', margin: '0 0 16px 0' }}>📷 Official Profile Photo</h3>
 
           <div style={{ display: 'flex', alignItems: 'center', gap: 24, flexWrap: 'wrap', marginBottom: 20 }}>
             <div style={{
@@ -139,13 +152,13 @@ export default function ProfileSettings({ mode = 'profile', onProfileUpdated }) 
               {profile?.avatar_url || user?.avatarUrl ? (
                 <img src={profile?.avatar_url || user?.avatarUrl} alt="Avatar" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
               ) : (
-                currentName[0]?.toUpperCase() || 'S'
+                currentName[0]?.toUpperCase() || 'U'
               )}
             </div>
 
             <div>
               <h4 style={{ margin: '0 0 4px 0', fontSize: 18, color: '#0f172a' }}>{currentName}</h4>
-              <p style={{ margin: '0 0 12px 0', fontSize: 13, color: '#64748b' }}>USN: {regNo} · {deptName}</p>
+              <p style={{ margin: '0 0 12px 0', fontSize: 13, color: '#64748b' }}>{idHeader}: {regNo} · {deptName}</p>
 
               <form onSubmit={handleAvatarUpload} style={{ display: 'flex', gap: 10, alignItems: 'center', flexWrap: 'wrap' }}>
                 <input
@@ -164,11 +177,11 @@ export default function ProfileSettings({ mode = 'profile', onProfileUpdated }) 
 
         {/* Full Identity Details Form */}
         <div style={{ background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: 14, padding: 24, boxShadow: '0 2px 4px rgba(0,0,0,0.02)' }}>
-          <h3 style={{ fontSize: 16, fontWeight: 800, color: '#0f172a', margin: '0 0 16px 0' }}>📋 Candidate Personal Identity Information</h3>
+          <h3 style={{ fontSize: 16, fontWeight: 800, color: '#0f172a', margin: '0 0 16px 0' }}>{formTitle}</h3>
           <form onSubmit={handleNameUpdate}>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
               <div>
-                <label style={{ display: 'block', fontSize: 12, color: '#64748b', fontWeight: 600, marginBottom: 6 }}>Full Candidate Name</label>
+                <label style={{ display: 'block', fontSize: 12, color: '#64748b', fontWeight: 600, marginBottom: 6 }}>{nameLabel}</label>
                 <input
                   value={fullName}
                   onChange={(e) => setFullName(e.target.value)}
@@ -178,7 +191,7 @@ export default function ProfileSettings({ mode = 'profile', onProfileUpdated }) 
               </div>
 
               <div>
-                <label style={{ display: 'block', fontSize: 12, color: '#64748b', fontWeight: 600, marginBottom: 6 }}>University USN / Reg No.</label>
+                <label style={{ display: 'block', fontSize: 12, color: '#64748b', fontWeight: 600, marginBottom: 6 }}>{idLabel}</label>
                 <input
                   value={regNo}
                   disabled

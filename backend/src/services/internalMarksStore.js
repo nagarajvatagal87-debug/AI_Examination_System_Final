@@ -1,4 +1,7 @@
-const { supabaseAdmin } = require("../../config/Supabase");
+const fs = require("fs");
+const path = require("path");
+
+const MARKS_FILE = path.join(__dirname, "../../persistent_internal_marks.json");
 
 // In-memory fallback store when internal_marks table isn't present in database schema
 const memoryStore = new Map();
@@ -7,36 +10,49 @@ const memoryStore = new Map();
 const subjectStatusMap = new Map();
 // Key format: subjectId -> status ('draft', 'submitted_to_hod', 'approved_by_hod')
 
-async function getSubjectInternalMarks(subjectId) {
-  try {
-    const { data: dbRows, error } = await supabaseAdmin
-      .from("internal_marks")
-      .select("*, profiles!internal_marks_student_id_fkey(id, full_name, registration_no)")
-      .eq("subject_id", subjectId);
+// Load persisted internal marks from disk on startup
+try {
+  if (fs.existsSync(MARKS_FILE)) {
+    const raw = fs.readFileSync(MARKS_FILE, "utf8");
+    const parsed = JSON.parse(raw);
+    Object.entries(parsed).forEach(([key, val]) => {
+      memoryStore.set(key, val);
+    });
+    console.log(`Loaded ${memoryStore.size} persistent internal marks records from disk.`);
+  }
+} catch (e) {
+  console.warn("Failed to load persistent internal marks file:", e.message);
+}
 
-    if (!error && dbRows) {
-      return dbRows;
+function saveMarksToDisk() {
+  try {
+    const obj = {};
+    for (const [key, val] of memoryStore.entries()) {
+      obj[key] = val;
     }
-  } catch (err) {
-    // DB query failed or table missing, fallback to memory store
+    fs.writeFileSync(MARKS_FILE, JSON.stringify(obj, null, 2), "utf8");
+  } catch (e) {
+    console.warn("Failed to save internal marks to disk:", e.message);
+  }
+}
+
+const { getEnrolledStudentIds } = require("./enrollmentStore");
+
+async function getSubjectInternalMarks(subjectId) {
+  const enrolledIds = getEnrolledStudentIds(subjectId);
+  if (enrolledIds.length === 0) {
+    return [];
   }
 
-  // Fallback to memory store or student profiles in dept
-  const { data: subject } = await supabaseAdmin
-    .from("subjects")
-    .select("department_id")
-    .eq("id", subjectId)
-    .single();
-
   let students = [];
-  if (subject?.department_id) {
+  try {
     const { data } = await supabaseAdmin
       .from("profiles")
       .select("id, full_name, registration_no")
-      .eq("role", "student")
-      .eq("department_id", subject.department_id);
+      .in("id", enrolledIds)
+      .order("registration_no");
     students = data || [];
-  }
+  } catch (e) {}
 
   const subjectStatus = subjectStatusMap.get(subjectId) || "draft";
 
@@ -91,11 +107,12 @@ async function saveInternalMarks(subjectId, marksArray) {
     };
   });
 
-  // Store in memory
+  // Store in memory & save to persistent disk storage
   rows.forEach((r) => {
     const key = `${subjectId}:${r.student_id}`;
     memoryStore.set(key, r);
   });
+  saveMarksToDisk();
 
   // Try DB upsert
   try {
@@ -171,38 +188,6 @@ async function getStudentInternalMarks(studentId) {
       ...r,
       subjects: r.subjects || existing.subjects || subjMap.get(r.subject_id) || { id: r.subject_id, name: "Subject", code: "SUB" },
     });
-  });
-
-  // Guarantee continuous internal mark records for all enrolled/department subjects
-  const subjectsToInclude = allSubjects.length > 0 ? allSubjects : [
-    { id: 'sub-dl', name: 'Deep Learning', code: 'MMC321' },
-    { id: 'sub-dbms', name: 'Database Management Systems', code: 'MMC322' },
-    { id: 'sub-java', name: 'Enterprise Java Programming', code: 'MMC323' },
-    { id: 'sub-cloud', name: 'Cloud Computing & DevOps', code: 'MMC324' },
-  ];
-
-  subjectsToInclude.forEach((s, idx) => {
-    if (!map.has(s.id)) {
-      const i1 = 12 + (idx % 3);
-      const i2 = 13 + (idx % 2);
-      const ass = 8 + (idx % 3);
-      const proj = 9 + (idx % 2);
-      const tot = i1 + i2 + ass + proj;
-      map.set(s.id, {
-        id: `im-eval-${s.id}`,
-        subject_id: s.id,
-        student_id: studentId,
-        internal1_marks: i1,
-        internal2_marks: i2,
-        assignment_marks: ass,
-        project_marks: proj,
-        total_internal_marks: tot,
-        is_eligible: tot >= 25,
-        status: 'submitted_to_hod',
-        hod_approved: false,
-        subjects: s,
-      });
-    }
   });
 
   return Array.from(map.values());

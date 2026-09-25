@@ -1,0 +1,74 @@
+{
+  "050ba71c-1308-415a-bbd4-d294de0eefe3:a2316ce0-20ba-4500-9e47-be467b8f8a67": {
+    "subject_id": "050ba71c-1308-415a-bbd4-d294de0eefe3",
+    "student_id": "a2316ce0-20ba-4500-9e47-be467b8f8a67",
+    "internal1_marks": 0,
+    "internal2_marks": 0,
+    "internal3_marks": 0,
+    "assignment_marks": 0,
+    "total_internal_marks": 0,
+    "is_eligible": false,
+    "status": "draft",
+    "updated_at": "2026-09-25T13:32:19.284Z"
+  },
+  "050ba71c-1308-415a-bbd4-d294de0eefe3:5b768ee2-41cf-417a-922d-0a1229ee6cc9": {
+    "subject_id": "050ba71c-1308-415a-bbd4-d294de0eefe3",
+    "student_id": "5b768ee2-41cf-417a-922d-0a1229ee6cc9",
+    "internal1_marks": 0,
+    "internal2_marks": 0,
+    "internal3_marks": 0,
+    "assignment_marks": 0,
+    "total_internal_marks": 0,
+    "is_eligible": false,
+    "status": "draft",
+    "updated_at": "2026-09-25T13:32:19.284Z"
+  },
+  "050ba71c-1308-415a-bbd4-d294de0eefe3:47764147-519c-4cd5-98d2-5a34a56f5d6d": {
+    "subject_id": "050ba71c-1308-415a-bbd4-d294de0eefe3",
+    "student_id": "47764147-519c-4cd5-98d2-5a34a56f5d6d",
+    "internal1_marks": 0,
+    "internal2_marks": 0,
+    "internal3_marks": 0,
+    "assignment_marks": 0,
+    "total_internal_marks": 0,
+    "is_eligible": false,
+    "status": "draft",
+    "updated_at": "2026-09-25T13:32:19.284Z"
+  },
+  "050ba71c-1308-415a-bbd4-d294de0eefe3:1e7d1628-44a5-4479-877b-5491cca1c32d": {
+    "subject_id": "050ba71c-1308-415a-bbd4-d294de0eefe3",
+    "student_id": "1e7d1628-44a5-4479-877b-5491cca1c32d",
+    "internal1_marks": 0,
+    "internal2_marks": 0,
+    "internal3_marks": 0,
+    "assignment_marks": 0,
+    "total_internal_marks": 0,
+    "is_eligible": false,
+    "status": "draft",
+    "updated_at": "2026-09-25T13:32:19.284Z"
+  },
+  "050ba71c-1308-415a-bbd4-d294de0eefe3:ccb4fa03-15f0-4d86-a1d9-bbe698ea1fc5": {
+    "subject_id": "050ba71c-1308-415a-bbd4-d294de0eefe3",
+    "student_id": "ccb4fa03-15f0-4d86-a1d9-bbe698ea1fc5",
+    "internal1_marks": 15,
+    "internal2_marks": 13,
+    "internal3_marks": 10,
+    "assignment_marks": 9,
+    "total_internal_marks": 47,
+    "is_eligible": true,
+    "status": "draft",
+    "updated_at": "2026-09-25T13:32:19.284Z"
+  },
+  "050ba71c-1308-415a-bbd4-d294de0eefe3:d300d6e5-ce15-4a7f-9ce5-ae2947b36346": {
+    "subject_id": "050ba71c-1308-415a-bbd4-d294de0eefe3",
+    "student_id": "d300d6e5-ce15-4a7f-9ce5-ae2947b36346",
+    "internal1_marks": 0,
+    "internal2_marks": 0,
+    "internal3_marks": 0,
+    "assignment_marks": 0,
+    "total_internal_marks": 0,
+    "is_eligible": false,
+    "status": "draft",
+    "updated_at": "2026-09-25T13:32:19.284Z"
+  }
+}

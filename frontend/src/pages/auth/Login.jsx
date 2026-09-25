@@ -47,7 +47,7 @@ export default function Login() {
     setLoading(true)
 
     try {
-      const { data } = await api.post('/auth/login', { email, password })
+      const { data } = await api.post('/auth/login', { email, password, role: roleParam })
 
       setAuthToken(data.token)
       login(data.user)

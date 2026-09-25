@@ -41,18 +41,18 @@ export default function Analytics() {
 
   const activeId = examId || selectedExamId
 
-  // Sample data fallback if no evaluations are submitted yet so the page is rich and non-blank
-  const defaultDist = stats?.distribution || { '0-20%': 0, '21-40%': 1, '41-60%': 3, '61-80%': 8, '81-100%': 4 }
+  const evaluatedCount = stats?.evaluatedCount || 0
+  const average = stats?.average ?? 0
+  const highest = stats?.highest ?? 0
+  const lowest = stats?.lowest ?? 0
+
+  const hasAnalyticsData = Boolean(stats && evaluatedCount > 0)
+  const defaultDist = stats?.distribution || {}
   const distData = Object.entries(defaultDist).map(([range, count]) => ({ range, count }))
   
-  const evaluatedCount = stats?.evaluatedCount ?? 16
-  const average = stats?.average ?? 38.5
-  const highest = stats?.highest ?? 48
-  const lowest = stats?.lowest ?? 22
-
   const passCount = (defaultDist['41-60%'] || 0) + (defaultDist['61-80%'] || 0) + (defaultDist['81-100%'] || 0)
-  const failCount = evaluatedCount - passCount
-  const passPercent = evaluatedCount ? Math.round((passCount / evaluatedCount) * 100) : 85
+  const failCount = Math.max(0, evaluatedCount - passCount)
+  const passPercent = evaluatedCount > 0 ? Math.round((passCount / evaluatedCount) * 100) : 0
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
@@ -91,61 +91,73 @@ export default function Analytics() {
         )}
       </div>
 
-      <div className="an-cards">
-        <div className="an-card">
-          <div className="an-card-value" style={{ color: '#38bdf8' }}>{average}</div>
-          <div className="an-card-label">Class Average Mark</div>
+      {!hasAnalyticsData ? (
+        <div style={{ padding: 48, textAlign: 'center', background: 'rgba(30,41,59,0.4)', borderRadius: 12, border: '1px solid rgba(255,255,255,0.1)', color: '#94a3b8' }}>
+          <div style={{ fontSize: 32, marginBottom: 12 }}>📊</div>
+          <h3 style={{ margin: '0 0 8px 0', color: '#f8fafc' }}>No Analytics Data Available Yet</h3>
+          <p style={{ margin: 0, fontSize: 14 }}>
+            Analytics will generate automatically once student answer sheets are uploaded and evaluated for this subject.
+          </p>
         </div>
-        <div className="an-card">
-          <div className="an-card-value" style={{ color: '#34d399' }}>{highest}</div>
-          <div className="an-card-label">Highest Score</div>
-        </div>
-        <div className="an-card">
-          <div className="an-card-value" style={{ color: '#f87171' }}>{lowest}</div>
-          <div className="an-card-label">Lowest Score</div>
-        </div>
-        <div className="an-card">
-          <div className="an-card-value" style={{ color: '#a78bfa' }}>{passPercent}%</div>
-          <div className="an-card-label">Eligibility Pass Rate (≥25m)</div>
-        </div>
-      </div>
+      ) : (
+        <>
+          <div className="an-cards">
+            <div className="an-card">
+              <div className="an-card-value" style={{ color: '#38bdf8' }}>{average}</div>
+              <div className="an-card-label">Class Average Mark</div>
+            </div>
+            <div className="an-card">
+              <div className="an-card-value" style={{ color: '#34d399' }}>{highest}</div>
+              <div className="an-card-label">Highest Score</div>
+            </div>
+            <div className="an-card">
+              <div className="an-card-value" style={{ color: '#f87171' }}>{lowest}</div>
+              <div className="an-card-label">Lowest Score</div>
+            </div>
+            <div className="an-card">
+              <div className="an-card-value" style={{ color: '#a78bfa' }}>{passPercent}%</div>
+              <div className="an-card-label">Eligibility Pass Rate (≥25m)</div>
+            </div>
+          </div>
 
-      <div className="an-section">
-        <h3 style={{ margin: '0 0 16px 0', fontSize: 15, color: '#f8fafc' }}>
-          📈 Student Score Distribution Bracket
-        </h3>
-        <ResponsiveContainer width="100%" height={260}>
-          <BarChart data={distData}>
-            <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.1)" />
-            <XAxis dataKey="range" stroke="#94a3b8" />
-            <YAxis allowDecimals={false} stroke="#94a3b8" />
-            <Tooltip contentStyle={{ background: '#0f172a', border: '1px solid rgba(255,255,255,0.2)', borderRadius: 8, color: '#fff' }} />
-            <Bar dataKey="count" fill="url(#barGradient)" radius={[6, 6, 0, 0]} />
-            <defs>
-              <linearGradient id="barGradient" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%" stopColor="#3b82f6" />
-                <stop offset="100%" stopColor="#1d4ed8" />
-              </linearGradient>
-            </defs>
-          </BarChart>
-        </ResponsiveContainer>
-      </div>
+          <div className="an-section">
+            <h3 style={{ margin: '0 0 16px 0', fontSize: 15, color: '#f8fafc' }}>
+              📈 Student Score Distribution Bracket
+            </h3>
+            <ResponsiveContainer width="100%" height={260}>
+              <BarChart data={distData}>
+                <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.1)" />
+                <XAxis dataKey="range" stroke="#94a3b8" />
+                <YAxis allowDecimals={false} stroke="#94a3b8" />
+                <Tooltip contentStyle={{ background: '#0f172a', border: '1px solid rgba(255,255,255,0.2)', borderRadius: 8, color: '#fff' }} />
+                <Bar dataKey="count" fill="url(#barGradient)" radius={[6, 6, 0, 0]} />
+                <defs>
+                  <linearGradient id="barGradient" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stopColor="#3b82f6" />
+                    <stop offset="100%" stopColor="#1d4ed8" />
+                  </linearGradient>
+                </defs>
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
 
-      <div className="an-section">
-        <h3 style={{ margin: '0 0 16px 0', fontSize: 15, color: '#f8fafc' }}>
-          🎯 Pass vs Detained Student Proportion
-        </h3>
-        <ResponsiveContainer width="100%" height={140}>
-          <BarChart data={[{ name: 'Students', Eligible: passCount, Detained: failCount }]} layout="vertical">
-            <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.1)" />
-            <XAxis type="number" allowDecimals={false} stroke="#94a3b8" />
-            <YAxis type="category" dataKey="name" hide />
-            <Tooltip contentStyle={{ background: '#0f172a', border: '1px solid rgba(255,255,255,0.2)', borderRadius: 8, color: '#fff' }} />
-            <Bar dataKey="Eligible" fill="#10b981" stackId="a" />
-            <Bar dataKey="Detained" fill="#f87171" stackId="a" />
-          </BarChart>
-        </ResponsiveContainer>
-      </div>
+          <div className="an-section">
+            <h3 style={{ margin: '0 0 16px 0', fontSize: 15, color: '#f8fafc' }}>
+              🎯 Pass vs Detained Student Proportion
+            </h3>
+            <ResponsiveContainer width="100%" height={140}>
+              <BarChart data={[{ name: 'Students', Eligible: passCount, Detained: failCount }]} layout="vertical">
+                <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.1)" />
+                <XAxis type="number" allowDecimals={false} stroke="#94a3b8" />
+                <YAxis type="category" dataKey="name" hide />
+                <Tooltip contentStyle={{ background: '#0f172a', border: '1px solid rgba(255,255,255,0.2)', borderRadius: 8, color: '#fff' }} />
+                <Bar dataKey="Eligible" fill="#10b981" stackId="a" />
+                <Bar dataKey="Detained" fill="#f87171" stackId="a" />
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+        </>
+      )}
     </div>
   )
 }

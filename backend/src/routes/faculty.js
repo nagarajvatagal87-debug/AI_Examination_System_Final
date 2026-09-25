@@ -105,14 +105,39 @@ router.post("/course-materials", upload.single("file"), async (req, res) => {
         file_path: path,
         uploaded_by: req.user.id,
         kind: kind === "previous_paper" ? "previous_paper" : "course_pdf",
-        published: true,
         processed: true,
-        ingestion_status: "INDEXED",
       })
       .select()
       .single();
 
     if (error) throw error;
+
+    // Extract PDF text & auto-create RAG chunks in course_chunks
+    try {
+      const { PDFParse } = require("pdf-parse");
+      const parser = new PDFParse({ data: file.buffer });
+      const txtResult = await parser.getText();
+      const fullText = (txtResult?.text || "").trim();
+
+      if (fullText && fullText.length > 20) {
+        const chunkSize = 1000;
+        const chunks = [];
+        for (let i = 0; i < fullText.length; i += chunkSize) {
+          chunks.push({
+            course_material_id: data.id,
+            subject_id: subjectId,
+            chunk_index: Math.floor(i / chunkSize),
+            content: fullText.substring(i, i + chunkSize)
+          });
+        }
+
+        if (chunks.length > 0) {
+          await supabaseAdmin.from("course_chunks").insert(chunks.slice(0, 50));
+        }
+      }
+    } catch (e) {
+      console.warn("PDF RAG text chunking note:", e.message);
+    }
 
     if (kind !== "previous_paper") {
       axios.post(
@@ -155,6 +180,16 @@ router.post("/exams", async (req, res) => {
       .single();
     if (examError) throw examError;
 
+    // Fetch target subject details from database
+    const { data: subjectObj } = await supabaseAdmin
+      .from("subjects")
+      .select("name, code, department_id")
+      .eq("id", subjectId)
+      .single();
+
+    const subjectName = subjectObj?.name || "Subject";
+    const subjectCode = subjectObj?.code || "ACAD";
+
     let generated = null;
 
     try {
@@ -173,69 +208,134 @@ router.post("/exams", async (req, res) => {
         },
         { headers: { Authorization: `Bearer ${process.env.GENAI_SERVICE_API_KEY}` } }
       );
-      generated = data;
+      if (data && data.status === "ok") {
+        generated = data;
+      }
     } catch (e) {
-      console.log("AI service question generation endpoint unavailable, using node question generator.");
+      console.log("AI service question generation endpoint unavailable, using node Groq/DB question generator.");
     }
 
-    // Check if questions exist in DB; if not, generate fallback questions
+    // Check if questions were already inserted by AI service
     const { data: existingQ } = await supabaseAdmin
       .from("questions")
       .select("id")
       .eq("exam_id", exam.id);
 
     if (!existingQ || existingQ.length === 0) {
-      const pattern = (questionPattern && questionPattern.length > 0)
-        ? questionPattern
-        : [{ marks: 2, count: 5 }, { marks: 5, count: 4 }, { marks: 10, count: 2 }];
+      // Fetch course material text for this subject from DB
+      let materialText = "";
+      try {
+        const { data: matChunks } = await supabaseAdmin
+          .from("course_chunks")
+          .select("content")
+          .eq("subject_id", subjectId)
+          .limit(5);
 
-      const { data: subject } = await supabaseAdmin
-        .from("subjects")
-        .select("name")
-        .eq("id", subjectId)
-        .maybeSingle();
+        if (matChunks && matChunks.length > 0) {
+          materialText = matChunks.map((c) => c.content).join("\n\n");
+        }
+      } catch (e) {}
 
-      const subjectName = subject?.name || "Subject";
-      const qRows = [];
-      let qNo = 1;
+      let newQuestions = [];
+      const groqApiKey = process.env.GROQ_API_KEY;
 
-      const questionTemplates = [
-        `Define the core principles of ${subjectName} and explain key architectural layers.`,
-        `Describe the fundamental workflow and mechanisms in ${subjectName}.`,
-        `Explain key algorithms or modeling techniques used in ${subjectName} with examples.`,
-        `Analyze the transaction/query optimization and concurrency control in ${subjectName}.`,
-        `Compare different design approaches in ${subjectName} with their pros and cons.`,
-        `Solve a practical implementation scenario using ${subjectName} best practices.`,
-        `Discuss security, integrity constraints, and error recovery in ${subjectName}.`,
-        `Design a scalable solution architecture for a real-world ${subjectName} system.`
-      ];
+      if (groqApiKey) {
+        try {
+          const prompt = `Generate 5 academic exam questions for the course subject: "${subjectName}" (${subjectCode}).
+Exam Title: "${title}", Total Marks: ${totalMarks || 50}.
+Instructions / Focus: ${instructions || "Cover core syllabus units, principles, and applications."}
 
-      for (const group of pattern) {
-        for (let i = 0; i < group.count; i++) {
-          const textIndex = (qNo - 1) % questionTemplates.length;
-          const uIndex = (qNo - 1) % (units?.length || 1);
-          qRows.push({
-            exam_id: exam.id,
-            question_no: qNo,
-            question_text: `${questionTemplates[textIndex]} (Part ${i + 1})`,
-            marks: group.marks,
-            unit: units?.[uIndex] || `Unit ${(qNo % 5) + 1}`,
-            difficulty: difficulty || "medium",
-            rubric: {
-              key_points: ["Accurate definition", "Neat diagram / SQL syntax", "Clear explanation"],
+${materialText ? `COURSE MATERIAL CONTEXT:\n${materialText.substring(0, 2000)}\n` : ""}
+
+Requirements:
+- Every question must be strictly about ${subjectName}.
+- Do NOT generate questions about unrelated subjects.
+- Each question must carry 10 marks.
+- Return ONLY a JSON array of 5 objects with keys: "question_no" (1 to 5), "unit" (e.g. "Unit 1"), "difficulty" ("hard"), "marks" (10), "question_text" (string).`;
+
+          const groqRes = await axios.post(
+            "https://api.groq.com/openai/v1/chat/completions",
+            {
+              model: "llama-3.3-70b-versatile",
+              messages: [{ role: "user", content: prompt }],
+              temperature: 0.3,
             },
-          });
-          qNo++;
+            {
+              headers: { Authorization: `Bearer ${groqApiKey}`, "Content-Type": "application/json" },
+              timeout: 12000,
+            }
+          );
+
+          const content = groqRes.data?.choices?.[0]?.message?.content || "";
+          const jsonMatch = content.match(/\[[\s\S]*\]/);
+          if (jsonMatch) {
+            newQuestions = JSON.parse(jsonMatch[0]);
+          }
+        } catch (groqErr) {
+          console.warn("Groq question generation fallback:", groqErr.message);
         }
       }
 
-      await supabaseAdmin.from("questions").insert(qRows);
-      generated = { status: "success", questions_created: qRows.length, quality_check: { score: 95, issues: [] } };
+      // Dynamic fallback if Groq call failed or returned empty
+      if (!newQuestions || newQuestions.length === 0) {
+        newQuestions = [
+          {
+            question_no: 1,
+            unit: "Unit 1",
+            difficulty: difficulty || "hard",
+            marks: 10,
+            question_text: `Define the core principles, terminology, and foundational architecture of ${subjectName} (${subjectCode}).`,
+          },
+          {
+            question_no: 2,
+            unit: "Unit 2",
+            difficulty: difficulty || "hard",
+            marks: 10,
+            question_text: `Describe the fundamental workflows, methodologies, and operational lifecycle in ${subjectName}.`,
+          },
+          {
+            question_no: 3,
+            unit: "Unit 3",
+            difficulty: difficulty || "hard",
+            marks: 10,
+            question_text: `Explain key algorithms, tools, and technical modeling strategies used in ${subjectName} with real-world examples.`,
+          },
+          {
+            question_no: 4,
+            unit: "Unit 4",
+            difficulty: difficulty || "hard",
+            marks: 10,
+            question_text: `Analyze system optimization, security parameters, and performance scalability in ${subjectName}.`,
+          },
+          {
+            question_no: 5,
+            unit: "Unit 5",
+            difficulty: difficulty || "hard",
+            marks: 10,
+            question_text: `Compare different design paradigms and industry practices in ${subjectName}, highlighting pros and cons.`,
+          },
+        ];
+      }
+
+      // Insert generated questions into DB questions table
+      const questionRows = newQuestions.map((q, idx) => ({
+        exam_id: exam.id,
+        question_no: q.question_no || idx + 1,
+        unit: q.unit || `Unit ${(idx % 5) + 1}`,
+        difficulty: q.difficulty || "medium",
+        marks: q.marks || 10,
+        question_text: q.question_text || q.text,
+        rubric: {
+          key_points: ["Accurate definition & concepts", "Technical diagrams / code syntax", "Clear analytical explanation"],
+        },
+      }));
+
+      await supabaseAdmin.from("questions").insert(questionRows);
     }
 
     await supabaseAdmin.from("exams").update({ status: "evaluation" }).eq("id", exam.id);
 
-    res.status(201).json({ exam, generated });
+    res.status(201).json({ exam, generated: generated || { status: "success" } });
   } catch (err) {
     res.status(400).json({ error: err.response?.data?.error || err.message });
   }
@@ -505,13 +605,8 @@ router.post("/students", async (req, res) => {
       }).eq("id", studentId);
     }
 
-    if (subjectId) {
-      try {
-        await supabaseAdmin.from("student_subjects").upsert({
-          student_id: studentId,
-          subject_id: subjectId,
-        }, { onConflict: "student_id,subject_id" });
-      } catch (e) {}
+    if (subjectId && studentId) {
+      enrollStudent(subjectId, studentId);
     }
 
     res.status(201).json({
@@ -527,30 +622,109 @@ router.post("/students", async (req, res) => {
   }
 });
 
+const { getEnrolledStudentIds, enrollStudent, enrollMultipleStudents, unenrollStudent } = require("../services/enrollmentStore.js");
+
+// ── Subject Enrollment Management ──
+// GET /api/faculty/subjects/:subjectId/enrolled-students -> enrolled students for a subject
+router.get("/subjects/:subjectId/enrolled-students", async (req, res) => {
+  try {
+    const { subjectId } = req.params;
+    const enrolledIds = getEnrolledStudentIds(subjectId);
+
+    if (enrolledIds.length === 0) {
+      return res.json([]);
+    }
+
+    const { data: students, error } = await supabaseAdmin
+      .from("profiles")
+      .select("id, full_name, registration_no, email, semester, section")
+      .in("id", enrolledIds)
+      .order("registration_no");
+
+    if (error) throw error;
+    res.json(students || []);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// GET /api/faculty/subjects/:subjectId/eligible-students -> candidate students in department
+router.get("/subjects/:subjectId/eligible-students", async (req, res) => {
+  try {
+    const { subjectId } = req.params;
+    const { data: sub } = await supabaseAdmin
+      .from("subjects")
+      .select("department_id")
+      .eq("id", subjectId)
+      .maybeSingle();
+
+    if (!sub?.department_id) {
+      return res.json([]);
+    }
+
+    const { data: students } = await supabaseAdmin
+      .from("profiles")
+      .select("id, full_name, registration_no, email, semester, section")
+      .eq("role", "student")
+      .eq("department_id", sub.department_id)
+      .order("registration_no");
+
+    const enrolledSet = new Set(getEnrolledStudentIds(subjectId));
+    const candidateList = (students || []).map((s) => ({
+      ...s,
+      isEnrolled: enrolledSet.has(s.id),
+    }));
+
+    res.json(candidateList);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// POST /api/faculty/subjects/:subjectId/enroll -> Batch enroll selected students into subject
+router.post("/subjects/:subjectId/enroll", async (req, res) => {
+  try {
+    const { subjectId } = req.params;
+    const { studentIds } = req.body;
+    if (!Array.isArray(studentIds) || studentIds.length === 0) {
+      return res.status(400).json({ error: "studentIds array is required" });
+    }
+
+    enrollMultipleStudents(subjectId, studentIds);
+    res.json({ success: true, enrolledCount: studentIds.length });
+  } catch (err) {
+    res.status(400).json({ error: err.message });
+  }
+});
+
+// DELETE /api/faculty/subjects/:subjectId/unenroll/:studentId -> Remove enrollment
+router.delete("/subjects/:subjectId/unenroll/:studentId", async (req, res) => {
+  try {
+    const { subjectId, studentId } = req.params;
+    unenrollStudent(subjectId, studentId);
+    res.json({ success: true, removedStudentId: studentId });
+  } catch (err) {
+    res.status(400).json({ error: err.message });
+  }
+});
+
 // ── 50-Mark Internal Evaluation & Eligibility Management ──
 // GET /api/faculty/subjects/:subjectId/internal-marks
 router.get("/subjects/:subjectId/internal-marks", async (req, res) => {
   try {
     const { subjectId } = req.params;
+    const enrolledIds = getEnrolledStudentIds(subjectId);
 
-    const { data: facultyProf } = await supabaseAdmin
-      .from("profiles")
-      .select("department_id")
-      .eq("id", req.user.id)
-      .maybeSingle();
-
-    const departmentId = facultyProf?.department_id;
-    let query = supabaseAdmin
-      .from("profiles")
-      .select("id, full_name, email, registration_no, semester, section")
-      .eq("role", "student")
-      .order("registration_no");
-
-    if (departmentId) {
-      query = query.eq("department_id", departmentId);
+    if (enrolledIds.length === 0) {
+      return res.json({ subjectId, roster: [] });
     }
 
-    const { data: students, error: stdError } = await query;
+    const { data: students, error: stdError } = await supabaseAdmin
+      .from("profiles")
+      .select("id, full_name, email, registration_no, semester, section")
+      .in("id", enrolledIds)
+      .order("registration_no");
+
     if (stdError) throw stdError;
 
     let savedMarks = [];
@@ -793,15 +967,7 @@ async function processAnswerSheetEvaluation(submissionId, examId, studentId, fil
       .order("question_no", { ascending: true });
 
     if (!questions || questions.length === 0) {
-      const defaultQs = [
-        { exam_id: examId, question_no: 1, question_text: "Q1. Explain key concepts, architecture and primary principles.", marks: 10 },
-        { exam_id: examId, question_no: 2, question_text: "Q2. Differentiate core components with suitable code/diagram examples.", marks: 10 },
-        { exam_id: examId, question_no: 3, question_text: "Q3. Describe implementation algorithms, working methodology & trade-offs.", marks: 10 },
-        { exam_id: examId, question_no: 4, question_text: "Q4. Solve mathematical/practical application problem step-by-step.", marks: 10 },
-        { exam_id: examId, question_no: 5, question_text: "Q5. Discuss real-world system optimization, security and concurrency control.", marks: 10 },
-      ];
-      const { data: insertedQs } = await supabaseAdmin.from("questions").insert(defaultQs).select();
-      questions = insertedQs || defaultQs;
+      return res.json([]);
     }
 
     const uploadSeed = Date.now();
@@ -1050,8 +1216,8 @@ router.post("/evaluations/:id/verify", async (req, res) => {
         const { saveInternalMarks } = require("../services/internalMarksStore");
         await saveInternalMarks(subjectId, [{
           studentId,
-          internal1: Math.min(15, roundedScore),
-          internal2: Math.min(15, Math.max(0, roundedScore - 15)),
+          internal1: Math.min(50, roundedScore),
+          internal2: Math.min(50, Math.max(0, roundedScore - 50)),
           assignment: 10,
           project: 10,
         }]);
@@ -1328,15 +1494,12 @@ router.get("/dashboard-summary", async (req, res) => {
       exams = facultyExams || [];
     }
 
-    let students = [];
-    if (me?.department_id) {
-      const { data: deptStudents } = await supabaseAdmin
-        .from("profiles")
-        .select("id")
-        .eq("role", "student")
-        .eq("department_id", me.department_id);
-      students = deptStudents || [];
-    }
+    const uniqueEnrolledStudentIds = new Set();
+    (subjectIds || []).forEach((subId) => {
+      const enrolled = getEnrolledStudentIds(subId);
+      enrolled.forEach((id) => uniqueEnrolledStudentIds.add(id));
+    });
+    const studentCount = uniqueEnrolledStudentIds.size;
 
     const examIds = (exams || []).map((e) => e.id);
     let pendingCount = 0;
@@ -1381,7 +1544,7 @@ router.get("/dashboard-summary", async (req, res) => {
       subjects: subjects || [],
       subjectCount: subjects?.length || 0,
       examCount: exams?.length || 0,
-      studentCount: students?.length || 0,
+      studentCount,
       pendingEvaluations: pendingCount,
       recentExams,
       performanceTrend,
@@ -1425,40 +1588,7 @@ router.post("/messages", async (req, res) => {
   }
 });
 
-// POST /api/faculty/course-materials -> Upload syllabus / course notes PDF
-router.post("/course-materials", upload.single("file"), async (req, res) => {
-  try {
-    const { subjectId, kind } = req.body;
-    const file = req.file;
-    if (!file || !subjectId) {
-      return res.status(400).json({ error: "file and subjectId are required" });
-    }
 
-    const path = `course-materials/${subjectId}/${Date.now()}-${file.originalname}`;
-    const { error: uploadErr } = await supabaseAdmin.storage
-      .from(process.env.SUPABASE_STORAGE_BUCKET || "exam-files")
-      .upload(path, file.buffer, { contentType: file.mimetype, upsert: true });
-
-    if (uploadErr) console.warn("Storage upload warning:", uploadErr.message);
-
-    const { data: inserted, error: dbErr } = await supabaseAdmin
-      .from("course_materials")
-      .insert({
-        subject_id: subjectId,
-        uploaded_by: req.user.id,
-        file_name: file.originalname,
-        file_path: path,
-        kind: kind || "course_pdf",
-      })
-      .select()
-      .single();
-
-    if (dbErr) throw dbErr;
-    res.status(201).json(inserted);
-  } catch (err) {
-    res.status(400).json({ error: err.message });
-  }
-});
 
 // DELETE /api/faculty/exams/:examId -> Delete exam
 router.delete("/exams/:examId", async (req, res) => {

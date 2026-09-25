@@ -29,9 +29,33 @@ export default function MySubjects() {
     section: 'A',
   })
 
-  useEffect(() => {
+  const [allDeptSubjects, setAllDeptSubjects] = useState([])
+  const [selectedClaimSubId, setSelectedClaimSubId] = useState('')
+  const [claimMsg, setClaimMsg] = useState('')
+
+  function loadSubjects() {
     api.get('/subjects?mine=true').then((res) => setSubjects(res.data)).catch(() => {})
+    api.get('/subjects').then((res) => setAllDeptSubjects(res.data)).catch(() => {})
+  }
+
+  useEffect(() => {
+    loadSubjects()
   }, [])
+
+  async function handleClaimSubject(e) {
+    e.preventDefault()
+    if (!selectedClaimSubId) return
+    setClaimMsg('Linking subject to your faculty workspace...')
+    try {
+      await api.post('/subjects/claim', { subjectId: selectedClaimSubId })
+      setClaimMsg('✅ Subject assigned to your account successfully!')
+      setSelectedClaimSubId('')
+      loadSubjects()
+    } catch (err) {
+      setClaimMsg(`❌ ${err.response?.data?.error || 'Failed to assign subject'}`)
+    }
+  }
+
 
   function openMaterials(subject) {
     setStudentsFor(null)
@@ -43,82 +67,129 @@ export default function MySubjects() {
       .catch(() => {})
   }
 
+  async function handleUpload() {
+    if (!uploadFile || !materialsFor) {
+      setMsg('❌ Please select a PDF file to upload.')
+      return
+    }
+    setMsg('Uploading syllabus PDF & indexing for RAG AI generation...')
+    try {
+      const formData = new FormData()
+      formData.append('file', uploadFile)
+      formData.append('subjectId', materialsFor.id)
+      formData.append('kind', 'course_pdf')
+
+      await api.post('/faculty/course-materials', formData, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+      })
+      setMsg('✅ Syllabus PDF uploaded successfully! Indexed for Question Paper Generation.')
+      setUploadFile(null)
+      openMaterials(materialsFor)
+    } catch (err) {
+      setMsg(`❌ ${err.response?.data?.error || 'Upload failed'}`)
+    }
+  }
+
+  const [candidateList, setCandidateList] = useState([])
+  const [selectedCandidateIds, setSelectedCandidateIds] = useState([])
+
   function openStudents(subject) {
     setMaterialsFor(null)
     setInternalsFor(null)
     setStudentsFor(subject)
     setStudentMsg('')
+    setSelectedCandidateIds([])
+
     api.get(`/faculty/subjects/${subject.id}/enrolled-students`)
-      .then((res) => setStudentsList(res.data))
-      .catch(() => {})
+      .then((res) => setStudentsList(res.data || []))
+      .catch(() => setStudentsList([]))
+
+    api.get(`/faculty/subjects/${subject.id}/eligible-students`)
+      .then((res) => setCandidateList(res.data || []))
+      .catch(() => setCandidateList([]))
+  }
+
+  function toggleCandidateSelect(id) {
+    if (selectedCandidateIds.includes(id)) {
+      setSelectedCandidateIds(selectedCandidateIds.filter(x => x !== id))
+    } else {
+      setSelectedCandidateIds([...selectedCandidateIds, id])
+    }
+  }
+
+  async function handleBatchEnroll() {
+    if (!studentsFor || selectedCandidateIds.length === 0) return
+    setStudentMsg('Enrolling selected candidate students into subject...')
+    try {
+      await api.post(`/faculty/subjects/${studentsFor.id}/enroll`, { studentIds: selectedCandidateIds })
+      setStudentMsg('✅ Candidate students enrolled successfully into subject!')
+      setSelectedCandidateIds([])
+      openStudents(studentsFor)
+    } catch (err) {
+      setStudentMsg(`❌ ${err.response?.data?.error || 'Failed to enroll students'}`)
+    }
+  }
+
+  async function handleRemoveStudent(studentId) {
+    if (!window.confirm('Are you sure you want to unenroll this student from the subject?')) return
+    setStudentMsg('Removing student from subject...')
+    try {
+      await api.delete(`/faculty/subjects/${studentsFor.id}/unenroll/${studentId}`)
+      setStudentMsg('✅ Student unenrolled successfully!')
+      if (studentsFor) openStudents(studentsFor)
+    } catch (err) {
+      setStudentMsg(`❌ ${err.response?.data?.error || 'Failed to unenroll student'}`)
+    }
   }
 
   function openInternalEvaluation(subject) {
     setMaterialsFor(null)
     setStudentsFor(null)
+    setAttendanceFor(null)
     setInternalsFor(subject)
     setInternalMsg('')
     api.get(`/faculty/subjects/${subject.id}/internal-marks`)
       .then((res) => {
-        setInternalRoster(res.data.roster || [])
-        const initial = {}
-        (res.data.roster || []).forEach((r) => {
-          initial[r.studentId] = {
+        const roster = res.data?.roster || []
+        setInternalRoster(roster)
+        const inputMap = {}
+        roster.forEach((r) => {
+          inputMap[r.studentId] = {
             internal1: r.internal1 || 0,
             internal2: r.internal2 || 0,
             assignment: r.assignment || 0,
             project: r.project || 0,
           }
         })
-        setInternalInput(initial)
+        setInternalInput(inputMap)
       })
-      .catch(() => {})
-  }
-
-  async function handleUpload() {
-    if (!uploadFile || !materialsFor) return
-    setMsg('Uploading syllabus / course notes PDF...')
-    try {
-      const formData = new FormData()
-      formData.append('file', uploadFile)
-      formData.append('subjectId', materialsFor.id)
-      formData.append('kind', 'course_pdf')
-      await api.post('/faculty/course-materials', formData, { headers: { 'Content-Type': 'multipart/form-data' } })
-      setMsg('Uploaded successfully — AI chunking & vector ingestion complete!')
-      setUploadFile(null)
-      openMaterials(materialsFor)
-    } catch (err) {
-      setMsg(err.response?.data?.error || 'Upload failed')
-    }
+      .catch(() => {
+        setInternalRoster([])
+        setInternalInput({})
+      })
   }
 
   async function handleAddStudent(e) {
     e.preventDefault()
-    if (!studentForm.fullName || !studentForm.email || !studentForm.registrationNo || !studentsFor) return
-
-    setStudentMsg('Adding student to subject...')
+    if (!studentsFor) return
+    setStudentMsg('Adding student & enrolling into subject...')
     try {
-      const res = await api.post('/faculty/students', {
+      const payload = {
         ...studentForm,
         subjectId: studentsFor.id,
+      }
+      await api.post('/faculty/students', payload)
+      setStudentMsg('✅ New student created & enrolled successfully!')
+      setStudentForm({
+        fullName: '',
+        email: '',
+        registrationNo: '',
+        semester: '3rd Sem',
+        section: 'A',
       })
-      setStudentMsg(`✅ Student ${studentForm.fullName} added successfully! Initial Login Password: ${res.data.tempPassword || 'Student@123'}`)
-      setStudentForm({ fullName: '', email: '', registrationNo: '', semester: '3rd Sem', section: 'A' })
       openStudents(studentsFor)
     } catch (err) {
       setStudentMsg(`❌ ${err.response?.data?.error || 'Failed to add student'}`)
-    }
-  }
-
-  async function handleRemoveStudent(studentId) {
-    if (!window.confirm('Are you sure you want to remove this student from the subject?')) return
-    setStudentMsg('Removing student...')
-    try {
-      await api.delete(`/faculty/students/${studentId}`)
-      setStudentMsg('✅ Student removed successfully!')
-      if (studentsFor) openStudents(studentsFor)
-    } catch (err) {
-      setStudentMsg(`❌ ${err.response?.data?.error || 'Failed to remove student'}`)
     }
   }
 
@@ -266,9 +337,41 @@ export default function MySubjects() {
     }
   }
 
+  async function handleDeleteSubject(subjectId, subjectName) {
+    if (!window.confirm(`Are you sure you want to delete "${subjectName}"? This will remove the subject from your workspace.`)) return
+    setClaimMsg(`Deleting subject "${subjectName}"...`)
+    try {
+      await api.delete(`/subjects/${subjectId}`)
+      setClaimMsg(`✅ Subject "${subjectName}" deleted successfully!`)
+      loadSubjects()
+    } catch (err) {
+      setClaimMsg(`❌ ${err.response?.data?.error || 'Failed to delete subject'}`)
+    }
+  }
+
   return (
     <div>
-      <h2 className="ms-title">My Subjects & Internal Marks Workspace</h2>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20, flexWrap: 'wrap', gap: 14 }}>
+        <h2 className="ms-title" style={{ margin: 0 }}>My Subjects & Internal Marks Workspace</h2>
+        <form onSubmit={handleClaimSubject} style={{ display: 'flex', gap: 8, alignItems: 'center', background: 'rgba(15,23,42,0.6)', padding: '8px 14px', borderRadius: 10, border: '1px solid rgba(56,189,248,0.3)' }}>
+          <span style={{ fontSize: 13, color: '#38bdf8', fontWeight: 700 }}>+ Select / Take Subject:</span>
+          <select
+            value={selectedClaimSubId}
+            onChange={(e) => setSelectedClaimSubId(e.target.value)}
+            style={{ padding: '6px 12px', borderRadius: 6, background: 'rgba(15,23,42,0.9)', color: '#fff', border: '1px solid rgba(255,255,255,0.2)', fontSize: 13 }}
+          >
+            <option value="">-- Choose Subject --</option>
+            {allDeptSubjects.map((s) => (
+              <option key={s.id} value={s.id}>{s.name} ({s.code || 'SUB'})</option>
+            ))}
+          </select>
+          <button type="submit" style={{ padding: '6px 14px', borderRadius: 6, border: 'none', background: 'linear-gradient(135deg, #0284c7 0%, #38bdf8 100%)', color: '#fff', fontWeight: 800, fontSize: 13, cursor: 'pointer' }}>
+            ➕ Take Subject
+          </button>
+        </form>
+      </div>
+
+      {claimMsg && <p style={{ fontSize: 13, fontWeight: 700, color: claimMsg.includes('✅') ? '#34d399' : '#f87171', marginBottom: 16 }}>{claimMsg}</p>}
 
       <div className="ms-grid">
         {subjects.map((s) => (
@@ -281,10 +384,11 @@ export default function MySubjects() {
               <button className="fd-btn fd-btn-secondary" style={{ background: '#8b5cf6', borderColor: '#8b5cf6', color: '#fff' }} onClick={() => openAttendance(s)}>📋 Attendance</button>
               <button className="fd-btn fd-btn-secondary" style={{ background: '#10b981', borderColor: '#10b981', color: '#fff' }} onClick={() => openInternalEvaluation(s)}>📊 50m Internals</button>
               <button className="fd-btn" onClick={() => navigate(`/faculty/examinations?subjectId=${s.id}`)}>Exams</button>
+              <button className="fd-btn" style={{ background: '#ef4444', borderColor: '#ef4444', color: '#fff' }} onClick={() => handleDeleteSubject(s.id, s.name)}>🗑️ Delete</button>
             </div>
           </div>
         ))}
-        {subjects.length === 0 && <p className="hint">No subjects assigned to you yet.</p>}
+        {subjects.length === 0 && <p className="hint">No subjects assigned to you yet. Use "+ Select / Take Subject" above to pick your subject!</p>}
       </div>
 
       {materialsFor && (
@@ -338,91 +442,131 @@ export default function MySubjects() {
             </p>
           )}
 
-          <div style={{ overflowX: 'auto', marginBottom: 20 }}>
-            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13, color: '#f8fafc' }}>
-              <thead>
-                <tr style={{ background: 'rgba(139,92,246,0.2)', color: '#c084fc', textAlign: 'left', borderBottom: '1px solid rgba(139,92,246,0.4)' }}>
-                  <th style={{ padding: 10 }}>USN / Reg No</th>
-                  <th style={{ padding: 10 }}>Student Name</th>
-                  <th style={{ padding: 10 }}>Total Classes</th>
-                  <th style={{ padding: 10 }}>Classes Attended</th>
-                  <th style={{ padding: 10 }}>Attendance %</th>
-                  <th style={{ padding: 10 }}>Quick Attendance</th>
-                  <th style={{ padding: 10 }}>Status</th>
-                </tr>
-              </thead>
-              <tbody>
-                {attendanceList.map((st) => (
-                  <tr key={st.student_id} style={{ borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
-                    <td style={{ padding: 10, color: '#38bdf8', fontWeight: 700 }}>{st.registration_no}</td>
-                    <td style={{ padding: 10, fontWeight: 600 }}>{st.full_name}</td>
-                    <td style={{ padding: 6 }}>
-                      <input
-                        type="number" min={1} max={100}
-                        value={st.totalClasses}
-                        onChange={(e) => handleDirectAttChange(st.student_id, 'totalClasses', e.target.value)}
-                        style={{ width: 60, padding: 6, borderRadius: 6, border: '1px solid rgba(255,255,255,0.2)', background: 'rgba(0,0,0,0.5)', color: '#fff', fontSize: 13 }}
-                      />
-                    </td>
-                    <td style={{ padding: 6 }}>
-                      <input
-                        type="number" min={0} max={st.totalClasses}
-                        value={st.attendedClasses}
-                        onChange={(e) => handleDirectAttChange(st.student_id, 'attendedClasses', e.target.value)}
-                        style={{ width: 60, padding: 6, borderRadius: 6, border: '1px solid rgba(255,255,255,0.2)', background: 'rgba(0,0,0,0.5)', color: '#fff', fontSize: 13 }}
-                      />
-                    </td>
-                    <td style={{ padding: 10, fontWeight: 900, fontSize: 15, color: st.percentage >= 75 ? '#34d399' : '#f87171' }}>
-                      {st.percentage}%
-                    </td>
-                    <td style={{ padding: 6 }}>
-                      <div style={{ display: 'flex', gap: 6 }}>
-                        <button
-                          onClick={() => handleMarkPresent(st.student_id)}
-                          style={{ padding: '4px 8px', borderRadius: 6, background: '#10b981', color: '#fff', border: 'none', fontWeight: 700, fontSize: 11, cursor: 'pointer' }}
-                        >
-                          + Present
-                        </button>
-                        <button
-                          onClick={() => handleMarkAbsent(st.student_id)}
-                          style={{ padding: '4px 8px', borderRadius: 6, background: '#ef4444', color: '#fff', border: 'none', fontWeight: 700, fontSize: 11, cursor: 'pointer' }}
-                        >
-                          + Absent
-                        </button>
-                      </div>
-                    </td>
-                    <td style={{ padding: 10 }}>
-                      {st.percentage >= 75 ? (
-                        <span style={{ padding: '4px 10px', borderRadius: 12, background: 'rgba(16,185,129,0.2)', color: '#34d399', fontSize: 12, fontWeight: 700 }}>
-                          ✓ Eligible (≥75%)
-                        </span>
-                      ) : (
-                        <span style={{ padding: '4px 10px', borderRadius: 12, background: 'rgba(239,68,68,0.2)', color: '#f87171', fontSize: 12, fontWeight: 700 }}>
-                          ⚠️ Shortage (&lt;75%)
-                        </span>
-                      )}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+          {attendanceList.length === 0 ? (
+            <p style={{ padding: 24, textAlign: 'center', color: '#94a3b8', fontSize: 14, background: 'rgba(15,23,42,0.6)', borderRadius: 10, border: '1px dashed rgba(255,255,255,0.15)' }}>
+              🎓 No students enrolled in <strong>{attendanceFor.name}</strong> yet. Click the <strong>🎓 Students</strong> button above to enroll department candidate students into this subject.
+            </p>
+          ) : (
+            <>
+              <div style={{ overflowX: 'auto', marginBottom: 20 }}>
+                <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13, color: '#f8fafc' }}>
+                  <thead>
+                    <tr style={{ background: 'rgba(139,92,246,0.2)', color: '#c084fc', textAlign: 'left', borderBottom: '1px solid rgba(139,92,246,0.4)' }}>
+                      <th style={{ padding: 10 }}>USN / Reg No</th>
+                      <th style={{ padding: 10 }}>Student Name</th>
+                      <th style={{ padding: 10 }}>Total Classes</th>
+                      <th style={{ padding: 10 }}>Classes Attended</th>
+                      <th style={{ padding: 10 }}>Attendance %</th>
+                      <th style={{ padding: 10 }}>Quick Attendance</th>
+                      <th style={{ padding: 10 }}>Status</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {attendanceList.map((st) => (
+                      <tr key={st.student_id} style={{ borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
+                        <td style={{ padding: 10, color: '#38bdf8', fontWeight: 700 }}>{st.registration_no}</td>
+                        <td style={{ padding: 10, fontWeight: 600 }}>{st.full_name}</td>
+                        <td style={{ padding: 6 }}>
+                          <input
+                            type="number" min={1} max={100}
+                            value={st.totalClasses}
+                            onChange={(e) => handleDirectAttChange(st.student_id, 'totalClasses', e.target.value)}
+                            style={{ width: 60, padding: 6, borderRadius: 6, border: '1px solid rgba(255,255,255,0.2)', background: 'rgba(0,0,0,0.5)', color: '#fff', fontSize: 13 }}
+                          />
+                        </td>
+                        <td style={{ padding: 6 }}>
+                          <input
+                            type="number" min={0} max={st.totalClasses}
+                            value={st.attendedClasses}
+                            onChange={(e) => handleDirectAttChange(st.student_id, 'attendedClasses', e.target.value)}
+                            style={{ width: 60, padding: 6, borderRadius: 6, border: '1px solid rgba(255,255,255,0.2)', background: 'rgba(0,0,0,0.5)', color: '#fff', fontSize: 13 }}
+                          />
+                        </td>
+                        <td style={{ padding: 10, fontWeight: 900, fontSize: 15, color: st.percentage >= 75 ? '#34d399' : '#f87171' }}>
+                          {st.percentage}%
+                        </td>
+                        <td style={{ padding: 6 }}>
+                          <div style={{ display: 'flex', gap: 6 }}>
+                            <button
+                              onClick={() => handleMarkPresent(st.student_id)}
+                              style={{ padding: '4px 8px', borderRadius: 6, background: '#10b981', color: '#fff', border: 'none', fontWeight: 700, fontSize: 11, cursor: 'pointer' }}
+                            >
+                              + Present
+                            </button>
+                            <button
+                              onClick={() => handleMarkAbsent(st.student_id)}
+                              style={{ padding: '4px 8px', borderRadius: 6, background: '#ef4444', color: '#fff', border: 'none', fontWeight: 700, fontSize: 11, cursor: 'pointer' }}
+                            >
+                              + Absent
+                            </button>
+                          </div>
+                        </td>
+                        <td style={{ padding: 10 }}>
+                          {st.percentage >= 75 ? (
+                            <span style={{ padding: '4px 10px', borderRadius: 12, background: 'rgba(16,185,129,0.2)', color: '#34d399', fontSize: 12, fontWeight: 700 }}>
+                              ✓ Eligible (≥75%)
+                            </span>
+                          ) : (
+                            <span style={{ padding: '4px 10px', borderRadius: 12, background: 'rgba(239,68,68,0.2)', color: '#f87171', fontSize: 12, fontWeight: 700 }}>
+                              ⚠️ Shortage (&lt;75%)
+                            </span>
+                          )}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
 
-          <button className="fd-btn" onClick={handleSaveAttendance} style={{ background: 'linear-gradient(135deg, #8b5cf6 0%, #6d28d9 100%)', width: '100%' }}>
-            💾 Save & Sync Student Attendance Percentages
-          </button>
+              <button className="fd-btn" onClick={handleSaveAttendance} style={{ background: 'linear-gradient(135deg, #8b5cf6 0%, #6d28d9 100%)', width: '100%' }}>
+                💾 Save & Sync Student Attendance Percentages
+              </button>
+            </>
+          )}
         </div>
       )}
 
       {studentsFor && (
         <div className="ms-materials-panel" style={{ borderColor: 'rgba(59,130,246,0.5)' }}>
           <div className="ms-materials-header">
-            <h3>🎓 {studentsFor.name} — Enrolled Students Roster</h3>
+            <h3>🎓 {studentsFor.name} — Student Roster & Enrollment</h3>
             <button className="ms-close" onClick={() => setStudentsFor(null)}>✕</button>
           </div>
 
+          {/* Department Candidate Students Batch Enrollment section */}
+          <div style={{ background: 'rgba(15,23,42,0.6)', padding: 16, borderRadius: 10, border: '1px solid rgba(56,189,248,0.3)', marginBottom: 20 }}>
+            <h4 style={{ margin: '0 0 8px 0', fontSize: 14, color: '#38bdf8' }}>➕ Select & Enroll Department Candidate Students into {studentsFor.name}</h4>
+            <p style={{ margin: '0 0 12px 0', fontSize: 12, color: '#94a3b8' }}>Check candidate students from your department to enroll them into this subject's active roster:</p>
+            {candidateList.filter(c => !studentsList.some(s => s.id === c.id)).length === 0 ? (
+              <p style={{ fontSize: 12, color: '#34d399', margin: 0, fontStyle: 'italic' }}>✓ All available department candidate students are already enrolled in this subject.</p>
+            ) : (
+              <>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: 10, marginBottom: 14, maxHeight: 180, overflowY: 'auto' }}>
+                  {candidateList.filter(c => !studentsList.some(s => s.id === c.id)).map((c) => (
+                    <label key={c.id} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 12px', background: 'rgba(255,255,255,0.04)', borderRadius: 6, cursor: 'pointer', border: selectedCandidateIds.includes(c.id) ? '1px solid #38bdf8' : '1px solid rgba(255,255,255,0.1)' }}>
+                      <input
+                        type="checkbox"
+                        checked={selectedCandidateIds.includes(c.id)}
+                        onChange={() => toggleCandidateSelect(c.id)}
+                      />
+                      <div style={{ fontSize: 12 }}>
+                        <strong style={{ color: '#f8fafc', display: 'block' }}>{c.full_name}</strong>
+                        <span style={{ color: '#38bdf8' }}>{c.registration_no || '—'}</span>
+                      </div>
+                    </label>
+                  ))}
+                </div>
+                {selectedCandidateIds.length > 0 && (
+                  <button className="fd-btn" onClick={handleBatchEnroll} style={{ background: 'linear-gradient(135deg, #0284c7 0%, #38bdf8 100%)', width: '100%' }}>
+                    ➕ Enroll {selectedCandidateIds.length} Selected Candidates into {studentsFor.name}
+                  </button>
+                )}
+              </>
+            )}
+          </div>
+
           <form onSubmit={handleAddStudent} style={{ background: 'rgba(15,23,42,0.6)', padding: 16, borderRadius: 10, border: '1px solid rgba(255,255,255,0.1)', marginBottom: 20 }}>
-            <h4 style={{ margin: '0 0 12px 0', fontSize: 14, color: '#38bdf8' }}>+ Add New Student to {studentsFor.name}</h4>
+            <h4 style={{ margin: '0 0 12px 0', fontSize: 14, color: '#38bdf8' }}>+ Add Brand New Student to {studentsFor.name}</h4>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 100px 80px', gap: 10, marginBottom: 12 }}>
               <input
                 type="text"
@@ -464,7 +608,7 @@ export default function MySubjects() {
               />
             </div>
             <button className="fd-btn" type="submit" style={{ background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)', width: '100%' }}>
-              Save & Add Student to {studentsFor.name}
+              Save & Create New Student for {studentsFor.name}
             </button>
           </form>
 
@@ -474,7 +618,7 @@ export default function MySubjects() {
             </p>
           )}
 
-          <h4 style={{ margin: '0 0 10px 0', fontSize: 14 }}>Total Enrolled Students ({studentsList.length})</h4>
+          <h4 style={{ margin: '0 0 10px 0', fontSize: 14 }}>Enrolled Students Roster ({studentsList.length})</h4>
           <div style={{ maxHeight: 250, overflowY: 'auto' }}>
             <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13, color: '#e2e8f0' }}>
               <thead>
@@ -503,6 +647,13 @@ export default function MySubjects() {
                     </td>
                   </tr>
                 ))}
+                {studentsList.length === 0 && (
+                  <tr>
+                    <td colSpan={5} style={{ padding: 16, textAlign: 'center', color: '#94a3b8' }}>
+                      No students enrolled in this subject yet. Select candidate students above or add a new student.
+                    </td>
+                  </tr>
+                )}
               </tbody>
             </table>
           </div>
@@ -528,91 +679,99 @@ export default function MySubjects() {
             </p>
           )}
 
-          <div style={{ overflowX: 'auto', marginBottom: 20 }}>
-            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13, color: '#f8fafc' }}>
-              <thead>
-                <tr style={{ background: 'rgba(16,185,129,0.15)', color: '#34d399', textAlign: 'left', borderBottom: '1px solid rgba(16,185,129,0.3)' }}>
-                  <th style={{ padding: 10 }}>USN / Reg No</th>
-                  <th style={{ padding: 10 }}>Student Name</th>
-                  <th style={{ padding: 10 }}>Int-1 (15m)</th>
-                  <th style={{ padding: 10 }}>Int-2 (15m)</th>
-                  <th style={{ padding: 10 }}>Assignment (10m)</th>
-                  <th style={{ padding: 10 }}>Project (10m)</th>
-                  <th style={{ padding: 10 }}>Total (50m)</th>
-                  <th style={{ padding: 10 }}>Eligibility Status</th>
-                </tr>
-              </thead>
-              <tbody>
-                {internalRoster.map((st) => {
-                  const currentInput = internalInput[st.studentId] || { internal1: 0, internal2: 0, assignment: 0, project: 0 }
-                  const total = (Number(currentInput.internal1) || 0) + (Number(currentInput.internal2) || 0) + (Number(currentInput.assignment) || 0) + (Number(currentInput.project) || 0)
-                  const eligible = total >= 25
-
-                  return (
-                    <tr key={st.studentId} style={{ borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
-                      <td style={{ padding: 10, color: '#38bdf8', fontWeight: 700 }}>{st.registrationNo}</td>
-                      <td style={{ padding: 10, fontWeight: 600 }}>{st.fullName}</td>
-                      <td style={{ padding: 6 }}>
-                        <input
-                          type="number" min={0} max={15}
-                          value={currentInput.internal1}
-                          onChange={(e) => updateInternalScore(st.studentId, 'internal1', e.target.value)}
-                          style={{ width: 60, padding: 6, borderRadius: 6, border: '1px solid rgba(255,255,255,0.2)', background: 'rgba(0,0,0,0.5)', color: '#fff', fontSize: 13 }}
-                        />
-                      </td>
-                      <td style={{ padding: 6 }}>
-                        <input
-                          type="number" min={0} max={15}
-                          value={currentInput.internal2}
-                          onChange={(e) => updateInternalScore(st.studentId, 'internal2', e.target.value)}
-                          style={{ width: 60, padding: 6, borderRadius: 6, border: '1px solid rgba(255,255,255,0.2)', background: 'rgba(0,0,0,0.5)', color: '#fff', fontSize: 13 }}
-                        />
-                      </td>
-                      <td style={{ padding: 6 }}>
-                        <input
-                          type="number" min={0} max={20}
-                          value={currentInput.assignment}
-                          onChange={(e) => updateInternalScore(st.studentId, 'assignment', e.target.value)}
-                          style={{ width: 60, padding: 6, borderRadius: 6, border: '1px solid rgba(255,255,255,0.2)', background: 'rgba(0,0,0,0.5)', color: '#fff', fontSize: 13 }}
-                        />
-                      </td>
-                      <td style={{ padding: 6 }}>
-                        <input
-                          type="number" min={0} max={10}
-                          value={currentInput.project}
-                          onChange={(e) => updateInternalScore(st.studentId, 'project', e.target.value)}
-                          style={{ width: 60, padding: 6, borderRadius: 6, border: '1px solid rgba(255,255,255,0.2)', background: 'rgba(0,0,0,0.5)', color: '#fff', fontSize: 13 }}
-                        />
-                      </td>
-                      <td style={{ padding: 10, fontWeight: 900, fontSize: 15, color: eligible ? '#34d399' : '#f87171' }}>
-                        {total} / 50
-                      </td>
-                      <td style={{ padding: 10 }}>
-                        {eligible ? (
-                          <span style={{ padding: '4px 10px', borderRadius: 12, background: 'rgba(16,185,129,0.2)', color: '#34d399', fontSize: 12, fontWeight: 700 }}>
-                            ✓ Eligible (≥25)
-                          </span>
-                        ) : (
-                          <span style={{ padding: '4px 10px', borderRadius: 12, background: 'rgba(239,68,68,0.2)', color: '#f87171', fontSize: 12, fontWeight: 700 }}>
-                            ⚠️ Detained (&lt;25)
-                          </span>
-                        )}
-                      </td>
+          {internalRoster.length === 0 ? (
+            <p style={{ padding: 24, textAlign: 'center', color: '#94a3b8', fontSize: 14, background: 'rgba(15,23,42,0.6)', borderRadius: 10, border: '1px dashed rgba(255,255,255,0.15)' }}>
+              🎓 No students enrolled in <strong>{internalsFor.name}</strong> yet. Click the <strong>🎓 Students</strong> button above to enroll department candidate students into this subject.
+            </p>
+          ) : (
+            <>
+              <div style={{ overflowX: 'auto', marginBottom: 20 }}>
+                <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13, color: '#f8fafc' }}>
+                  <thead>
+                    <tr style={{ background: 'rgba(16,185,129,0.15)', color: '#34d399', textAlign: 'left', borderBottom: '1px solid rgba(16,185,129,0.3)' }}>
+                      <th style={{ padding: 10 }}>USN / Reg No</th>
+                      <th style={{ padding: 10 }}>Student Name</th>
+                      <th style={{ padding: 10 }}>Int-1 (15m)</th>
+                      <th style={{ padding: 10 }}>Int-2 (15m)</th>
+                      <th style={{ padding: 10 }}>Assignment (10m)</th>
+                      <th style={{ padding: 10 }}>Project (10m)</th>
+                      <th style={{ padding: 10 }}>Total (50m)</th>
+                      <th style={{ padding: 10 }}>Eligibility Status</th>
                     </tr>
-                  )
-                })}
-              </tbody>
-            </table>
-          </div>
+                  </thead>
+                  <tbody>
+                    {internalRoster.map((st) => {
+                      const currentInput = internalInput[st.studentId] || { internal1: 0, internal2: 0, assignment: 0, project: 0 }
+                      const total = (Number(currentInput.internal1) || 0) + (Number(currentInput.internal2) || 0) + (Number(currentInput.assignment) || 0) + (Number(currentInput.project) || 0)
+                      const eligible = total >= 25
 
-          <div style={{ display: 'flex', gap: 14 }}>
-            <button className="fd-btn" onClick={handleSaveInternalMarks} style={{ background: 'rgba(255,255,255,0.1)' }}>
-              💾 Save Draft Internal Marks
-            </button>
-            <button className="fd-btn" onClick={handleSubmitInternalsToHOD} style={{ background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)', flex: 1 }}>
-              📤 Submit 50-Mark Internal Sheet to HOD
-            </button>
-          </div>
+                      return (
+                        <tr key={st.studentId} style={{ borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
+                          <td style={{ padding: 10, color: '#38bdf8', fontWeight: 700 }}>{st.registrationNo}</td>
+                          <td style={{ padding: 10, fontWeight: 600 }}>{st.fullName}</td>
+                          <td style={{ padding: 6 }}>
+                            <input
+                              type="number" min={0} max={15}
+                              value={currentInput.internal1}
+                              onChange={(e) => updateInternalScore(st.studentId, 'internal1', e.target.value)}
+                              style={{ width: 60, padding: 6, borderRadius: 6, border: '1px solid rgba(255,255,255,0.2)', background: 'rgba(0,0,0,0.5)', color: '#fff', fontSize: 13 }}
+                            />
+                          </td>
+                          <td style={{ padding: 6 }}>
+                            <input
+                              type="number" min={0} max={15}
+                              value={currentInput.internal2}
+                              onChange={(e) => updateInternalScore(st.studentId, 'internal2', e.target.value)}
+                              style={{ width: 60, padding: 6, borderRadius: 6, border: '1px solid rgba(255,255,255,0.2)', background: 'rgba(0,0,0,0.5)', color: '#fff', fontSize: 13 }}
+                            />
+                          </td>
+                          <td style={{ padding: 6 }}>
+                            <input
+                              type="number" min={0} max={20}
+                              value={currentInput.assignment}
+                              onChange={(e) => updateInternalScore(st.studentId, 'assignment', e.target.value)}
+                              style={{ width: 60, padding: 6, borderRadius: 6, border: '1px solid rgba(255,255,255,0.2)', background: 'rgba(0,0,0,0.5)', color: '#fff', fontSize: 13 }}
+                            />
+                          </td>
+                          <td style={{ padding: 6 }}>
+                            <input
+                              type="number" min={0} max={10}
+                              value={currentInput.project}
+                              onChange={(e) => updateInternalScore(st.studentId, 'project', e.target.value)}
+                              style={{ width: 60, padding: 6, borderRadius: 6, border: '1px solid rgba(255,255,255,0.2)', background: 'rgba(0,0,0,0.5)', color: '#fff', fontSize: 13 }}
+                            />
+                          </td>
+                          <td style={{ padding: 10, fontWeight: 900, fontSize: 15, color: eligible ? '#34d399' : '#f87171' }}>
+                            {total} / 50
+                          </td>
+                          <td style={{ padding: 10 }}>
+                            {eligible ? (
+                              <span style={{ padding: '4px 10px', borderRadius: 12, background: 'rgba(16,185,129,0.2)', color: '#34d399', fontSize: 12, fontWeight: 700 }}>
+                                ✓ Eligible (≥25)
+                              </span>
+                            ) : (
+                              <span style={{ padding: '4px 10px', borderRadius: 12, background: 'rgba(239,68,68,0.2)', color: '#f87171', fontSize: 12, fontWeight: 700 }}>
+                                ⚠️ Detained (&lt;25)
+                              </span>
+                            )}
+                          </td>
+                        </tr>
+                      )
+                    })}
+                  </tbody>
+                </table>
+              </div>
+
+              <div style={{ display: 'flex', gap: 14 }}>
+                <button className="fd-btn" onClick={handleSaveInternalMarks} style={{ background: 'rgba(255,255,255,0.1)' }}>
+                  💾 Save Draft Internal Marks
+                </button>
+                <button className="fd-btn" onClick={handleSubmitInternalsToHOD} style={{ background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)', flex: 1 }}>
+                  📤 Submit 50-Mark Internal Sheet to HOD
+                </button>
+              </div>
+            </>
+          )}
         </div>
       )}
     </div>

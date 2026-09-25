@@ -1,0 +1,92 @@
+{
+  "52b022a4-7a0e-4320-b5da-01de2e8ff711:bbdfcb4a-24d3-455e-8cc2-feef7c8b65b4": {
+    "subjectId": "52b022a4-7a0e-4320-b5da-01de2e8ff711",
+    "studentId": "bbdfcb4a-24d3-455e-8cc2-feef7c8b65b4",
+    "totalClasses": 4,
+    "attendedClasses": 3,
+    "percentage": 75,
+    "isEligible": true,
+    "status": "ELIGIBLE",
+    "updatedAt": "2026-09-24T18:16:08.062Z"
+  },
+  "52b022a4-7a0e-4320-b5da-01de2e8ff711:0c78f280-cebe-43b3-a639-9bcec549ddc7": {
+    "subjectId": "52b022a4-7a0e-4320-b5da-01de2e8ff711",
+    "studentId": "0c78f280-cebe-43b3-a639-9bcec549ddc7",
+    "totalClasses": 4,
+    "attendedClasses": 3,
+    "percentage": 75,
+    "isEligible": true,
+    "status": "ELIGIBLE",
+    "updatedAt": "2026-09-24T18:16:08.062Z"
+  },
+  "52b022a4-7a0e-4320-b5da-01de2e8ff711:ccb4fa03-15f0-4d86-a1d9-bbe698ea1fc5": {
+    "subjectId": "52b022a4-7a0e-4320-b5da-01de2e8ff711",
+    "studentId": "ccb4fa03-15f0-4d86-a1d9-bbe698ea1fc5",
+    "totalClasses": 4,
+    "attendedClasses": 3,
+    "percentage": 75,
+    "isEligible": true,
+    "status": "ELIGIBLE",
+    "updatedAt": "2026-09-24T18:16:08.062Z"
+  },
+  "050ba71c-1308-415a-bbd4-d294de0eefe3:a2316ce0-20ba-4500-9e47-be467b8f8a67": {
+    "subjectId": "050ba71c-1308-415a-bbd4-d294de0eefe3",
+    "studentId": "a2316ce0-20ba-4500-9e47-be467b8f8a67",
+    "totalClasses": 40,
+    "attendedClasses": 0,
+    "percentage": 0,
+    "isEligible": false,
+    "status": "NOT_ELIGIBLE_ATTENDANCE_SHORTAGE",
+    "updatedAt": "2026-09-25T13:35:32.602Z"
+  },
+  "050ba71c-1308-415a-bbd4-d294de0eefe3:5b768ee2-41cf-417a-922d-0a1229ee6cc9": {
+    "subjectId": "050ba71c-1308-415a-bbd4-d294de0eefe3",
+    "studentId": "5b768ee2-41cf-417a-922d-0a1229ee6cc9",
+    "totalClasses": 40,
+    "attendedClasses": 0,
+    "percentage": 0,
+    "isEligible": false,
+    "status": "NOT_ELIGIBLE_ATTENDANCE_SHORTAGE",
+    "updatedAt": "2026-09-25T13:35:32.602Z"
+  },
+  "050ba71c-1308-415a-bbd4-d294de0eefe3:47764147-519c-4cd5-98d2-5a34a56f5d6d": {
+    "subjectId": "050ba71c-1308-415a-bbd4-d294de0eefe3",
+    "studentId": "47764147-519c-4cd5-98d2-5a34a56f5d6d",
+    "totalClasses": 40,
+    "attendedClasses": 0,
+    "percentage": 0,
+    "isEligible": false,
+    "status": "NOT_ELIGIBLE_ATTENDANCE_SHORTAGE",
+    "updatedAt": "2026-09-25T13:35:32.602Z"
+  },
+  "050ba71c-1308-415a-bbd4-d294de0eefe3:1e7d1628-44a5-4479-877b-5491cca1c32d": {
+    "subjectId": "050ba71c-1308-415a-bbd4-d294de0eefe3",
+    "studentId": "1e7d1628-44a5-4479-877b-5491cca1c32d",
+    "totalClasses": 40,
+    "attendedClasses": 0,
+    "percentage": 0,
+    "isEligible": false,
+    "status": "NOT_ELIGIBLE_ATTENDANCE_SHORTAGE",
+    "updatedAt": "2026-09-25T13:35:32.602Z"
+  },
+  "050ba71c-1308-415a-bbd4-d294de0eefe3:ccb4fa03-15f0-4d86-a1d9-bbe698ea1fc5": {
+    "subjectId": "050ba71c-1308-415a-bbd4-d294de0eefe3",
+    "studentId": "ccb4fa03-15f0-4d86-a1d9-bbe698ea1fc5",
+    "totalClasses": 4,
+    "attendedClasses": 3,
+    "percentage": 75,
+    "isEligible": true,
+    "status": "ELIGIBLE",
+    "updatedAt": "2026-09-25T13:35:32.602Z"
+  },
+  "050ba71c-1308-415a-bbd4-d294de0eefe3:d300d6e5-ce15-4a7f-9ce5-ae2947b36346": {
+    "subjectId": "050ba71c-1308-415a-bbd4-d294de0eefe3",
+    "studentId": "d300d6e5-ce15-4a7f-9ce5-ae2947b36346",
+    "totalClasses": 40,
+    "attendedClasses": 0,
+    "percentage": 0,
+    "isEligible": false,
+    "status": "NOT_ELIGIBLE_ATTENDANCE_SHORTAGE",
+    "updatedAt": "2026-09-25T13:35:32.602Z"
+  }
+}

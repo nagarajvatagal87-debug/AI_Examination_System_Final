@@ -20,21 +20,45 @@ router.post("/register", async (req, res) => {
     const cleanEmail = email.toLowerCase().trim();
     const cleanRegNo = registrationNo ? registrationNo.trim() : null;
 
-    // Check if user already exists in profiles
+    // Check if user pre-exists in profiles (added by HOD or Faculty)
     const { data: existing } = await supabaseAdmin
       .from("profiles")
-      .select("id, email, role, full_name")
+      .select("id, email, role, full_name, registration_no")
       .or(`email.ilike.${cleanEmail}${cleanRegNo ? `,registration_no.ilike.${cleanRegNo}` : ""}`)
       .limit(1);
 
-    if (existing && existing.length > 0) {
-      const user = existing[0];
+    let userProfile = existing && existing.length > 0 ? existing[0] : null;
+
+    if (role === "student" && !userProfile) {
+      return res.status(403).json({
+        error: "Registration Denied: Student record not found in system database. Your Faculty or HOD must first add your email or USN to the database."
+      });
+    }
+
+    if (role === "faculty" && !userProfile) {
+      return res.status(403).json({
+        error: "Registration Denied: Faculty record not found in system database. Your HOD must first add your email to the faculty roster."
+      });
+    }
+
+    if (userProfile) {
+      // Update existing pre-registered profile
+      const { data: updatedProfile, error: updateError } = await supabaseAdmin
+        .from("profiles")
+        .update({
+          full_name: fullName.trim(),
+          registration_no: cleanRegNo || userProfile.registration_no,
+        })
+        .eq("id", userProfile.id)
+        .select()
+        .single();
+
       return res.status(200).json({
-        id: user.id,
-        role: user.role,
-        fullName: user.full_name,
-        email: user.email,
-        message: "Account already registered! Logging you in...",
+        id: userProfile.id,
+        role: userProfile.role,
+        fullName: updatedProfile?.full_name || fullName,
+        email: userProfile.email,
+        message: "Account activated successfully! You can now log in.",
       });
     }
 
@@ -127,8 +151,14 @@ router.post("/login", async (req, res) => {
       userProfile = (regProfiles && regProfiles.length > 0) ? regProfiles[0] : null;
     }
 
-    // If profile found, return success 200 with token and user object!
+    // If profile found, verify role match if specific portal role was requested
     if (userProfile) {
+      if (req.body.role && userProfile.role !== req.body.role) {
+        return res.status(403).json({
+          error: `Access Denied: Your account is registered as a ${userProfile.role.toUpperCase()}, not as a ${req.body.role.toUpperCase()}. Please select the correct ${userProfile.role.toUpperCase()} portal to log in.`
+        });
+      }
+
       return res.json({
         token: `token-${userProfile.id}`,
         user: {
@@ -142,53 +172,9 @@ router.post("/login", async (req, res) => {
       });
     }
 
-    // 3. Fallback: Auto-create profile for user logging in for the first time
-    const detectedRole = VALID_ROLES.find((r) => cleanInput.includes(r)) || "student";
-    const { data: defaultDept } = await supabaseAdmin.from("departments").select("id, name").limit(1).maybeSingle();
-
-    const newUserId = crypto.randomUUID();
-    const newName = cleanInput.split("@")[0].replace(/[._-]/g, " ").toUpperCase() || "Student";
-
-    try {
-      const { data: autoProfile } = await supabaseAdmin
-        .from("profiles")
-        .insert({
-          id: newUserId,
-          role: detectedRole,
-          full_name: newName,
-          email: cleanInput.includes("@") ? cleanInput : `${cleanInput}@dsatm.edu.in`,
-          registration_no: detectedRole === "student" ? (cleanInput.includes("@") ? cleanInput.split("@")[0].toUpperCase() : cleanInput.toUpperCase()) : null,
-          department_id: defaultDept?.id || null,
-        })
-        .select()
-        .single();
-
-      if (autoProfile) {
-        return res.json({
-          token: `token-${autoProfile.id}`,
-          user: {
-            id: autoProfile.id,
-            role: autoProfile.role,
-            fullName: autoProfile.full_name,
-            email: autoProfile.email,
-            registrationNo: autoProfile.registration_no,
-            departmentName: defaultDept?.name || "Computer Applications",
-          },
-        });
-      }
-    } catch (e) {}
-
-    // Fallback: Return active user session so login always succeeds cleanly!
-    return res.json({
-      token: `token-${newUserId}`,
-      user: {
-        id: newUserId,
-        role: detectedRole,
-        fullName: newName,
-        email: cleanInput.includes("@") ? cleanInput : `${cleanInput}@dsatm.edu.in`,
-        registrationNo: detectedRole === "student" ? "1DT25MC036" : null,
-        departmentName: defaultDept?.name || "Computer Applications",
-      },
+    // Strict Authorization: If user profile is NOT found in DB, block access immediately!
+    return res.status(403).json({
+      error: "Access Denied: Your email or USN is not registered in the system database. Only authorized students or faculty registered by the HOD or administration can access the application."
     });
   } catch (err) {
     res.status(401).json({ error: err.message || "Invalid credentials" });

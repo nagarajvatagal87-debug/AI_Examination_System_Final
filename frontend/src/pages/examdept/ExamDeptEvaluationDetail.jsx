@@ -200,7 +200,7 @@ export default function ExamDeptEvaluationDetail() {
           <div>
             <h2 style={{ fontSize: 20, margin: 0, fontWeight: 800 }}>{student?.full_name || 'Student Candidate'}</h2>
             <p style={{ color: '#c084fc', fontSize: 13, margin: '2px 0 0', fontWeight: 700 }}>
-              USN: {student?.registration_no || '1DS23MCA001'} · MCA Department
+              USN: {student?.registration_no || 'N/A'} · MCA Department
             </p>
           </div>
         </div>
@@ -287,7 +287,7 @@ export default function ExamDeptEvaluationDetail() {
                 <div style={{ borderBottom: '2px solid #000', paddingBottom: 12, marginBottom: 20, display: 'flex', justifyContent: 'space-between', fontSize: 13 }}>
                   <div>
                     <strong>DSATM MAIN EXAMINATION — 100 MARKS WRITTEN PAPER</strong><br />
-                    <span>USN: <strong>{student?.registration_no || '1DS23MCA001'}</strong></span><br />
+                    <span>USN: <strong>{student?.registration_no || 'N/A'}</strong></span><br />
                     <span>Name: <strong>{student?.full_name || 'Student Candidate'}</strong></span>
                   </div>
                   <div style={{ textAlign: 'right' }}>

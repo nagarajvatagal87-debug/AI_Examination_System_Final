@@ -43,7 +43,7 @@ export default function HodDashboard() {
       <HeaderBanner />
 
       <div className="hod-layout" style={{ flex: 1 }}>
-        <Sidebar title="Exam AI Platform" subtitle="HOD Portal" items={sidebarItems} />
+        <Sidebar title="HOD Portal" subtitle="Department Oversight" items={sidebarItems} />
 
         <div className="hod-content">
           <header className="hod-topbar glass-card" style={{ margin: '20px 24px 0', padding: '14px 24px', borderRadius: 14, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -155,7 +155,7 @@ function OverviewSection({ overview }) {
         <StatCard icon="👥" label="Total Department Students" value={overview?.total_students ?? 6} tone="blue" />
         <StatCard icon="📚" label="Active Subjects" value={overview?.subjects?.length || passRates.length || 1} tone="green" />
         <StatCard icon="👩‍🏫" label="Department Faculty" value={overview?.faculty_count ?? 2} tone="purple" />
-        <StatCard icon="📅" label="Department Attendance Avg" value="85% Avg" tone="blue" />
+        <StatCard icon="📅" label="Department Attendance Avg" value={overview?.attendance_avg || "Pending Upload"} tone="blue" />
       </div>
 
       <div style={{ margin: '20px 0' }}>
@@ -313,6 +313,17 @@ function DepartmentStudentsSection() {
     }
   }
 
+  async function handleDeleteSubject(subjectId, sName) {
+    if (!window.confirm(`Are you sure you want to remove subject "${sName}"?`)) return
+    try {
+      await api.delete(`/hod/subjects/${subjectId}`)
+      setStatusMsg(`✅ Subject "${sName}" removed successfully!`)
+      loadData(selectedSem)
+    } catch (err) {
+      setStatusMsg(`❌ ${err.response?.data?.error || 'Failed to remove subject'}`)
+    }
+  }
+
   const filtered = students.filter((s) => {
     const matchesSearch = !search ||
       s.full_name?.toLowerCase().includes(search.toLowerCase()) ||
@@ -410,8 +421,17 @@ function DepartmentStudentsSection() {
           <h4 style={{ margin: '0 0 12px 0', fontSize: 15, color: '#c084fc' }}>📚 Department Registered Subjects ({subjects.length} Active)</h4>
           <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
             {subjects.map((sub, idx) => (
-              <div key={idx} style={{ padding: '8px 14px', borderRadius: 8, background: 'rgba(192,132,252,0.12)', border: '1px solid rgba(192,132,252,0.3)', color: '#e2e8f0', fontSize: 13 }}>
-                <strong>{sub.code}</strong> — {sub.name} <span style={{ color: '#c084fc', fontSize: 11 }}>({sub.semester})</span>
+              <div key={idx} style={{ padding: '8px 14px', borderRadius: 8, background: 'rgba(192,132,252,0.12)', border: '1px solid rgba(192,132,252,0.3)', color: '#e2e8f0', fontSize: 13, display: 'flex', alignItems: 'center', gap: 8 }}>
+                <div>
+                  <strong>{sub.code}</strong> — {sub.name} <span style={{ color: '#c084fc', fontSize: 11 }}>({sub.semester})</span>
+                </div>
+                <button
+                  onClick={() => handleDeleteSubject(sub.id, sub.name)}
+                  style={{ background: 'transparent', border: 'none', color: '#f87171', cursor: 'pointer', fontWeight: 800, fontSize: 13, padding: '2px 4px' }}
+                  title="Remove Subject"
+                >
+                  ✖
+                </button>
               </div>
             ))}
           </div>
@@ -465,11 +485,7 @@ function DepartmentStudentsSection() {
             </thead>
             <tbody>
               {filtered.map((s, idx) => {
-                const sCourses = s.registeredCourses && s.registeredCourses.length > 0
-                  ? s.registeredCourses
-                  : (subjects.filter((sub) => !sub.semester || sub.semester === s.semester).length > 0
-                      ? subjects.filter((sub) => !sub.semester || sub.semester === s.semester)
-                      : subjects)
+                const sCourses = s.registeredCourses || []
                 return (
                   <tr key={s.id || idx}>
                     <td style={{ color: '#94a3b8' }}>{idx + 1}</td>
@@ -495,11 +511,7 @@ function DepartmentStudentsSection() {
 
       {/* Student Registered Courses Modal */}
       {activeCourseModalStudent && (() => {
-        const studentCourses = activeCourseModalStudent.registeredCourses && activeCourseModalStudent.registeredCourses.length > 0
-          ? activeCourseModalStudent.registeredCourses
-          : (subjects.filter((sub) => !sub.semester || sub.semester === activeCourseModalStudent.semester).length > 0
-              ? subjects.filter((sub) => !sub.semester || sub.semester === activeCourseModalStudent.semester)
-              : subjects)
+        const studentCourses = activeCourseModalStudent.registeredCourses || []
 
         return (
           <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.7)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, padding: 20 }}>
@@ -566,12 +578,14 @@ function StatCard({ icon, label, value, tone, note }) {
 
 function FacultyManagement() {
   const [faculty, setFaculty] = useState([])
+  const [deptSubjects, setDeptSubjects] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const [fullName, setFullName] = useState('')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [gender, setGender] = useState('Female')
+  const [selectedSubjectId, setSelectedSubjectId] = useState('')
   const [creating, setCreating] = useState(false)
   const [newTempPassword, setNewTempPassword] = useState(null)
 
@@ -583,9 +597,13 @@ function FacultyManagement() {
 
   function loadFaculty() {
     setLoading(true)
-    api.get('/hod/faculty')
-      .then((res) => setFaculty(res.data))
-      .catch((err) => setError(err.response?.data?.error || 'Failed to load faculty'))
+    Promise.all([
+      api.get('/hod/faculty').catch(() => ({ data: [] })),
+      api.get('/hod/subjects').catch(() => ({ data: [] }))
+    ]).then(([facRes, subRes]) => {
+      setFaculty(facRes.data || [])
+      setDeptSubjects(subRes.data || [])
+    }).catch((err) => setError(err.response?.data?.error || 'Failed to load faculty'))
       .finally(() => setLoading(false))
   }
 
@@ -600,16 +618,29 @@ function FacultyManagement() {
       const payload = { fullName, email, gender }
       if (password && password.length >= 6) payload.password = password
       const { data } = await api.post('/hod/faculty', payload)
+      if (selectedSubjectId && data.faculty?.id) {
+        await api.put(`/hod/faculty/${data.faculty.id}/assign-subject`, { subjectId: selectedSubjectId }).catch(() => {})
+      }
       setNewTempPassword({ email: data.faculty.email, password: data.tempPassword })
       setFullName('')
       setEmail('')
       setPassword('')
       setGender('Female')
+      setSelectedSubjectId('')
       loadFaculty()
     } catch (err) {
       setError(err.response?.data?.error || 'Failed to add faculty')
     } finally {
       setCreating(false)
+    }
+  }
+
+  async function handleAssignSubject(facultyId, subjectId) {
+    try {
+      await api.put(`/hod/faculty/${facultyId}/assign-subject`, { subjectId })
+      loadFaculty()
+    } catch (err) {
+      setError(err.response?.data?.error || 'Failed to assign subject')
     }
   }
 
@@ -648,13 +679,19 @@ function FacultyManagement() {
   return (
     <div className="hod-card">
       <h3 className="hod-card-title">Add New Faculty</h3>
-      <form className="hod-inline-form" onSubmit={handleAdd}>
+      <form className="hod-inline-form" onSubmit={handleAdd} style={{ display: 'grid', gridTemplateColumns: '1fr 1fr auto 1fr auto auto', gap: 10 }}>
         <input placeholder="Full name" value={fullName} onChange={(e) => setFullName(e.target.value)} required />
         <input type="email" placeholder="Email (login ID)" value={email} onChange={(e) => setEmail(e.target.value)} required />
         <select value={gender} onChange={(e) => setGender(e.target.value)} style={{ padding: '8px 12px', borderRadius: 8, background: 'rgba(15,23,42,0.9)', color: '#fff', border: '1px solid rgba(255,255,255,0.2)' }}>
           <option value="Female">Female 👩‍🏫</option>
           <option value="Male">Male 👨‍🏫</option>
           <option value="Other">Other</option>
+        </select>
+        <select value={selectedSubjectId} onChange={(e) => setSelectedSubjectId(e.target.value)} style={{ padding: '8px 12px', borderRadius: 8, background: 'rgba(15,23,42,0.9)', color: '#38bdf8', border: '1px solid rgba(56,189,248,0.4)' }}>
+          <option value="">-- Assign Subject --</option>
+          {deptSubjects.map((s) => (
+            <option key={s.id} value={s.id}>{s.name} ({s.code || 'SUB'})</option>
+          ))}
         </select>
         <input type="password" placeholder="Password (min 6 chars)" value={password} onChange={(e) => setPassword(e.target.value)} />
         <button type="submit" disabled={creating}>{creating ? 'Adding...' : 'Add Faculty'}</button>
@@ -689,19 +726,31 @@ function FacultyManagement() {
         </form>
       )}
 
-      <h3 className="hod-card-title" style={{ marginTop: 28 }}>Current Faculty</h3>
+      <h3 className="hod-card-title" style={{ marginTop: 28 }}>Current Faculty & Subject Allocation</h3>
       {loading ? (
         <p>Loading...</p>
       ) : faculty.length === 0 ? (
         <div className="hod-empty">No faculty added yet.</div>
       ) : (
         <table className="hod-table">
-          <thead><tr><th>Name</th><th>Email</th><th>Joined</th><th>Actions</th></tr></thead>
+          <thead><tr><th>Name</th><th>Email</th><th>Assigned Subject</th><th>Joined</th><th>Actions</th></tr></thead>
           <tbody>
             {faculty.map((f) => (
               <tr key={f.id}>
                 <td style={{ fontWeight: 600 }}>{f.full_name}</td>
                 <td>{f.email}</td>
+                <td>
+                  <select
+                    value={f.subjectId || ''}
+                    onChange={(e) => handleAssignSubject(f.id, e.target.value)}
+                    style={{ padding: '6px 10px', borderRadius: 6, background: 'rgba(15,23,42,0.9)', color: '#38bdf8', border: '1px solid rgba(56,189,248,0.4)', fontSize: 13, fontWeight: 700 }}
+                  >
+                    <option value="">-- Assign Subject --</option>
+                    {deptSubjects.map((s) => (
+                      <option key={s.id} value={s.id}>{s.name} ({s.code || 'SUB'})</option>
+                    ))}
+                  </select>
+                </td>
                 <td>{new Date(f.created_at).toLocaleDateString()}</td>
                 <td>
                   <div style={{ display: 'flex', gap: 8 }}>
@@ -722,6 +771,7 @@ function FacultyManagement() {
     </div>
   )
 }
+
 
 // ---------------------------------------------------------------------------
 // Main Exam Analytics: pass/fail, backlogs, subject-wise %, top-10 transfer
@@ -1573,10 +1623,11 @@ function HodAttendanceSection() {
     selectedSem === 'ALL' || st.semester === selectedSem
   )
 
-  const lowAttendanceCount = students.filter((st) => (st.overallPercentage ?? st.percentage) < 75).length
-  const avgDepartmentAttendance = students.length
-    ? Math.round(students.reduce((acc, st) => acc + (st.overallPercentage ?? st.percentage ?? 0), 0) / students.length)
-    : (data?.avgDepartmentAttendance ?? 85)
+  const studentsWithAtt = students.filter((st) => st.hasAttendance || (st.overallPercentage !== null && st.overallPercentage !== undefined))
+  const lowAttendanceCount = studentsWithAtt.filter((st) => (st.overallPercentage ?? st.percentage) < 75).length
+  const avgDepartmentAttendance = studentsWithAtt.length > 0
+    ? `${Math.round(studentsWithAtt.reduce((acc, st) => acc + (st.overallPercentage ?? st.percentage ?? 0), 0) / studentsWithAtt.length)}%`
+    : (data?.avgDepartmentAttendance !== null && data?.avgDepartmentAttendance !== undefined ? `${data.avgDepartmentAttendance}%` : "Pending Upload")
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
@@ -1584,7 +1635,7 @@ function HodAttendanceSection() {
       <div className="hod-stat-grid">
         <StatCard icon="👥" label="Total Department Students" value={students.length} tone="blue" />
         <StatCard icon="⚠️" label="Attendance Shortage (<75%)" value={lowAttendanceCount} tone="purple" note="Barred from Internal Exams" />
-        <StatCard icon="📊" label="Average Department Attendance" value={`${avgDepartmentAttendance}%`} tone="green" />
+        <StatCard icon="📊" label="Average Department Attendance" value={avgDepartmentAttendance} tone="green" />
       </div>
 
       {/* Student Attendance Roster & Eligibility Breakdown */}
@@ -1631,18 +1682,23 @@ function HodAttendanceSection() {
           </thead>
           <tbody>
             {students.map((st) => {
-              const pct = st.overallPercentage ?? st.percentage ?? 0
-              const isEligible = pct >= 75
+              const hasAtt = st.hasAttendance || (st.overallPercentage !== null && st.overallPercentage !== undefined)
+              const pct = hasAtt ? (st.overallPercentage ?? st.percentage ?? 0) : null
+              const isEligible = hasAtt ? pct >= 75 : true
               return (
-                <tr key={st.studentId || st.registrationNo} style={{ background: !isEligible ? 'rgba(239,68,68,0.06)' : 'transparent' }}>
+                <tr key={st.studentId || st.registrationNo} style={{ background: hasAtt && !isEligible ? 'rgba(239,68,68,0.06)' : 'transparent' }}>
                   <td style={{ fontWeight: 700, color: '#38bdf8' }}>{st.registrationNo}</td>
                   <td style={{ fontWeight: 600 }}>{st.studentName}</td>
                   <td>{st.semester || '3rd Sem'}</td>
-                  <td style={{ fontWeight: 900, fontSize: 15, color: isEligible ? '#34d399' : '#f87171' }}>
-                    {pct}%
+                  <td style={{ fontWeight: 900, fontSize: 15, color: !hasAtt ? '#94a3b8' : isEligible ? '#34d399' : '#f87171' }}>
+                    {hasAtt ? `${pct}%` : 'Pending Upload'}
                   </td>
                   <td>
-                    {isEligible ? (
+                    {!hasAtt ? (
+                      <span style={{ padding: '4px 12px', borderRadius: 12, background: 'rgba(148,163,184,0.15)', color: '#94a3b8', fontSize: 12, fontWeight: 700 }}>
+                        ⏳ ATTENDANCE PENDING
+                      </span>
+                    ) : isEligible ? (
                       <span style={{ padding: '4px 12px', borderRadius: 12, background: 'rgba(16,185,129,0.15)', color: '#34d399', fontSize: 12, fontWeight: 800 }}>
                         ✓ ELIGIBLE FOR INTERNALS
                       </span>
@@ -1755,7 +1811,7 @@ function HodInternalAnalyticsSection() {
   }
 
   // Filter roster for selected internal exam
-  const maxMark = 15 // Internal 1 & Internal 2 are out of 15 marks
+  const maxMark = 50 // Internal 1 & Internal 2 are out of 50 marks
   const currentSubjectObj = subjects.find((s) => s.id === selectedSubject)
 
   // Map student performance for selected internal
@@ -1852,8 +1908,8 @@ function HodInternalAnalyticsSection() {
             onChange={(e) => setSelectedInternal(e.target.value)}
             style={{ padding: '9px 14px', borderRadius: 8, background: 'rgba(15,23,42,0.9)', border: '1px solid rgba(56,189,248,0.4)', color: '#fff', fontSize: 13, fontWeight: 700 }}
           >
-            <option value="internal1">📝 Internal 1 (15 Marks)</option>
-            <option value="internal2">📝 Internal 2 (15 Marks)</option>
+            <option value="internal1">📝 Internal 1 (50 Marks)</option>
+            <option value="internal2">📝 Internal 2 (50 Marks)</option>
           </select>
         </div>
 
@@ -1910,7 +1966,7 @@ function HodInternalAnalyticsSection() {
           <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
             <div>
               <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, color: '#a7f3d0', marginBottom: 4, fontWeight: 700 }}>
-                <span>🌟 Excellence (80-100% | 12-15 Marks)</span>
+                <span>🌟 Excellence (80-100% | 40-50 Marks)</span>
                 <span>{excCount} Students ({totalStudents > 0 ? Math.round((excCount / totalStudents) * 100) : 0}%)</span>
               </div>
               <div style={{ height: 12, borderRadius: 6, background: 'rgba(255,255,255,0.1)', overflow: 'hidden' }}>
@@ -1920,7 +1976,7 @@ function HodInternalAnalyticsSection() {
 
             <div>
               <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, color: '#7dd3fc', marginBottom: 4, fontWeight: 700 }}>
-                <span>👍 Good Performance (60-79% | 9-11 Marks)</span>
+                <span>👍 Good Performance (60-79% | 30-39 Marks)</span>
                 <span>{goodCount} Students ({totalStudents > 0 ? Math.round((goodCount / totalStudents) * 100) : 0}%)</span>
               </div>
               <div style={{ height: 12, borderRadius: 6, background: 'rgba(255,255,255,0.1)', overflow: 'hidden' }}>
@@ -1930,7 +1986,7 @@ function HodInternalAnalyticsSection() {
 
             <div>
               <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, color: '#fde68a', marginBottom: 4, fontWeight: 700 }}>
-                <span>🟢 Average / Pass (40-59% | 6-8 Marks)</span>
+                <span>🟢 Average / Pass (40-59% | 20-29 Marks)</span>
                 <span>{avgCount} Students ({totalStudents > 0 ? Math.round((avgCount / totalStudents) * 100) : 0}%)</span>
               </div>
               <div style={{ height: 12, borderRadius: 6, background: 'rgba(255,255,255,0.1)', overflow: 'hidden' }}>
@@ -1940,7 +1996,7 @@ function HodInternalAnalyticsSection() {
 
             <div>
               <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, color: '#fca5a5', marginBottom: 4, fontWeight: 700 }}>
-                <span>⚠️ Critical Risk / Needs Guidance (&lt;40% | 0-5 Marks)</span>
+                <span>⚠️ Critical Risk / Needs Guidance (&lt;40% | 0-19 Marks)</span>
                 <span>{criticalCount} Students ({totalStudents > 0 ? Math.round((criticalCount / totalStudents) * 100) : 0}%)</span>
               </div>
               <div style={{ height: 12, borderRadius: 6, background: 'rgba(255,255,255,0.1)', overflow: 'hidden' }}>

@@ -38,6 +38,9 @@ async function requireAuth(req, res, next) {
       req.user = userProfile;
       return next();
     }
+
+    // If profile not found for token- format, reject!
+    return res.status(401).json({ error: "Unauthorized access: Account session not found in database." });
   }
 
   // 2. Demo token format: demo-<role>-token
@@ -56,15 +59,7 @@ async function requireAuth(req, res, next) {
       req.user = dbProfile;
       return next();
     }
-
-    const fallbackId = ROLE_FALLBACK_UUIDS[role] || ROLE_FALLBACK_UUIDS.faculty;
-    req.user = {
-      id: fallbackId,
-      role: role,
-      full_name: role === "faculty" ? "Dr. Ramesh Kumar" : "User",
-      fullName: role === "faculty" ? "Dr. Ramesh Kumar" : "User",
-    };
-    return next();
+    return res.status(401).json({ error: `Unauthorized access: No registered account found for role ${role}.` });
   }
 
   // 3. Supabase Auth JWT Token Verification
@@ -82,30 +77,9 @@ async function requireAuth(req, res, next) {
         return next();
       }
     }
-
-    // Fallback profile if user profile not found
-    const { data: defaultFaculty } = await supabaseAdmin
-      .from("profiles")
-      .select("id, role, full_name, department_id")
-      .eq("role", "faculty")
-      .limit(1)
-      .maybeSingle();
-
-    req.user = defaultFaculty || {
-      id: ROLE_FALLBACK_UUIDS.faculty,
-      role: "faculty",
-      full_name: "Faculty User",
-      fullName: "Faculty User",
-    };
-    next();
+    return res.status(401).json({ error: "Unauthorized access: Invalid or expired token." });
   } catch (err) {
-    req.user = {
-      id: ROLE_FALLBACK_UUIDS.faculty,
-      role: "faculty",
-      full_name: "Faculty User",
-      fullName: "Faculty User",
-    };
-    next();
+    return res.status(401).json({ error: "Unauthorized access: Token verification failed." });
   }
 }
 

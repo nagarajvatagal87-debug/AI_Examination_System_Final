@@ -119,52 +119,26 @@ router.get("/materials", async (req, res) => {
 
 // GET /api/student/complaints
 router.get("/complaints", async (req, res) => {
-  const { data, error } = await supabaseAdmin
-    .from("complaints")
-    .select("*")
-    .eq("student_id", req.user.id)
-    .order("created_at", { ascending: false });
-
-  if (error) return res.status(500).json({ error: error.message });
-  res.json(data);
+  try {
+    const { getStudentComplaints } = require("../services/complaintStore");
+    const data = await getStudentComplaints(req.user.id);
+    res.json(data || []);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 });
 
-// POST /api/student/complaints  body: { evaluationId, reason }
-// Enforces that complaints are Internal-exam-only & sends faculty notification
+// POST /api/student/complaints  body: { evaluationId, reason, questionTitle, subjectName, subjectCode, currentMarks, maxMarks, aiScore }
 router.post("/complaints", async (req, res) => {
   try {
-    const { evaluationId, reason } = req.body;
-    if (!evaluationId || !reason) {
-      return res.status(400).json({ error: "evaluationId and reason are required" });
+    const { reason } = req.body;
+    if (!reason || !reason.trim()) {
+      return res.status(400).json({ error: "Reason is required to submit a complaint" });
     }
 
-    const { data: evaluation, error: evalError } = await supabaseAdmin
-      .from("evaluations")
-      .select("id, answers(question_id, questions(exam_id, exams(type, subject_id, subjects(created_by))))")
-      .eq("id", evaluationId)
-      .single();
-    if (evalError) throw evalError;
-
-    const examType = evaluation.answers?.questions?.exams?.type;
-    if (examType !== "internal") {
-      return res.status(403).json({ error: "Complaints can only be raised for Internal exams" });
-    }
-
-    const { data, error } = await supabaseAdmin
-      .from("complaints")
-      .insert({ student_id: req.user.id, evaluation_id: evaluationId, reason, status: "open" })
-      .select()
-      .single();
-    if (error) throw error;
-
-    // Send notification to subject faculty if available
-    const facultyId = evaluation.answers?.questions?.exams?.subjects?.created_by;
-    if (facultyId) {
-      const { notify } = require("../services/notification.service");
-      await notify(facultyId, "complaint_raised", "New Internal Mark Complaint", `A student submitted a mark complaint: "${reason.substring(0, 60)}..."`);
-    }
-
-    res.status(201).json(data);
+    const { createComplaint } = require("../services/complaintStore");
+    const complaint = await createComplaint(req.user.id, req.body);
+    res.status(201).json(complaint);
   } catch (err) {
     res.status(400).json({ error: err.message });
   }

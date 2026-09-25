@@ -202,21 +202,69 @@ export default function StudentDashboard() {
     feedback: m?.ai_evidence?.evidence || 'Answers evaluated successfully.',
   }))
 
+  const complaintOptions = []
+  studentResults.forEach((r, idx) => {
+    complaintOptions.push({
+      id: r.evaluationId || `eval-q-${idx + 1}`,
+      label: `${r.exam} (${r.qNo}): ${r.question} — Score: ${r.teacherScore}/${r.maxMarks}`,
+      questionTitle: `${r.exam} (${r.qNo}): ${r.question}`,
+      subjectName: currentSubjectObj?.fullName || 'Computer Applications',
+      subjectCode: currentSubjectObj?.code || 'MMC321',
+      currentMarks: r.teacherScore,
+      maxMarks: r.maxMarks,
+      aiScore: r.aiScore,
+    })
+  })
+
+  safeStudentInternals.forEach((i) => {
+    const tot = i.total_internal_marks ?? ((i.internal1_marks || 0) + (i.internal2_marks || 0) + (i.assignment_marks || 0) + (i.project_marks || 0))
+    complaintOptions.push({
+      id: `eval-int-${i.subject_id}`,
+      label: `${i.subjects?.name || 'Subject'} (${i.subjects?.code || 'MMC'}) 50-Mark Continuous Assessment — Score: ${tot}/50`,
+      questionTitle: `${i.subjects?.name || 'Subject'} 50-Mark Continuous Assessment`,
+      subjectName: i.subjects?.name || 'Subject',
+      subjectCode: i.subjects?.code || 'MMC',
+      currentMarks: tot,
+      maxMarks: 50,
+      aiScore: tot,
+    })
+  })
+
   async function handleSubmitComplaint(e) {
     e.preventDefault()
     if (!complaintReason.trim()) return
 
+    const selectedOpt = complaintOptions.find((o) => o.id === complaintQuestion) || complaintOptions[0] || {
+      id: `eval-${Date.now()}`,
+      questionTitle: complaintQuestion || 'Internal Exam Assessment',
+      subjectName: currentSubjectObj?.fullName || 'Deep Learning',
+      subjectCode: currentSubjectObj?.code || 'MMC321',
+      currentMarks: 6,
+      maxMarks: 10,
+      aiScore: 6,
+    }
+
     try {
       const res = await api.post('/student/complaints', {
-        evaluationId: safeDbMarks[0]?.id || 'eval-sample',
+        evaluationId: selectedOpt.id,
+        questionTitle: selectedOpt.questionTitle || complaintQuestion,
+        subjectName: selectedOpt.subjectName,
+        subjectCode: selectedOpt.subjectCode,
+        currentMarks: selectedOpt.currentMarks,
+        maxMarks: selectedOpt.maxMarks,
+        aiScore: selectedOpt.aiScore,
         reason: complaintReason,
       })
-      if (res.data) setDbComplaints([res.data, ...dbComplaints])
-    } catch (err) {}
-
-    setComplaintReason('')
-    setComplaintSuccess('Internal mark complaint submitted successfully to your Subject Faculty!')
-    setTimeout(() => setComplaintSuccess(''), 4000)
+      if (res.data) {
+        setDbComplaints([res.data, ...dbComplaints])
+      }
+      setComplaintReason('')
+      setComplaintSuccess('✓ Internal mark complaint submitted! Faculty has been notified via email & dashboard.')
+      setTimeout(() => setComplaintSuccess(''), 5000)
+    } catch (err) {
+      setComplaintSuccess('⚠️ Failed to submit complaint. Please try again.')
+      setTimeout(() => setComplaintSuccess(''), 4000)
+    }
   }
 
   function handleOpenAiAssistant(materialObj, initialSubTab = 'course-materials') {
@@ -747,7 +795,7 @@ export default function StudentDashboard() {
                   <div>
                     <h3 style={{ margin: 0 }}>📊 Continuous Internal Evaluation Scorecard (50-Mark Scale)</h3>
                     <p style={{ fontSize: 13, color: '#64748b', margin: '4px 0 0 0' }}>
-                      Official breakdown for Internal 1 (15M), Internal 2 (15M), Assignment (10M), and Project (10M).
+                      Official breakdown for Internal 1 (50M), Internal 2 (50M), Assignment (10M), and Project (10M).
                     </p>
                   </div>
                   <span style={{ fontSize: 12, padding: '4px 12px', background: '#eff6ff', color: '#2563eb', fontWeight: 700, borderRadius: 6, border: '1px solid #bfdbfe' }}>
@@ -812,8 +860,8 @@ export default function StudentDashboard() {
                     <thead>
                       <tr>
                         <th>SUBJECT</th>
-                        <th>INT 1 (15M)</th>
-                        <th>INT 2 (15M)</th>
+                        <th>INT 1 (50M)</th>
+                        <th>INT 2 (50M)</th>
                         <th>ASSIGNMENT (10M)</th>
                         <th>PROJECT (10M)</th>
                         <th>TOTAL SCORE (50M)</th>
@@ -836,8 +884,8 @@ export default function StudentDashboard() {
                               <strong>{m.subjects?.name || 'Subject'}</strong>
                               <div style={{ fontSize: 11, color: '#64748b' }}>{m.subjects?.code}</div>
                             </td>
-                            <td>{i1} / 15</td>
-                            <td>{i2} / 15</td>
+                            <td>{i1} / 50</td>
+                            <td>{i2} / 50</td>
                             <td>{ass} / 10</td>
                             <td>{proj} / 10</td>
                             <td>
@@ -1051,8 +1099,8 @@ export default function StudentDashboard() {
                           </div>
 
                           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 10, fontSize: 12, background: '#ffffff', padding: 12, borderRadius: 8, border: '1px solid #cbd5e1' }}>
-                            <div><span style={{ color: '#64748b', display: 'block' }}>Internal 1</span><strong style={{ color: '#0f172a' }}>{i.internal1_marks || 0} / 15</strong></div>
-                            <div><span style={{ color: '#64748b', display: 'block' }}>Internal 2</span><strong style={{ color: '#0f172a' }}>{i.internal2_marks || 0} / 15</strong></div>
+                            <div><span style={{ color: '#64748b', display: 'block' }}>Internal 1</span><strong style={{ color: '#0f172a' }}>{i.internal1_marks || 0} / 50</strong></div>
+                            <div><span style={{ color: '#64748b', display: 'block' }}>Internal 2</span><strong style={{ color: '#0f172a' }}>{i.internal2_marks || 0} / 50</strong></div>
                             <div><span style={{ color: '#64748b', display: 'block' }}>Assignment</span><strong style={{ color: '#0f172a' }}>{i.assignment_marks || 0} / 10</strong></div>
                             <div><span style={{ color: '#64748b', display: 'block' }}>Project</span><strong style={{ color: '#0f172a' }}>{i.project_marks || 0} / 10</strong></div>
                           </div>
@@ -1214,7 +1262,7 @@ export default function StudentDashboard() {
 
           {/* Tab: Attendance */}
           {activeTab === 'attendance' && (
-            <div className="content-card" style={{ padding: 24, background: '#f1f5f9' }}>
+            <div className="content-card" style={{ padding: '24px 28px', background: '#f8fafc' }}>
               <ExactAttendanceView attendanceData={attendanceData} />
             </div>
           )}
@@ -1267,40 +1315,110 @@ export default function StudentDashboard() {
 
           {/* Tab 5: Internal Mark Complaints */}
           {activeTab === 'complaints' && (
-            <div className="content-card">
-              <h3>💬 Raise Internal Mark Complaint</h3>
-              <p style={{ fontSize: 13, color: '#64748b', marginBottom: 16 }}>Complaints apply strictly to <strong>Internal Examination</strong> evaluations.</p>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
+              <div className="content-card">
+                <h3>💬 Raise Internal Mark Complaint</h3>
+                <p style={{ fontSize: 13, color: '#64748b', marginBottom: 16 }}>Complaints apply strictly to <strong>Internal Examination</strong> evaluations.</p>
 
-              {complaintSuccess && <div className="success-alert">{complaintSuccess}</div>}
+                {complaintSuccess && (
+                  <div style={{
+                    padding: '12px 16px', borderRadius: 8, marginBottom: 16,
+                    background: complaintSuccess.includes('✓') ? '#f0fdf4' : '#fef2f2',
+                    color: complaintSuccess.includes('✓') ? '#166534' : '#991b1b',
+                    border: complaintSuccess.includes('✓') ? '1px solid #bbf7d0' : '1px solid #fca5a5',
+                    fontSize: 13, fontWeight: 700
+                  }}>
+                    {complaintSuccess}
+                  </div>
+                )}
 
-              <form onSubmit={handleSubmitComplaint} className="complaint-form">
-                <label>Select Internal Question / Evaluation:</label>
-                <select value={complaintQuestion} onChange={(e) => setComplaintQuestion(e.target.value)} style={{ padding: '10px 14px', borderRadius: 8, border: '1px solid #cbd5e1', fontSize: 13 }}>
-                  <option value="">-- Select Question or Subject Internal Score --</option>
-                  {studentResults.map((r, idx) => (
-                    <option key={idx} value={`${r.exam} - ${r.qNo}: ${r.question}`}>
-                      {r.exam} ({r.qNo}) - Score: {r.teacherScore}/{r.maxMarks}
-                    </option>
-                  ))}
-                  {studentInternals.map((i) => (
-                    <option key={i.subject_id} value={`${i.subjects?.name || 'Subject'} 50-Mark Internal Sheet`}>
-                      {i.subjects?.name} Internal Total Score: {i.total_internal_marks}/50
-                    </option>
-                  ))}
-                </select>
+                <form onSubmit={handleSubmitComplaint} className="complaint-form">
+                  <label>Select Internal Question / Evaluation:</label>
+                  <select
+                    value={complaintQuestion}
+                    onChange={(e) => setComplaintQuestion(e.target.value)}
+                    style={{ padding: '10px 14px', borderRadius: 8, border: '1px solid #cbd5e1', fontSize: 13, width: '100%', marginBottom: 14 }}
+                  >
+                    <option value="">-- Select Question or Subject Internal Score --</option>
+                    {complaintOptions.map((opt) => (
+                      <option key={opt.id} value={opt.id}>
+                        {opt.label}
+                      </option>
+                    ))}
+                  </select>
 
-                <label style={{ marginTop: 14 }}>Reason for Appeal:</label>
-                <textarea
-                  rows={4}
-                  value={complaintReason}
-                  onChange={(e) => setComplaintReason(e.target.value)}
-                  placeholder="Explain why you are requesting additional marks or re-checking..."
-                  required
-                  style={{ padding: '10px 14px', borderRadius: 8, border: '1px solid #cbd5e1', fontSize: 13 }}
-                />
+                  <label>Reason for Appeal:</label>
+                  <textarea
+                    rows={4}
+                    value={complaintReason}
+                    onChange={(e) => setComplaintReason(e.target.value)}
+                    placeholder="Explain why you are requesting additional marks or re-checking (e.g., step-by-step derivations provided)..."
+                    required
+                    style={{ padding: '10px 14px', borderRadius: 8, border: '1px solid #cbd5e1', fontSize: 13, width: '100%', marginBottom: 14 }}
+                  />
 
-                <button type="submit" className="submit-cmp-btn" style={{ marginTop: 14 }}>Submit Complaint to Faculty</button>
-              </form>
+                  <button type="submit" className="submit-cmp-btn" style={{ padding: '12px 24px', borderRadius: 8, background: '#2563eb', color: '#fff', border: 'none', fontWeight: 800, cursor: 'pointer' }}>
+                    🚀 Submit Complaint to Faculty
+                  </button>
+                </form>
+              </div>
+
+              {/* Card 2: My Submitted Complaints History & Faculty Resolution Status */}
+              <div className="content-card">
+                <h3>📋 My Submitted Complaints & Faculty Responses</h3>
+                <p style={{ fontSize: 13, color: '#64748b', marginBottom: 16 }}>
+                  Track open grievances, faculty feedback remarks, extra marks awarded, and resolution status.
+                </p>
+
+                {dbComplaints.length === 0 ? (
+                  <div style={{ padding: 24, textAlign: 'center', color: '#94a3b8', background: '#f8fafc', borderRadius: 8, border: '1px dashed #cbd5e1' }}>
+                    You have not submitted any internal mark complaints.
+                  </div>
+                ) : (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+                    {dbComplaints.map((c) => {
+                      const qTitle = c.question_title || (c.evaluations?.answers?.questions?.question_text ? `Q${c.evaluations.answers.questions.question_no}: ${c.evaluations.answers.questions.question_text}` : 'Internal Evaluation Item')
+                      const statusStr = c.status || 'open'
+                      const isResolved = statusStr === 'resolved'
+                      const isRejected = statusStr === 'rejected'
+
+                      return (
+                        <div key={c.id} style={{ background: '#f8fafc', padding: 18, borderRadius: 12, border: '1px solid #e2e8f0' }}>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
+                            <div>
+                              <strong style={{ fontSize: 15, color: '#0f172a' }}>{c.subject_name || c.subject_code || 'Subject'}</strong>
+                              <span style={{ fontSize: 12, color: '#64748b', marginLeft: 8 }}>• {qTitle}</span>
+                            </div>
+                            <span style={{
+                              padding: '4px 10px', borderRadius: 6, fontSize: 11, fontWeight: 800, textTransform: 'uppercase',
+                              background: isResolved ? '#dcfce7' : isRejected ? '#fee2e2' : '#fef3c7',
+                              color: isResolved ? '#15803d' : isRejected ? '#b91c1c' : '#b45309',
+                              border: isResolved ? '1px solid #86efac' : isRejected ? '1px solid #fca5a5' : '1px solid #fde68a'
+                            }}>
+                              {isResolved ? '✓ RESOLVED' : isRejected ? '❌ REJECTED' : '⏳ UNDER REVIEW'}
+                            </span>
+                          </div>
+
+                          <div style={{ fontSize: 13, color: '#334155', marginBottom: 10, background: '#ffffff', padding: 12, borderRadius: 8, border: '1px solid #cbd5e1' }}>
+                            <strong>Your Appeal Reason:</strong> "{c.reason}"
+                          </div>
+
+                          {(c.resolution_note || c.extra_marks_awarded) && (
+                            <div style={{ fontSize: 13, background: isResolved ? '#eff6ff' : '#fef2f2', padding: 12, borderRadius: 8, border: isResolved ? '1px solid #bfdbfe' : '1px solid #fecdd3' }}>
+                              <strong style={{ color: isResolved ? '#1e3a8a' : '#991b1b' }}>Faculty Resolution:</strong> {c.resolution_note || 'Reviewed by faculty.'}
+                              {c.extra_marks_awarded > 0 && (
+                                <span style={{ marginLeft: 10, fontWeight: 800, color: '#10b981' }}>
+                                  (+{c.extra_marks_awarded} Extra Marks Awarded!)
+                                </span>
+                              )}
+                            </div>
+                          )}
+                        </div>
+                      )
+                    })}
+                  </div>
+                )}
+              </div>
             </div>
           )}
 
@@ -1718,201 +1836,429 @@ function ExactAttendanceView({ attendanceData }) {
   const semLabel = attendanceData?.semesterLabel || 'Sem 3'
   const ayLabel = attendanceData?.academicYear || 'A.Y. 2026-27 - Odd'
   const hasData = Boolean(attendanceData && attendanceData.hasAnyAttendance)
+
   const overallPct = hasData ? (attendanceData?.overallPercentage ?? 0) : 0
   const totalClasses = hasData ? (attendanceData?.totalClasses ?? 0) : 0
   const attendedClasses = hasData ? (attendanceData?.attendedClasses ?? 0) : 0
   const absentClasses = hasData ? (attendanceData?.absentClasses ?? 0) : 0
-  const pendingClasses = attendanceData?.pendingClasses ?? 0
-  const noAttClasses = attendanceData?.noAttendanceClasses ?? 0
+  const isCondoned = Boolean(attendanceData?.isCondoned)
+  const isEligible = hasData ? (attendanceData?.isEligible !== false) : true
 
-  const subjectsList = hasData ? (attendanceData?.subjectBreakdown || []) : []
-  const dailyLogs = hasData ? (attendanceData?.dailyLogs || []) : []
+  const subjectsList = attendanceData?.subjectBreakdown || []
+  const dailyLogs = attendanceData?.dailyLogs || []
+
+  // Calculate shortage or surplus classes for 75% cutoff
+  const requiredClasses = Math.ceil(totalClasses * 0.75)
+  const marginClasses = attendedClasses - requiredClasses
+
+  // Collect list of all absent slots for student's quick review
+  const absentLogsList = []
+  dailyLogs.forEach((row) => {
+    (row.slots || []).forEach((slot) => {
+      if (slot.type === 'absent' || slot.text === 'A') {
+        absentLogsList.push({
+          date: row.date,
+          day: row.day,
+          slotName: slot.slotName,
+          slotTime: slot.slotTime,
+          subjectCode: slot.subjectCode,
+          subjectName: slot.subjectName
+        })
+      }
+    })
+  })
 
   return (
-    <div style={{ maxWidth: 520, margin: '0 auto', background: '#f8fafc', border: '1px solid #cbd5e1', borderRadius: 20, overflow: 'hidden', boxShadow: '0 8px 30px rgba(0,0,0,0.08)', fontFamily: 'system-ui, -apple-system, sans-serif' }}>
+    <div style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: 24, fontFamily: 'Inter, system-ui, sans-serif' }}>
       
-      {/* 1. Top Header */}
-      <div style={{ background: '#09090b', color: '#ffffff', padding: '16px 20px', display: 'flex', alignItems: 'center', gap: 16 }}>
-        <div style={{ fontSize: 20, cursor: 'pointer' }}>←</div>
-        <div style={{ fontSize: 20, fontWeight: 700, flex: 1 }}>Attendance</div>
+      {/* 1. Modern Header Banner */}
+      <div style={{
+        background: 'linear-gradient(135deg, #0f172a 0%, #1e1b4b 50%, #1e3a8a 100%)',
+        borderRadius: 20,
+        padding: '24px 28px',
+        color: '#ffffff',
+        border: '1px solid rgba(255, 255, 255, 0.12)',
+        boxShadow: '0 12px 32px rgba(15, 23, 42, 0.25)',
+        display: 'flex',
+        flexDirection: 'column',
+        gap: 18
+      }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: 16 }}>
+          <div className="attendance-hero-header">
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 6 }}>
+              <span style={{ fontSize: 24 }}>📅</span>
+              <h2 style={{ margin: 0, fontSize: 22, fontWeight: 800, letterSpacing: '-0.3px' }}>
+                Academic Attendance & Exam Eligibility Portal
+              </h2>
+            </div>
+            <p style={{ margin: 0, fontSize: 13, lineHeight: 1.5 }}>
+              VTU Autonomous Regulations • Department of MCA • Minimum 75% Cutoff Required for Internal Examination Eligibility & Hall Ticket Generation
+            </p>
+          </div>
+
+          <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
+            <span style={{ fontSize: 12, color: '#cbd5e1', fontWeight: 600 }}>Academic Term:</span>
+            <span style={{
+              background: 'rgba(56, 189, 248, 0.15)',
+              border: '1px solid rgba(56, 189, 248, 0.3)',
+              color: '#38bdf8',
+              padding: '6px 14px',
+              borderRadius: 20,
+              fontSize: 12,
+              fontWeight: 800
+            }}>
+              {semLabel} | {ayLabel}
+            </span>
+          </div>
+        </div>
+
+        {/* Dynamic Overall Status Hero Card */}
+        <div style={{
+          background: 'rgba(15, 23, 42, 0.65)',
+          backdropFilter: 'blur(12px)',
+          border: '1px solid rgba(255, 255, 255, 0.1)',
+          borderRadius: 16,
+          padding: 20,
+          display: 'grid',
+          gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
+          gap: 20,
+          alignItems: 'center'
+        }}>
+          {/* Circular Percentage Dial */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+            <div style={{ position: 'relative', width: 84, height: 84, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <svg width="84" height="84" viewBox="0 0 36 36">
+                <path d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="rgba(255,255,255,0.1)" strokeWidth="3.5" />
+                <path d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke={!hasData ? '#94a3b8' : isEligible ? '#34d399' : '#f87171'} strokeWidth="3.5" strokeDasharray={`${hasData ? overallPct : 0}, 100`} strokeLinecap="round" />
+              </svg>
+              <div style={{ position: 'absolute', textAlign: 'center' }}>
+                <div style={{ fontSize: 18, fontWeight: 900, color: '#ffffff' }}>
+                  {hasData ? `${Math.round(overallPct)}%` : 'N/A'}
+                </div>
+                <div style={{ fontSize: 9, color: '#94a3b8', fontWeight: 700, textTransform: 'uppercase' }}>Overall</div>
+              </div>
+            </div>
+
+            <div>
+              <div style={{ fontSize: 11, fontWeight: 700, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: 0.5 }}>Eligibility Status</div>
+              <div style={{ fontSize: 17, fontWeight: 900, color: !hasData ? '#cbd5e1' : isEligible ? '#34d399' : '#fca5a5', marginTop: 2 }}>
+                {!hasData
+                  ? 'Faculty Entry Pending ⏳'
+                  : isCondoned
+                  ? 'Medical Condoned (HOD Approved) 🏥'
+                  : isEligible
+                  ? 'Internal Exam Eligible ✓'
+                  : 'Attendance Shortage Alert ⛔'}
+              </div>
+              <div style={{ fontSize: 12, color: '#cbd5e1', marginTop: 4 }}>
+                {!hasData
+                  ? 'Subject faculty will log attendance hours shortly.'
+                  : isEligible
+                  ? 'Maintain ≥ 75% overall attendance across all subjects.'
+                  : `You are currently ${Math.abs(marginClasses)} lecture(s) short of the 75% cutoff.`}
+              </div>
+            </div>
+          </div>
+
+          {/* Key Quick Stats */}
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+            <div style={{ background: 'rgba(255,255,255,0.05)', padding: '12px 14px', borderRadius: 10, border: '1px solid rgba(255,255,255,0.08)' }}>
+              <div style={{ fontSize: 11, color: '#94a3b8', fontWeight: 600 }}>Attended / Conducted</div>
+              <div style={{ fontSize: 18, fontWeight: 900, color: '#38bdf8', marginTop: 2 }}>
+                {attendedClasses} / {totalClasses} <span style={{ fontSize: 12, color: '#94a3b8' }}>Hrs</span>
+              </div>
+            </div>
+
+            <div style={{ background: 'rgba(255,255,255,0.05)', padding: '12px 14px', borderRadius: 10, border: '1px solid rgba(255,255,255,0.08)' }}>
+              <div style={{ fontSize: 11, color: '#94a3b8', fontWeight: 600 }}>Absent / Missed</div>
+              <div style={{ fontSize: 18, fontWeight: 900, color: absentClasses > 0 ? '#f87171' : '#a7f3d0', marginTop: 2 }}>
+                {absentClasses} <span style={{ fontSize: 12, color: '#94a3b8' }}>Lectures</span>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
 
-      {/* 2. Tabs Bar */}
-      <div style={{ display: 'flex', borderBottom: '1px solid #e2e8f0', background: '#ffffff' }}>
+      {/* Missed Classes Warning Summary Card (If student has any absent classes) */}
+      {absentLogsList.length > 0 && (
+        <div style={{ background: '#fef2f2', border: '1px solid #fca5a5', borderRadius: 16, padding: 18 }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+            <h4 style={{ margin: 0, color: '#be123c', fontSize: 15, fontWeight: 800, display: 'flex', alignItems: 'center', gap: 8 }}>
+              <span>⚠️ Missed Classes & Absence Breakdown Log ({absentLogsList.length})</span>
+            </h4>
+            <span style={{ fontSize: 11, fontWeight: 700, background: '#fee2e2', color: '#9f1239', padding: '3px 10px', borderRadius: 12 }}>
+              Subject-wise Absence Records
+            </span>
+          </div>
+
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: 10 }}>
+            {absentLogsList.map((item, idx) => (
+              <div key={idx} style={{ background: '#ffffff', border: '1px solid #fecdd3', borderRadius: 10, padding: '12px 14px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <div>
+                  <div style={{ color: '#9f1239', fontSize: 13, fontWeight: 800 }}>
+                    📅 {item.date} ({item.day})
+                  </div>
+                  <div style={{ fontSize: 12, color: '#0f172a', fontWeight: 700, marginTop: 2 }}>
+                    {item.subjectCode} — {item.subjectName}
+                  </div>
+                  <div style={{ fontSize: 11, color: '#64748b', marginTop: 1 }}>
+                    {item.slotName} ({item.slotTime})
+                  </div>
+                </div>
+                <span style={{ padding: '4px 10px', borderRadius: 12, background: '#fee2e2', color: '#b91c1c', fontSize: 11, fontWeight: 900 }}>
+                  ⛔ ABSENT
+                </span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* 2. Sub Tabs Navigation */}
+      <div style={{ display: 'flex', gap: 12, borderBottom: '2px solid #e2e8f0', paddingBottom: 2 }}>
         <button
           onClick={() => setSubTab('current')}
           style={{
-            flex: 1, padding: '14px 0', border: 'none', background: 'transparent',
-            fontWeight: 800, fontSize: 16, color: subTab === 'current' ? '#1e1b4b' : '#94a3b8',
-            borderBottom: subTab === 'current' ? '3px solid #3b82f6' : '3px solid transparent',
-            cursor: 'pointer'
+            padding: '10px 20px',
+            border: 'none',
+            background: 'transparent',
+            fontWeight: 800,
+            fontSize: 14,
+            color: subTab === 'current' ? '#2563eb' : '#64748b',
+            borderBottom: subTab === 'current' ? '3px solid #2563eb' : '3px solid transparent',
+            cursor: 'pointer',
+            marginBottom: -2,
+            transition: 'all 0.2s ease'
           }}
         >
-          Current
+          📚 Subject Attendance Breakdown ({subjectsList.length})
         </button>
         <button
-          onClick={() => setSubTab('previous')}
+          onClick={() => setSubTab('logs')}
           style={{
-            flex: 1, padding: '14px 0', border: 'none', background: 'transparent',
-            fontWeight: 700, fontSize: 16, color: subTab === 'previous' ? '#1e1b4b' : '#94a3b8',
-            borderBottom: subTab === 'previous' ? '3px solid #3b82f6' : '3px solid transparent',
-            cursor: 'pointer'
+            padding: '10px 20px',
+            border: 'none',
+            background: 'transparent',
+            fontWeight: 800,
+            fontSize: 14,
+            color: subTab === 'logs' ? '#2563eb' : '#64748b',
+            borderBottom: subTab === 'logs' ? '3px solid #2563eb' : '3px solid transparent',
+            cursor: 'pointer',
+            marginBottom: -2,
+            transition: 'all 0.2s ease'
           }}
         >
-          Previous
+          🗓️ Daily Slot-wise Attendance Logs ({dailyLogs.length} Days)
         </button>
       </div>
 
-      <div style={{ padding: 16, display: 'flex', flexDirection: 'column', gap: 16 }}>
-        
-        {/* 3. Semester & Overall Progress Box */}
-        <div style={{ background: '#ffffff', borderRadius: 16, padding: 18, border: '1px solid #e2e8f0', boxShadow: '0 2px 8px rgba(0,0,0,0.02)' }}>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
-            <div style={{ background: '#f1f5f9', color: '#0f172a', padding: '8px 14px', borderRadius: 12, textAlign: 'center', border: '1px solid #e2e8f0' }}>
-              <div style={{ fontSize: 12, fontWeight: 700, color: '#475569' }}>{semLabel.split(' ')[0]}</div>
-              <div style={{ fontSize: 18, fontWeight: 900, color: '#0f172a' }}>{semLabel.split(' ')[1] || '3'}</div>
-            </div>
-            
-            <div style={{ flex: 1, marginLeft: 16 }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
-                <span style={{ color: '#0d9488', fontWeight: 800, fontSize: 14 }}>{ayLabel}</span>
-                <span style={{ color: '#0f172a', fontSize: 14, fontWeight: 800 }}>▲</span>
-              </div>
-              
-              {/* Progress Bar */}
-              <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                <div style={{ flex: 1, height: 8, background: '#e2e8f0', borderRadius: 4, overflow: 'hidden' }}>
-                  <div style={{ width: `${overallPct}%`, height: '100%', background: overallPct >= 75 ? '#22c55e' : '#ef4444', borderRadius: 4 }} />
-                </div>
-                <span style={{ fontWeight: 900, color: overallPct >= 75 ? '#16a34a' : '#dc2626', fontSize: 14 }}>
-                  {overallPct}%
-                </span>
-              </div>
-            </div>
-          </div>
-
-          {/* Subject Header */}
-          <div style={{ background: '#e2e8f0', borderRadius: 10, padding: '10px 14px', margin: '0 0 12px 0', border: '1px solid #cbd5e1' }}>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 60px 60px', fontWeight: 800, fontSize: 14, color: '#0f172a' }}>
-              <div>Subject</div>
-              <div style={{ textAlign: 'center' }}>Total</div>
-              <div style={{ textAlign: 'center' }}>Present</div>
-            </div>
-          </div>
-
-          {/* Subjects Rows */}
-          {subjectsList.length === 0 ? (
-            <div style={{ padding: '20px 14px', textAlign: 'center', color: '#64748b', fontSize: 13, background: '#f8fafc', borderRadius: 10, border: '1px dashed #cbd5e1' }}>
-              <div style={{ fontSize: 24, marginBottom: 4 }}>⏳</div>
-              <strong>No Attendance Records Found</strong>
-              <div style={{ fontSize: 12, color: '#94a3b8', marginTop: 4 }}>
-                Attendance entries will appear here once your Subject Faculty logs attendance for your section.
-              </div>
+      {/* 3. SubTab 1: Subject Attendance Breakdown Cards */}
+      {subTab === 'current' && (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+          {!hasData || subjectsList.length === 0 ? (
+            <div style={{
+              background: '#ffffff',
+              borderRadius: 16,
+              padding: '40px 24px',
+              textAlign: 'center',
+              border: '1px dashed #cbd5e1',
+              boxShadow: '0 4px 12px rgba(0,0,0,0.02)'
+            }}>
+              <div style={{ fontSize: 42, marginBottom: 10 }}>⏳</div>
+              <h3 style={{ margin: 0, color: '#1e293b', fontSize: 18, fontWeight: 800 }}>Attendance Records Pending Faculty Log</h3>
+              <p style={{ color: '#64748b', fontSize: 14, maxWidth: 540, margin: '8px auto 0', lineHeight: 1.6 }}>
+                Your subject faculties have not logged daily class attendance sessions yet for your section. Recorded attendance percentages and subject breakdown will appear here live once saved by your course instructors.
+              </p>
             </div>
           ) : (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: 18 }}>
               {subjectsList.map((sub, idx) => {
-                const isShortage = sub.isShortage || sub.percentage < 75.0
+                const subPct = Number(sub.percentage || 0)
+                const isShort = sub.hasAttendance && subPct < 75.0
+                const hasSubAtt = Boolean(sub.hasAttendance)
+
                 return (
-                  <div key={idx} style={{ padding: '0 4px' }}>
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 60px 60px', fontSize: 14, color: '#1e293b', marginBottom: 4, fontWeight: 500 }}>
-                      <div style={{ fontWeight: 600 }}>{sub.subjectName}</div>
-                      <div style={{ textAlign: 'center', color: '#475569' }}>{sub.totalClasses}</div>
-                      <div style={{ textAlign: 'center', fontWeight: 700 }}>{sub.attendedClasses}</div>
-                    </div>
-                    
-                    {/* Progress Line under subject & percentage */}
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                      <div style={{ flex: 1, height: 4, background: '#e2e8f0', borderRadius: 2, overflow: 'hidden' }}>
-                        <div style={{ width: `${sub.percentage}%`, height: '100%', background: isShortage ? '#ef4444' : '#22c55e' }} />
+                  <div
+                    key={sub.subjectId || idx}
+                    style={{
+                      background: '#ffffff',
+                      borderRadius: 16,
+                      padding: 20,
+                      border: '1px solid #e2e8f0',
+                      boxShadow: '0 4px 14px rgba(15,23,42,0.04)',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      justify: 'space-between',
+                      position: 'relative',
+                      overflow: 'hidden'
+                    }}
+                  >
+                    {/* Top Color Indicator Line */}
+                    <div style={{
+                      position: 'absolute', top: 0, left: 0, right: 0, height: 4,
+                      background: !hasSubAtt ? '#cbd5e1' : isShort ? '#ef4444' : '#10b981'
+                    }} />
+
+                    <div>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 10, marginBottom: 8 }}>
+                        <div>
+                          <span style={{ background: '#f1f5f9', color: '#2563eb', padding: '3px 8px', borderRadius: 6, fontSize: 11, fontWeight: 800, letterSpacing: '0.5px' }}>
+                            {sub.subjectCode}
+                          </span>
+                          <h4 style={{ margin: '6px 0 0 0', fontSize: 16, fontWeight: 800, color: '#0f172a !important' }}>
+                            {sub.subjectName}
+                          </h4>
+                        </div>
+                        <div style={{ textAlign: 'right' }}>
+                          <div style={{ fontSize: 20, fontWeight: 900, color: !hasSubAtt ? '#64748b' : isShort ? '#dc2626' : '#16a34a' }}>
+                            {hasSubAtt ? `${subPct.toFixed(1)}%` : 'Pending'}
+                          </div>
+                        </div>
                       </div>
-                      <span style={{ fontSize: 12, fontWeight: 800, color: isShortage ? '#dc2626' : '#16a34a', minWidth: 50, textAlign: 'right' }}>
-                        {Number(sub.percentage).toFixed(2)}%
-                      </span>
+
+                      {/* Progress Track */}
+                      <div style={{ margin: '14px 0 16px' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, color: '#64748b', marginBottom: 6, fontWeight: 600 }}>
+                          <span>Attendance Progress</span>
+                          <span>{sub.attendedClasses} of {sub.totalClasses} Hours</span>
+                        </div>
+                        <div style={{ height: 8, background: '#e2e8f0', borderRadius: 4, overflow: 'hidden' }}>
+                          <div style={{
+                            width: `${hasSubAtt ? subPct : 0}%`,
+                            height: '100%',
+                            background: isShort ? 'linear-gradient(90deg, #ef4444, #dc2626)' : 'linear-gradient(90deg, #10b981, #059669)',
+                            borderRadius: 4,
+                            transition: 'width 0.4s ease'
+                          }} />
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Footer Badge */}
+                    <div style={{
+                      paddingTop: 12, borderTop: '1px solid #f1f5f9',
+                      display: 'flex', justifyContent: 'space-between', alignItems: 'center'
+                    }}>
+                      <span style={{ fontSize: 12, color: '#64748b', fontWeight: 600 }}>Eligibility Cutoff (75%)</span>
+                      {!hasSubAtt ? (
+                        <span style={{ padding: '3px 10px', borderRadius: 12, background: '#f1f5f9', color: '#64748b', fontSize: 11, fontWeight: 700 }}>
+                          ⏳ Pending Log
+                        </span>
+                      ) : isShort ? (
+                        <span style={{ padding: '3px 10px', borderRadius: 12, background: '#fee2e2', color: '#b91c1c', fontSize: 11, fontWeight: 800 }}>
+                          ⚠️ Shortage Alert (&lt; 75%)
+                        </span>
+                      ) : (
+                        <span style={{ padding: '3px 10px', borderRadius: 12, background: '#dcfce7', color: '#15803d', fontSize: 11, fontWeight: 800 }}>
+                          ✓ Satisfactory (≥ 75%)
+                        </span>
+                      )}
                     </div>
                   </div>
                 )
               })}
             </div>
           )}
-
-          {/* Total Row */}
-          <div style={{ borderTop: '1px solid #cbd5e1', marginTop: 14, paddingTop: 10, display: 'grid', gridTemplateColumns: '1fr 60px 60px', fontWeight: 900, fontSize: 15, color: '#0f172a' }}>
-            <div>Total</div>
-            <div style={{ textAlign: 'center' }}>{totalClasses}</div>
-            <div style={{ textAlign: 'center' }}>{attendedClasses}</div>
-          </div>
         </div>
+      )}
 
-        {/* 4. Attendance KPI Counts Grid */}
-        <div style={{ background: '#ffffff', borderRadius: 16, padding: 16, border: '1px solid #e2e8f0', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
-          <div style={{ fontSize: 14, color: '#16a34a', fontWeight: 800 }}>
-            Present : <span style={{ fontWeight: 900, color: '#15803d' }}>{attendedClasses} / {totalClasses}</span>
+      {/* 4. SubTab 2: Slot-wise Daily Log Table */}
+      {subTab === 'logs' && (
+        <div style={{ background: '#ffffff', borderRadius: 16, padding: 20, border: '1px solid #e2e8f0', boxShadow: '0 4px 12px rgba(0,0,0,0.02)' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16, flexWrap: 'wrap', gap: 10 }}>
+            <div>
+              <h3 style={{ margin: 0, fontSize: 16, fontWeight: 800, color: '#0f172a !important' }}>🗓️ Daily Timetable Lecture Logs & Slot Status</h3>
+              <p style={{ margin: '4px 0 0 0', fontSize: 13, color: '#64748b' }}>
+                View exact day-by-day and subject-wise lecture attendance status for your section.
+              </p>
+            </div>
+            
+            {/* Status Legend Pills */}
+            <div style={{ display: 'flex', gap: 8, fontSize: 11, fontWeight: 700 }}>
+              <span style={{ padding: '4px 10px', borderRadius: 6, background: '#dcfce7', color: '#15803d', border: '1px solid #bbf7d0' }}>P = Present</span>
+              <span style={{ padding: '4px 10px', borderRadius: 6, background: '#fee2e2', color: '#b91c1c', border: '1px solid #fca5a5' }}>A = Absent</span>
+              <span style={{ padding: '4px 10px', borderRadius: 6, background: '#f3e8ff', color: '#7e22ce', border: '1px solid #e9d5ff' }}>C = Condoned</span>
+              <span style={{ padding: '4px 10px', borderRadius: 6, background: '#f1f5f9', color: '#64748b' }}>- = No Class</span>
+            </div>
           </div>
-          <div style={{ fontSize: 14, color: '#dc2626', fontWeight: 800 }}>
-            Absent : <span style={{ fontWeight: 900, color: '#b91c1c' }}>{absentClasses} / {totalClasses}</span>
-          </div>
-          <div style={{ fontSize: 14, color: '#ea580c', fontWeight: 800 }}>
-            Pending : <span style={{ fontWeight: 900, color: '#c2410c' }}>{pendingClasses} / {totalClasses}</span>
-          </div>
-          <div style={{ fontSize: 14, color: '#0284c7', fontWeight: 800 }}>
-            No Attendance : <span style={{ fontWeight: 900, color: '#0369a1' }}>{noAttClasses} / {totalClasses}</span>
-          </div>
+
+          {dailyLogs.length === 0 ? (
+            <div style={{ padding: 30, textAlign: 'center', color: '#94a3b8', fontSize: 13, background: '#f8fafc', borderRadius: 10, border: '1px dashed #cbd5e1' }}>
+              No daily slot logs generated for this session yet.
+            </div>
+          ) : (
+            <div style={{ overflowX: 'auto' }}>
+              <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
+                <thead>
+                  <tr style={{ background: '#f8fafc', borderBottom: '2px solid #e2e8f0', textTransform: 'uppercase', fontSize: 11, color: '#475569', fontWeight: 800 }}>
+                    <th style={{ padding: '14px 16px', textAlign: 'left', minWidth: 120 }}>Date & Day</th>
+                    <th style={{ padding: '14px 16px', textAlign: 'center' }}>Slot 1 (9:30 - 10:30 AM)</th>
+                    <th style={{ padding: '14px 16px', textAlign: 'center' }}>Slot 2 (10:30 - 11:30 AM)</th>
+                    <th style={{ padding: '14px 16px', textAlign: 'center' }}>Slot 3 (11:40 AM - 12:30 PM)</th>
+                    <th style={{ padding: '14px 16px', textAlign: 'center', color: '#2563eb' }}>Slot 4: LeetCode Practice (12:30 - 1:30 PM)</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {dailyLogs.map((row, idx) => (
+                    <tr key={idx} style={{ borderBottom: '1px solid #f1f5f9' }}>
+                      <td style={{ padding: '14px 16px', fontWeight: 800, color: '#0f172a' }}>
+                        <div>{row.date}</div>
+                        <div style={{ fontSize: 11, color: '#2563eb', fontWeight: 700 }}>{row.day}</div>
+                      </td>
+                      {row.slots.map((slot, sIdx) => {
+                        let bg = '#f8fafc'
+                        let color = '#64748b'
+                        let borderColor = '#e2e8f0'
+                        const isAbs = slot.type === 'absent' || slot.text === 'A'
+                        const isPres = slot.type === 'present' || slot.text === 'P'
+                        const isCond = slot.type === 'condoned' || slot.text === 'C'
+
+                        if (isPres) {
+                          bg = '#f0fdf4'
+                          color = '#15803d'
+                          borderColor = '#bbf7d0'
+                        } else if (isAbs) {
+                          bg = '#fef2f2'
+                          color = '#b91c1c'
+                          borderColor = '#fca5a5'
+                        } else if (isCond) {
+                          bg = '#faf5ff'
+                          color = '#7e22ce'
+                          borderColor = '#e9d5ff'
+                        }
+
+                        return (
+                          <td key={sIdx} style={{ padding: '12px 10px', textAlign: 'center' }}>
+                            <div style={{
+                              background: bg, border: `1px solid ${borderColor}`, borderRadius: 10, padding: '10px 8px',
+                              display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4
+                            }}>
+                              <span style={{ fontSize: 11, fontWeight: 800, color: '#1e293b' }}>
+                                {slot.subjectCode}
+                              </span>
+                              <span style={{ fontSize: 10, color: '#64748b', whiteSpace: 'nowrap', maxWidth: 110, overflow: 'hidden', textOverflow: 'ellipsis' }} title={slot.subjectName}>
+                                {slot.subjectName}
+                              </span>
+                              <span style={{
+                                marginTop: 4, padding: '3px 10px', borderRadius: 12,
+                                background: isPres ? '#dcfce7' : isAbs ? '#fee2e2' : isCond ? '#f3e8ff' : '#e2e8f0',
+                                color: color, fontWeight: 900, fontSize: 11
+                              }}>
+                                {isPres ? 'P (PRESENT)' : isAbs ? 'A (ABSENT)' : isCond ? 'C (CONDONED)' : '-'}
+                              </span>
+                            </div>
+                          </td>
+                        )
+                      })}
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
         </div>
+      )}
 
-        {/* 5. Attendance Legend Box */}
-        <div style={{ background: '#ffffff', borderRadius: 16, padding: 14, border: '1px solid #e2e8f0', fontSize: 13, fontWeight: 700, color: '#334155', textAlign: 'center' }}>
-          P = Present , A = Absent, NA = No Attendance, - = No Lecture/Lab
-        </div>
-
-        {/* 6. Slot-wise Daily Log Table */}
-        <div style={{ background: '#ffffff', borderRadius: 16, padding: 14, border: '1px solid #e2e8f0' }}>
-          <div style={{ display: 'grid', gridTemplateColumns: '90px repeat(4, 1fr)', background: '#f1f5f9', borderRadius: 10, padding: '10px 8px', fontWeight: 800, fontSize: 13, color: '#1e293b', textAlign: 'center', marginBottom: 10 }}>
-            <div>Date</div>
-            <div>Slot 1</div>
-            <div>Slot 2</div>
-            <div>Slot 3</div>
-            <div>Slot 4</div>
-          </div>
-
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-            {dailyLogs.map((row, idx) => (
-              <div key={idx} style={{ display: 'grid', gridTemplateColumns: '90px repeat(4, 1fr)', alignItems: 'center', textAlign: 'center', fontSize: 13 }}>
-                <div style={{ fontSize: 12, fontWeight: 700, color: '#334155', lineHeight: 1.2 }}>
-                  <div>{row.date}</div>
-                  <div style={{ color: '#64748b', fontSize: 11, fontWeight: 500 }}>{row.day}</div>
-                </div>
-
-                {row.slots.map((slot, sIdx) => {
-                  let bg = 'transparent'
-                  let color = '#64748b'
-
-                  if (slot.type === 'present' || slot.text === 'P') {
-                    bg = '#e6f4ea'
-                    color = '#16a34a'
-                  } else if (slot.type === 'absent' || slot.text === 'A') {
-                    bg = '#fce8e6'
-                    color = '#dc2626'
-                  }
-
-                  return (
-                    <div
-                      key={sIdx}
-                      style={{
-                        background: bg, color: color, padding: '8px 0', margin: '0 3px',
-                        borderRadius: 6, fontWeight: 800, fontSize: 13
-                      }}
-                    >
-                      {slot.text}
-                    </div>
-                  )
-                })}
-              </div>
-            ))}
-          </div>
-        </div>
-
-      </div>
     </div>
   )
 }

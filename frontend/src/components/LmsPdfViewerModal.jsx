@@ -13,6 +13,25 @@ function SafeMarkdown({ content }) {
   }
 }
 
+function parseRelatedQuestions(text) {
+  if (!text) return { mainText: '', questions: [] }
+  
+  const splitKey = /💡\s*\*\*Related (?:Follow-up )?Questions:\*\*/i
+  const parts = String(text).split(splitKey)
+
+  if (parts.length < 2) {
+    return { mainText: text, questions: [] }
+  }
+
+  const mainText = parts[0].trim().replace(/---$/, '').trim()
+  const rawQuestionsText = parts[1].trim()
+  const questionMatches = rawQuestionsText.match(/(?:\d+\.\s*\*?([^*?\n]+\??)\*?)/g) || []
+
+  const questions = questionMatches.map(q => q.replace(/^\d+\.\s*\*?|\*?$/g, '').trim()).filter(Boolean)
+
+  return { mainText, questions }
+}
+
 export default function LmsPdfViewerModal({ material, onClose }) {
   const [currentPage, setCurrentPage] = useState(1)
   const totalPages = 5
@@ -305,33 +324,93 @@ export default function LmsPdfViewerModal({ material, onClose }) {
     const lower = cleanQ.toLowerCase()
 
     if (lower.includes('page 1') || lower.includes('module 1') || lower.includes('module1') || lower.includes('perceptron') || lower.includes('neural network') || lower.includes('important') || lower.includes('key point') || lower.includes('summariz')) {
-      return `### 🧠 Module 1: Introduction to Neural Networks & Perceptron\n\nBased on **Page 1** of **${selectedDoc}**:\n\n1. **What is a Neural Network**: A computational model made of interconnected processing units called neurons. A neuron receives input values $x$, combines them using learnable weights $w$ and an adjustable bias $b$, applies an activation function $\\phi(z)$, and produces an output.\n2. **Core Components**:\n   * **Inputs ($x$)**: Feature values presented to the network.\n   * **Weights ($w$)**: Parameters controlling each input's contribution.\n   * **Bias ($b$)**: Adjustable offset parameter.\n   * **Activation Function ($\\phi$)**: Transforms weighted sum $z = w^T x + b$ to introduce non-linearity (Sigmoid, ReLU, Tanh, Softmax).\n   * **Layers**: Input layer, one or more hidden layers, and output layer.\n3. **Single Layer Perceptron**: Formula $y = \\phi(w^T x + b)$. Learns linearly separable boundaries (AND, OR logic gates) but strictly fails on non-linearly separable problems like XOR.`
+      return `### 📌 Module 1: Introduction to Neural Networks & Perceptron
+
+Based on **Page 1** of **${selectedDoc}**:
+
+• **What is a Neural Network**: A computational model made of interconnected processing units called neurons. A neuron receives input values $x$, combines them using learnable weights $w$ and an adjustable bias $b$, applies an activation function $\\phi(z)$, and produces an output.
+• **Core Components**:
+  - **Inputs ($x$)**: Feature values presented to the network.
+  - **Weights ($w$)**: Parameters controlling each input's contribution.
+  - **Bias ($b$)**: Adjustable offset parameter.
+  - **Activation Function ($\\phi$)**: Transforms weighted sum $z = w^T x + b$ to introduce non-linearity (Sigmoid, ReLU, Tanh, Softmax).
+• **Single Layer Perceptron**: Formula $y = \\phi(w^T x + b)$. Learns linearly separable boundaries (AND, OR logic gates) but strictly fails on non-linearly separable problems like XOR.
+
+---
+💡 **Related Follow-up Questions:**
+1. *How does the backpropagation algorithm update weights in multi-layer perceptrons?*
+2. *What are the key differences between ReLU and Sigmoid activation functions?*
+3. *Why does a single-layer perceptron fail to solve the XOR problem?*`
     }
 
     if (lower.includes('pool') || lower.includes('pooling') || lower.includes('max pooling') || lower.includes('average pooling')) {
-      return '### 🏊 Pooling Operations in Convolutional Neural Networks\n\nPooling (sub-sampling) reduces spatial dimensions (Height × Width) of feature maps while retaining dominant visual features.\n\n* **Max-Pooling**: Extracts the maximum activation value in each sliding $2 \\times 2$ window. Provides spatial translation invariance.\n* **Average-Pooling**: Calculates the arithmetic mean across the window.\n* **Output Dimension Formula**: $W_{\\text{out}} = \\lfloor\\frac{W - F + 2P}{S}\\rfloor + 1$.'
+      return `### 📌 Pooling Operations in Convolutional Neural Networks
+
+• **Sub-sampling & Spatial Reduction**: Pooling reduces spatial dimensions (Height × Width) of feature maps while retaining dominant visual features.
+• **Max-Pooling**: Extracts the maximum activation value in each sliding $2 \\times 2$ window to provide translation invariance.
+• **Average-Pooling**: Calculates the arithmetic mean across the window.
+• **Output Dimension Formula**: $W_{\\text{out}} = \\lfloor\\frac{W - F + 2P}{S}\\rfloor + 1$.
+
+---
+💡 **Related Follow-up Questions:**
+1. *What is the difference between Max-Pooling and Average-Pooling?*
+2. *How does padding (P) and stride (S) affect feature map resolution?*
+3. *Why are Pooling layers essential for translation invariance in CNNs?*`
     }
 
     if (subLowerName.includes('deep') || subLowerName.includes('neural') || subLowerName.includes('learning') || subLowerName.includes('ai')) {
       if (lower.includes('backprop') || lower.includes('propagation') || lower.includes('back-propagation') || lower.includes('gradient')) {
-        return '### 🧠 Backpropagation Calculus & Chain Rule\n\nBackpropagation is the optimization algorithm used to train neural networks. It computes loss function gradients relative to each weight using the mathematical calculus chain rule:\n\n$$\\frac{\\partial L}{\\partial W^{(l)}} = \\delta^{(l)} (a^{(l-1)})^T$$\n\nErrors are propagated backward from the output layer to hidden layers, updating weights via Stochastic Gradient Descent (SGD) or Adam optimizer.'
+        return `### 📌 Backpropagation Calculus & Chain Rule
+
+• **Optimization Algorithm**: Backpropagation computes loss function gradients relative to each weight using the calculus chain rule.
+• **Gradient Update Equation**: $\\frac{\\partial L}{\\partial W^{(l)}} = \\delta^{(l)} (a^{(l-1)})^T$.
+• **Error Propagation**: Errors are propagated backward from the output layer to hidden layers, updating weights via Stochastic Gradient Descent (SGD) or Adam optimizer.
+
+---
+💡 **Related Follow-up Questions:**
+1. *How does Adam optimizer differ from standard Stochastic Gradient Descent (SGD)?*
+2. *What causes vanishing gradients during backpropagation in deep networks?*
+3. *How does Batch Normalization stabilize gradient updates?*`
       }
       if (lower.includes('relu') || lower.includes('activation') || lower.includes('sigmoid')) {
-        return '### ⚡ Non-Linear Activation Functions\n\nActivation functions introduce non-linearity into neural networks.\n\n* **ReLU (Rectified Linear Unit)**: $f(x) = \\max(0, x)$. Mitigates vanishing gradients in deep hidden layers and speeds up SGD convergence.\n* **Sigmoid**: $\\sigma(x) = \\frac{1}{1 + e^{-x}}$. Maps outputs to $(0, 1)$ for binary classification.\n* **Softmax**: Converts output logits into normalized multi-class probabilities summing to $1.0$.'
+        return `### 📌 Non-Linear Activation Functions
+
+• **ReLU (Rectified Linear Unit)**: $f(x) = \\max(0, x)$. Mitigates vanishing gradients in deep hidden layers and speeds up SGD convergence.
+• **Sigmoid**: $\\sigma(x) = \\frac{1}{1 + e^{-x}}$. Maps outputs to $(0, 1)$ for binary classification.
+• **Softmax**: Converts output logits into normalized multi-class probabilities summing to $1.0$.
+
+---
+💡 **Related Follow-up Questions:**
+1. *When should you use Softmax instead of Sigmoid?*
+2. *What is the "Dying ReLU" problem and how do Leaky ReLUs solve it?*
+3. *How do activation functions introduce non-linearity into neural networks?*`
       }
-      if (lower.includes('cnn') || lower.includes('convolution')) {
-        return '### 👁️ Convolutional Neural Networks (CNNs)\n\nCNNs extract spatial features from grid input data (images). Key layers:\n\n* **Convolutional Layers**: Apply sliding kernel filters for edge and pattern detection.\n* **Max-Pooling**: Down-samples feature maps while preserving translation-invariant features.\n* **Feature Map Size**: $W_{\\text{out}} = \\lfloor\\frac{W - F + 2P}{S}\\rfloor + 1$.'
-      }
-      return `### Grounded Academic Summary for ${subjectName}\n\nRegarding **"${cleanQ}"** (Source: ${selectedDoc}):\n\n* **Module 1**: Artificial Neural Networks (ANNs), Perceptrons, Weights, Bias, and Activation Functions.\n* **Module 2**: Multi-Layer Perceptrons (MLPs), Backpropagation Calculus, and Loss Functions.\n* **Module 3**: Convolutional Neural Networks (CNNs) and Pooling Operations.\n* **Module 4**: Recurrent Neural Networks (RNNs), LSTM Cell Gates, and Optimizers (Adam/SGD).\n* **Module 5**: Transformers, Self-Attention, and Generative Adversarial Networks (GANs).`
+      return `### 📌 Key Points for ${subjectName}
+
+Regarding **"${cleanQ}"** (Source: ${selectedDoc}):
+
+• **Module 1**: Artificial Neural Networks (ANNs), Perceptrons, Weights, Bias, and Activation Functions.
+• **Module 2**: Multi-Layer Perceptrons (MLPs), Backpropagation Calculus, and Loss Functions.
+• **Module 3**: Convolutional Neural Networks (CNNs), Max-Pooling, and Feature Maps.
+• **Module 4**: Recurrent Neural Networks (RNNs), LSTM Cell Gates, and Optimizers (Adam/SGD).
+• **Module 5**: Transformers, Self-Attention, and Generative Adversarial Networks (GANs).
+
+---
+💡 **Related Follow-up Questions:**
+1. *What are the core topics covered in Module 1 of this PDF?*
+2. *How do Convolutional Neural Networks process visual spatial features?*
+3. *What is the role of LSTM gates in Recurrent Neural Networks?*`
     }
 
-    if (lower.includes('normaliz') || lower.includes('1nf') || lower.includes('2nf') || lower.includes('3nf')) {
-      return '### 🗄️ Database Normalization & Normal Forms\n\nNormalization eliminates redundant data and prevents database anomalies:\n\n* **1NF**: Atomic scalar values.\n* **2NF**: No partial functional dependencies.\n* **3NF**: No transitive functional dependencies.\n* **BCNF**: Determinants must be candidate keys.'
-    }
-    if (lower.includes('acid') || lower.includes('transaction')) {
-      return '### 🔒 ACID Properties in Database Transactions\n\nACID properties guarantee system reliability:\n\n* **Atomicity**: All-or-nothing transaction execution.\n* **Consistency**: Valid state transitions.\n* **Isolation**: Serializability of concurrent transactions.\n* **Durability**: Permanent persistence of committed data.'
-    }
-    return `Based on **${selectedDoc}**, core principles for ${subjectName} emphasize structured methodology, key mathematical derivations, architectural design trade-offs, and practical exam review topics.`
+    return `### 📌 Overview for ${subjectName}
+
+Based on **${selectedDoc}**, core principles for ${subjectName} emphasize structured methodology, key mathematical derivations, architectural design trade-offs, and practical exam review topics.
+
+---
+💡 **Related Follow-up Questions:**
+1. *What are the key exam revision topics in this document?*
+2. *Can you summarize the main modules from this course material?*
+3. *What practice questions should I study for the end-semester exam?*`
   }
 
   function handleSelectQuizAnswer(optIdx) {
@@ -667,29 +746,67 @@ export default function LmsPdfViewerModal({ material, onClose }) {
                       </div>
                       <div className="chat-bubble-content">
                         {m.role === 'assistant' ? (
-                          <>
-                            <SafeMarkdown content={m.content} />
-                            {m.sources && m.sources.length > 0 && (
-                              <div style={{ marginTop: 10, paddingTop: 8, borderTop: '1px solid rgba(255,255,255,0.1)', display: 'flex', flexWrap: 'wrap', gap: 6 }}>
-                                {m.sources.map((src, sIdx) => (
-                                  <button
-                                    key={sIdx}
-                                    onClick={() => {
-                                      if (src.page) setCurrentPage(Number(src.page))
-                                      setViewMode('notes')
-                                    }}
-                                    style={{
-                                      background: 'rgba(56,189,248,0.15)', border: '1px solid rgba(56,189,248,0.4)', color: '#38bdf8',
-                                      borderRadius: 6, padding: '3px 8px', fontSize: 11, fontWeight: 700, cursor: 'pointer'
-                                    }}
-                                    title="Click to jump to page in viewer"
-                                  >
-                                    📄 Source: {src.documentName || docTitle} · Page {src.page || 1} ↗
-                                  </button>
-                                ))}
-                              </div>
-                            )}
-                          </>
+                          (() => {
+                            const { mainText, questions } = parseRelatedQuestions(m.content)
+                            return (
+                              <>
+                                <SafeMarkdown content={mainText} />
+
+                                {questions && questions.length > 0 && (
+                                  <div style={{ marginTop: 12, paddingTop: 10, borderTop: '1px dashed #cbd5e1' }}>
+                                    <div style={{ fontSize: 11, fontWeight: 800, color: '#2563eb', marginBottom: 6, display: 'flex', alignItems: 'center', gap: 4 }}>
+                                      💡 Related Questions (Click to Ask):
+                                    </div>
+                                    <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                                      {questions.map((q, qIdx) => (
+                                        <button
+                                          key={qIdx}
+                                          onClick={() => handleSend(q)}
+                                          style={{
+                                            textAlign: 'left',
+                                            background: '#f0f9ff',
+                                            border: '1px solid #bae6fd',
+                                            color: '#0369a1',
+                                            borderRadius: 8,
+                                            padding: '6px 10px',
+                                            fontSize: 12,
+                                            fontWeight: 600,
+                                            cursor: 'pointer',
+                                            transition: 'all 0.15s ease',
+                                          }}
+                                          onMouseEnter={(e) => { e.currentTarget.style.background = '#e0f2fe'; e.currentTarget.style.borderColor = '#0284c7' }}
+                                          onMouseLeave={(e) => { e.currentTarget.style.background = '#f0f9ff'; e.currentTarget.style.borderColor = '#bae6fd' }}
+                                        >
+                                          ❓ {q}
+                                        </button>
+                                      ))}
+                                    </div>
+                                  </div>
+                                )}
+
+                                {m.sources && m.sources.length > 0 && (
+                                  <div style={{ marginTop: 10, paddingTop: 8, borderTop: '1px solid #e2e8f0', display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+                                    {m.sources.map((src, sIdx) => (
+                                      <button
+                                        key={sIdx}
+                                        onClick={() => {
+                                          if (src.page) setCurrentPage(Number(src.page))
+                                          setViewMode('notes')
+                                        }}
+                                        style={{
+                                          background: '#eff6ff', border: '1px solid #bfdbfe', color: '#1d4ed8',
+                                          borderRadius: 6, padding: '3px 8px', fontSize: 11, fontWeight: 700, cursor: 'pointer'
+                                        }}
+                                        title="Click to jump to page in viewer"
+                                      >
+                                        📄 Source: {src.documentName || docTitle} · Page {src.page || 1} ↗
+                                      </button>
+                                    ))}
+                                  </div>
+                                )}
+                              </>
+                            )
+                          })()
                         ) : (
                           m.content
                         )}
