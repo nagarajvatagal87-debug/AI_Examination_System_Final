@@ -78,31 +78,25 @@ export default function Results() {
     URL.revokeObjectURL(url)
   }
 
+  const sortedRows = [...rows].sort((a, b) => (Number(b.totalMarks) || 0) - (Number(a.totalMarks) || 0))
+
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+    <div className="rs-container">
+      <div className="rs-header-card">
         <div>
           <h2 className="rs-title">📊 Published Results & Rankings</h2>
           <p className="rs-sub">Manage & publish exam scores to students and HOD dashboard</p>
         </div>
 
         {exams.length > 0 && (
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-            <label style={{ fontSize: 13, color: '#94a3b8', fontWeight: 600 }}>Select Exam:</label>
+          <div className="rs-exam-select-box">
+            <label className="rs-select-label">Select Exam:</label>
             <select
+              className="rs-select"
               value={activeId}
               onChange={(e) => {
                 setSelectedExamId(e.target.value)
                 setSearchParams({ examId: e.target.value })
-              }}
-              style={{
-                padding: '8px 14px',
-                borderRadius: 8,
-                background: '#1e293b',
-                color: '#f8fafc',
-                border: '1px solid rgba(255,255,255,0.15)',
-                fontWeight: 600,
-                cursor: 'pointer'
               }}
             >
               {exams.map((ex) => (
@@ -116,54 +110,137 @@ export default function Results() {
       </div>
 
       {!activeId ? (
-        <div style={{ padding: 30, textAlign: 'center', background: 'rgba(30,41,59,0.4)', borderRadius: 12, color: '#94a3b8' }}>
+        <div className="rs-empty">
           No active examinations found. Please create an examination first.
         </div>
       ) : (
         <>
-          <div style={{ background: 'rgba(30,41,59,0.5)', padding: 14, borderRadius: 10, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <h3 style={{ margin: 0, fontSize: 16, color: '#f8fafc' }}>{exam?.title || 'Examination Results'}</h3>
-            <span style={{ fontSize: 13, color: '#38bdf8', fontWeight: 600 }}>
-              {evaluatedCount} / {rows.length} Student Papers Evaluated {allVerified && '✅ All Verified'}
-            </span>
+          <div className="rs-banner">
+            <div className="rs-banner-left">
+              <span className="rs-banner-icon">📝</span>
+              <div>
+                <h3 className="rs-banner-title" style={{ color: '#ffffff', WebkitTextFillColor: '#ffffff' }}>
+                  {exam?.title || 'Examination Results'}
+                </h3>
+                <span className="rs-banner-sub" style={{ color: '#cbd5e1', WebkitTextFillColor: '#cbd5e1' }}>
+                  {exam?.subjectName || 'Department Subject'}
+                </span>
+              </div>
+            </div>
+            <div className="rs-banner-right">
+              <div className="rs-progress-pill">
+                <span className="rs-progress-dot" />
+                <strong>{evaluatedCount} / {rows.length}</strong> Papers Evaluated
+              </div>
+              {allVerified && (
+                <span className="rs-verified-pill">
+                  ✓ All Verified
+                </span>
+              )}
+            </div>
           </div>
 
-          <table className="rs-table">
-            <thead>
-              <tr><th>Student Name</th><th>Register No (USN)</th><th>Evaluated Marks</th><th>Status</th><th>Action</th></tr>
-            </thead>
-            <tbody>
-              {rows.map((r) => (
-                <tr key={r.submissionId}>
-                  <td><strong>{r.fullName}</strong></td>
-                  <td>{r.registrationNo}</td>
-                  <td><strong>{r.totalMarks} / {r.maxMarks}</strong></td>
-                  <td><span className={`dh-status-badge ${r.status}`}>{r.status}</span></td>
-                  <td>
-                    {r.status === 'verified' && (
-                      <button className="fd-btn fd-btn-secondary" onClick={() => handlePublishStudent(r.submissionId)}>Publish Result</button>
-                    )}
-                  </td>
+          <div className="rs-table-wrapper">
+            <table className="rs-table">
+              <thead>
+                <tr>
+                  <th style={{ width: '80px', textAlign: 'center' }}>Rank</th>
+                  <th>Student Name</th>
+                  <th style={{ textAlign: 'center' }}>Register No (USN)</th>
+                  <th style={{ textAlign: 'center' }}>Evaluated Marks</th>
+                  <th style={{ textAlign: 'center' }}>Status</th>
+                  <th style={{ textAlign: 'center', width: '130px' }}>Action</th>
                 </tr>
-              ))}
-              {rows.length === 0 && (
-                <tr><td colSpan={5} className="hint" style={{ textAlign: 'center', padding: 20 }}>No student submissions evaluated for this exam yet.</td></tr>
-              )}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {sortedRows.map((r, idx) => {
+                  const rank = idx + 1
+                  const pct = r.maxMarks > 0 ? Math.round((r.totalMarks / r.maxMarks) * 100) : 0
 
-          <div className="rs-actions" style={{ display: 'flex', gap: 12 }}>
-            <button className="fd-btn" disabled={!allVerified || rows.length === 0} onClick={handlePublishClass}>
+                  return (
+                    <tr key={r.submissionId || idx}>
+                      <td style={{ textAlign: 'center' }}>
+                        {rank === 1 ? (
+                          <span className="rs-rank-badge rank-1">🥇 #1</span>
+                        ) : rank === 2 ? (
+                          <span className="rs-rank-badge rank-2">🥈 #2</span>
+                        ) : rank === 3 ? (
+                          <span className="rs-rank-badge rank-3">🥉 #3</span>
+                        ) : (
+                          <span className="rs-rank-badge rank-other">#{rank}</span>
+                        )}
+                      </td>
+                      <td>
+                        <strong className="rs-student-name">{r.fullName}</strong>
+                      </td>
+                      <td style={{ textAlign: 'center' }}>
+                        <code className="rs-usn-badge">{r.registrationNo}</code>
+                      </td>
+                      <td style={{ textAlign: 'center' }}>
+                        <div className="rs-marks-box">
+                          <span className="rs-marks-score">{r.totalMarks}</span>
+                          <span className="rs-marks-max">/ {r.maxMarks}</span>
+                          <span className={`rs-pct-tag ${pct >= 75 ? 'high' : pct >= 50 ? 'med' : 'low'}`}>
+                            {pct}%
+                          </span>
+                        </div>
+                      </td>
+                      <td style={{ textAlign: 'center' }}>
+                        {r.status === 'published' ? (
+                          <span className="rs-status-badge published">✓ Published</span>
+                        ) : r.status === 'verified' ? (
+                          <span className="rs-status-badge verified">⚡ Verified</span>
+                        ) : (
+                          <span className="rs-status-badge pending">⏳ Pending</span>
+                        )}
+                      </td>
+                      <td style={{ textAlign: 'center' }}>
+                        {r.status === 'published' ? (
+                          <span className="rs-done-tag">✓ Done</span>
+                        ) : (
+                          <button
+                            className="rs-btn-publish-single"
+                            onClick={() => handlePublishStudent(r.submissionId)}
+                            title="Publish this student's result"
+                          >
+                            🚀 Publish
+                          </button>
+                        )}
+                      </td>
+                    </tr>
+                  )
+                })}
+                {rows.length === 0 && (
+                  <tr>
+                    <td colSpan={6} className="rs-table-empty">
+                      No student submissions evaluated for this exam yet.
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+
+          <div className="rs-actions">
+            <button
+              className="rs-btn-primary"
+              disabled={!allVerified || rows.length === 0}
+              onClick={handlePublishClass}
+            >
               🚀 Publish Class Result to Students & HOD
             </button>
-            <button className="fd-btn fd-btn-secondary" disabled={rows.length === 0} onClick={handleDownloadSheet}>
+            <button
+              className="rs-btn-secondary"
+              disabled={rows.length === 0}
+              onClick={handleDownloadSheet}
+            >
               📥 Download Result CSV Sheet
             </button>
           </div>
         </>
       )}
 
-      {msg && <p className="fd-status">{msg}</p>}
+      {msg && <p className="rs-status-msg">{msg}</p>}
     </div>
   )
 }

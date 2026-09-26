@@ -102,34 +102,53 @@ export default function Analytics() {
       ) : (
         <>
           <div className="an-cards">
-            <div className="an-card">
-              <div className="an-card-value" style={{ color: '#38bdf8' }}>{average}</div>
+            <div className="an-card an-card-blue">
+              <div className="an-card-header">
+                <span className="an-card-icon">📊</span>
+                <span className="an-card-chip blue">Average</span>
+              </div>
+              <div className="an-card-value">{average}</div>
               <div className="an-card-label">Class Average Mark</div>
             </div>
-            <div className="an-card">
-              <div className="an-card-value" style={{ color: '#34d399' }}>{highest}</div>
+
+            <div className="an-card an-card-green">
+              <div className="an-card-header">
+                <span className="an-card-icon">🏆</span>
+                <span className="an-card-chip green">Highest</span>
+              </div>
+              <div className="an-card-value">{highest}</div>
               <div className="an-card-label">Highest Score</div>
             </div>
-            <div className="an-card">
-              <div className="an-card-value" style={{ color: '#f87171' }}>{lowest}</div>
+
+            <div className="an-card an-card-amber">
+              <div className="an-card-header">
+                <span className="an-card-icon">📉</span>
+                <span className="an-card-chip amber">Lowest</span>
+              </div>
+              <div className="an-card-value">{lowest}</div>
               <div className="an-card-label">Lowest Score</div>
             </div>
-            <div className="an-card">
-              <div className="an-card-value" style={{ color: '#a78bfa' }}>{passPercent}%</div>
-              <div className="an-card-label">Eligibility Pass Rate (≥25m)</div>
+
+            <div className="an-card an-card-purple">
+              <div className="an-card-header">
+                <span className="an-card-icon">🎓</span>
+                <span className="an-card-chip purple">Eligibility</span>
+              </div>
+              <div className="an-card-value">{passPercent}%</div>
+              <div className="an-card-label">Eligibility Pass Rate (≥25M)</div>
             </div>
           </div>
 
           <div className="an-section">
-            <h3 style={{ margin: '0 0 16px 0', fontSize: 15, color: '#f8fafc' }}>
+            <h3 style={{ margin: '0 0 16px 0', fontSize: 15, color: '#0f172a', fontWeight: 800 }}>
               📈 Student Score Distribution Bracket
             </h3>
             <ResponsiveContainer width="100%" height={260}>
               <BarChart data={distData}>
-                <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.1)" />
-                <XAxis dataKey="range" stroke="#94a3b8" />
-                <YAxis allowDecimals={false} stroke="#94a3b8" />
-                <Tooltip contentStyle={{ background: '#0f172a', border: '1px solid rgba(255,255,255,0.2)', borderRadius: 8, color: '#fff' }} />
+                <CartesianGrid strokeDasharray="3 3" stroke="rgba(0,0,0,0.06)" />
+                <XAxis dataKey="range" stroke="#64748b" />
+                <YAxis allowDecimals={false} stroke="#64748b" />
+                <Tooltip contentStyle={{ background: '#ffffff', border: '1px solid #cbd5e1', borderRadius: 10, color: '#0f172a', boxShadow: '0 4px 12px rgba(15,23,42,0.1)' }} />
                 <Bar dataKey="count" fill="url(#barGradient)" radius={[6, 6, 0, 0]} />
                 <defs>
                   <linearGradient id="barGradient" x1="0" y1="0" x2="0" y2="1">
@@ -142,15 +161,15 @@ export default function Analytics() {
           </div>
 
           <div className="an-section">
-            <h3 style={{ margin: '0 0 16px 0', fontSize: 15, color: '#f8fafc' }}>
+            <h3 style={{ margin: '0 0 16px 0', fontSize: 15, color: '#0f172a', fontWeight: 800 }}>
               🎯 Pass vs Detained Student Proportion
             </h3>
             <ResponsiveContainer width="100%" height={140}>
               <BarChart data={[{ name: 'Students', Eligible: passCount, Detained: failCount }]} layout="vertical">
-                <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.1)" />
-                <XAxis type="number" allowDecimals={false} stroke="#94a3b8" />
+                <CartesianGrid strokeDasharray="3 3" stroke="rgba(0,0,0,0.06)" />
+                <XAxis type="number" allowDecimals={false} stroke="#64748b" />
                 <YAxis type="category" dataKey="name" hide />
-                <Tooltip contentStyle={{ background: '#0f172a', border: '1px solid rgba(255,255,255,0.2)', borderRadius: 8, color: '#fff' }} />
+                <Tooltip contentStyle={{ background: '#ffffff', border: '1px solid #cbd5e1', borderRadius: 10, color: '#0f172a', boxShadow: '0 4px 12px rgba(15,23,42,0.1)' }} />
                 <Bar dataKey="Eligible" fill="#10b981" stackId="a" />
                 <Bar dataKey="Detained" fill="#f87171" stackId="a" />
               </BarChart>

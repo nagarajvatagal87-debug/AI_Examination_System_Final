@@ -2,12 +2,12 @@
   display: flex;
   min-height: 100vh;
   width: 100%;
-  background: #f8fafc;
-  color: #1e293b;
+  background: linear-gradient(135deg, #eef2ff 0%, #e0e7ff 35%, #f1f5f9 70%, #ede9fe 100%) !important;
+  color: #0f172a;
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
 }
 
-/* Sidebar Navigation */
+/* Sidebar Navigation - Premium Dark Theme */
 .eduexam-sidebar {
   width: 250px;
   background: #0f172a;
@@ -16,32 +16,53 @@
   flex-direction: column;
   flex-shrink: 0;
   border-right: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 4px 0 20px rgba(15, 23, 42, 0.15);
+  z-index: 10;
 }
 
 .eduexam-brand {
-  padding: 20px 24px;
+  padding: 18px 20px;
   display: flex;
   align-items: center;
   gap: 12px;
   border-bottom: 1px solid rgba(255, 255, 255, 0.08);
 }
 
-.eduexam-logo {
-  font-size: 26px;
-  background: rgba(99, 102, 241, 0.2);
+.eduexam-logo-frame {
   width: 42px;
   height: 42px;
-  border-radius: 10px;
+  border-radius: 50%;
+  padding: 2px;
+  background: linear-gradient(135deg, #f59e0b 0%, #3b82f6 100%);
   display: flex;
   align-items: center;
   justify-content: center;
+  box-shadow: 0 0 12px rgba(245, 158, 11, 0.3);
+  flex-shrink: 0;
+}
+
+.eduexam-logo-img {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  object-fit: cover;
+  background: #ffffff;
 }
 
 .eduexam-brand-name {
-  font-size: 18px;
-  font-weight: 800;
+  font-size: 16px;
+  font-weight: 900;
   color: #ffffff;
-  letter-spacing: -0.02em;
+  letter-spacing: 0.5px;
+  line-height: 1.1;
+}
+
+.eduexam-brand-sub {
+  font-size: 11px;
+  color: #fbbf24;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  margin-top: 2px;
 }
 
 .eduexam-nav {
@@ -72,15 +93,15 @@
 }
 
 .nav-btn:hover {
-  background: rgba(255, 255, 255, 0.05);
+  background: rgba(255, 255, 255, 0.06);
   color: #f8fafc;
 }
 
 .nav-btn.active {
-  background: #2563eb;
+  background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
   color: #ffffff;
-  font-weight: 600;
-  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.35);
+  font-weight: 700;
+  box-shadow: 0 4px 14px rgba(37, 99, 235, 0.4);
 }
 
 .nav-badge-count {
@@ -96,13 +117,19 @@
 .eduexam-logout-btn {
   margin: 12px;
   padding: 10px;
-  background: rgba(239, 68, 68, 0.1);
-  border: 1px solid rgba(239, 68, 68, 0.2);
+  background: rgba(239, 68, 68, 0.12);
+  border: 1px solid rgba(239, 68, 68, 0.25);
   color: #fca5a5;
   border-radius: 8px;
   cursor: pointer;
-  font-weight: 600;
+  font-weight: 700;
   font-size: 13px;
+  transition: all 0.15s ease;
+}
+
+.eduexam-logout-btn:hover {
+  background: rgba(239, 68, 68, 0.22);
+  color: #ffffff;
 }
 
 /* Main Area */
@@ -110,27 +137,67 @@
   flex: 1;
   display: flex;
   flex-direction: column;
-  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+  background: linear-gradient(135deg, #eef2ff 0%, #e0e7ff 35%, #f1f5f9 70%, #ede9fe 100%) !important;
   overflow-y: auto;
 }
 
-/* Top Header Bar */
+/* Top Header Bar - Premium Dark Theme */
 .eduexam-top-header {
-  background: #ffffff;
-  padding: 14px 28px;
-  border-bottom: 1px solid #e2e8f0;
+  background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+  padding: 12px 24px;
+  border-bottom: 1.5px solid rgba(245, 158, 11, 0.35); /* Gold Accent */
   display: flex;
   justify-content: space-between;
   align-items: center;
-  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.03);
+  gap: 16px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+  width: 100%;
+}
+
+.top-header-center {
+  text-align: center;
+  flex: 1;
+  padding: 0 12px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.eduexam-top-header .header-college-title-center {
+  font-size: 15.5px !important;
+  font-weight: 900 !important;
+  letter-spacing: 0.9px !important;
+  text-transform: uppercase !important;
+  color: #ffffff !important;
+  background: linear-gradient(135deg, #ffffff 0%, #fef08a 45%, #93c5fd 100%) !important;
+  -webkit-background-clip: text !important;
+  -webkit-text-fill-color: transparent !important;
+  margin: 0 !important;
+  line-height: 1.25 !important;
+  filter: drop-shadow(0 2px 6px rgba(0, 0, 0, 0.6)) !important;
+  opacity: 1 !important;
+  visibility: visible !important;
+}
+
+.eduexam-top-header .header-dashboard-subtitle-center {
+  font-size: 13px !important;
+  font-weight: 800 !important;
+  color: #38bdf8 !important;
+  margin-top: 3px !important;
+  letter-spacing: 0.5px !important;
+  background: none !important;
+  -webkit-text-fill-color: #38bdf8 !important;
+  opacity: 1 !important;
+  visibility: visible !important;
 }
 
 .search-bar-wrap {
   display: flex;
   align-items: center;
   gap: 10px;
-  background: #f8fafc;
-  border: 1px solid #cbd5e1;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.18);
   border-radius: 10px;
   padding: 8px 16px;
   width: 320px;
@@ -138,8 +205,8 @@
 }
 
 .search-bar-wrap:focus-within {
-  border-color: #2563eb;
-  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
+  border-color: #38bdf8;
+  box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.2);
 }
 
 .search-bar-wrap input {
@@ -147,9 +214,13 @@
   background: transparent !important;
   outline: none !important;
   font-size: 13px !important;
-  color: #0f172a !important;
+  color: #ffffff !important;
   font-weight: 600 !important;
   width: 100%;
+}
+
+.search-bar-wrap input::placeholder {
+  color: #94a3b8 !important;
 }
 
 .top-header-right {
@@ -160,10 +231,16 @@
 
 .header-icon-btn {
   font-size: 18px;
-  color: #475569;
+  color: #cbd5e1;
   cursor: pointer;
   padding: 6px;
   border-radius: 8px;
+  transition: background 0.15s ease;
+}
+
+.header-icon-btn:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: #ffffff;
 }
 
 .user-profile-badge {
@@ -184,24 +261,24 @@
   justify-content: center;
   font-weight: 800;
   font-size: 15px;
-  box-shadow: 0 4px 10px rgba(37, 99, 235, 0.3);
+  box-shadow: 0 4px 10px rgba(37, 99, 235, 0.4);
 }
 
 .user-name-title {
   font-size: 13px;
   font-weight: 800;
-  color: #0f172a;
+  color: #ffffff;
 }
 
 .user-sub-title {
   font-size: 11px;
-  color: #475569;
+  color: #94a3b8;
   font-weight: 600;
 }
 
 .caret-down {
   font-size: 12px;
-  color: #64748b;
+  color: #cbd5e1;
 }
 
 /* Body Content */
@@ -220,14 +297,14 @@
 .greeting-title {
   font-size: 24px;
   font-weight: 900;
-  color: #0f172a;
+  color: #ffffff !important;
   margin: 0;
   letter-spacing: -0.02em;
 }
 
 .greeting-sub {
   font-size: 13px;
-  color: #475569;
+  color: #cbd5e1 !important;
   margin-top: 4px;
   font-weight: 500;
 }
@@ -254,20 +331,20 @@
 }
 
 .stat-box {
-  background: #ffffff;
-  border: 1px solid #e2e8f0;
+  background: linear-gradient(135deg, #f0f7ff 0%, #e0eefd 100%);
+  border: 1px solid #bae6fd;
   border-radius: 16px;
   padding: 22px;
   display: flex;
   align-items: center;
   gap: 16px;
-  box-shadow: 0 8px 20px rgba(15, 23, 42, 0.04);
+  box-shadow: 0 8px 20px rgba(15, 23, 42, 0.05);
   transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
 .stat-box:hover {
   transform: translateY(-2px);
-  box-shadow: 0 12px 28px rgba(15, 23, 42, 0.08);
+  box-shadow: 0 12px 28px rgba(15, 23, 42, 0.09);
 }
 
 .stat-icon-square {
@@ -280,9 +357,14 @@
   font-size: 24px;
 }
 
-.stat-box.blue .stat-icon-square { background: #eff6ff; color: #2563eb; }
-.stat-box.purple .stat-icon-square { background: #f3e8ff; color: #9333ea; }
-.stat-box.green .stat-icon-square { background: #ecfdf5; color: #10b981; }
+.stat-box.blue { background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%); border: 1px solid #bfdbfe; }
+.stat-box.blue .stat-icon-square { background: #ffffff; color: #2563eb; }
+
+.stat-box.purple { background: linear-gradient(135deg, #faf5ff 0%, #f3e8ff 100%); border: 1px solid #e9d5ff; }
+.stat-box.purple .stat-icon-square { background: #ffffff; color: #9333ea; }
+
+.stat-box.green { background: linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%); border: 1px solid #a7f3d0; }
+.stat-box.green .stat-icon-square { background: #ffffff; color: #10b981; }
 
 .stat-number {
   font-size: 26px;
@@ -299,6 +381,8 @@
 }
 
 .stat-box.progress-box {
+  background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);
+  border: 1px solid #bbf7d0;
   justify-content: space-between;
 }
 
@@ -310,11 +394,11 @@
 }
 
 .content-card {
-  background: #ffffff;
+  background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
   border: 1px solid #cbd5e1;
   border-radius: 16px;
   padding: 22px;
-  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.04);
+  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.05);
   transition: border-color 0.2s ease;
 }
 
@@ -398,8 +482,8 @@
 }
 
 .sub-card-box {
-  background: #f8fafc;
-  border: 1px solid #e2e8f0;
+  background: linear-gradient(135deg, #f0f4fe 0%, #e2e8f0 100%);
+  border: 1px solid #cbd5e1;
   border-radius: 10px;
   padding: 12px 14px;
   cursor: pointer;
@@ -407,7 +491,7 @@
 }
 
 .sub-card-box:hover {
-  border-color: #cbd5e1;
+  border-color: #94a3b8;
   transform: translateY(-1px);
 }
 
@@ -489,8 +573,8 @@
 }
 
 .motivation-card {
-  background: #ffffff;
-  border: 1px solid #e2e8f0;
+  background: linear-gradient(135deg, #fff7ed 0%, #ffedd5 100%);
+  border: 1px solid #fed7aa;
   border-radius: 14px;
   padding: 18px;
 }
@@ -498,13 +582,13 @@
 .mot-title {
   font-size: 13px;
   font-weight: 700;
-  color: #0f172a;
+  color: #9a3412;
   margin-bottom: 6px;
 }
 
 .mot-text {
   font-size: 12px;
-  color: #64748b;
+  color: #c2410c;
   font-style: italic;
   margin: 0;
 }
@@ -517,8 +601,8 @@
 }
 
 .material-item-card {
-  background: #f8fafc;
-  border: 1px solid #e2e8f0;
+  background: linear-gradient(135deg, #f0fdf4 0%, #e8f5e9 100%);
+  border: 1px solid #bbf7d0;
   border-radius: 10px;
   padding: 16px;
   display: flex;
@@ -555,25 +639,59 @@
   cursor: pointer;
 }
 
-/* Results Table */
+/* Results & Evaluations Data Table - Clean Structured Grid Lines & Borders */
 .results-data-table {
-  width: 100%;
-  border-collapse: collapse;
-  font-size: 13px;
-  margin-top: 14px;
+  width: 100% !important;
+  border-collapse: separate !important;
+  border-spacing: 0 !important;
+  font-size: 13px !important;
+  margin-top: 14px !important;
+  border: 1px solid #cbd5e1 !important;
+  border-radius: 12px !important;
+  overflow: hidden !important;
+  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.04) !important;
 }
 
 .results-data-table th {
-  text-align: left;
-  padding: 10px 12px;
-  background: #f8fafc;
-  color: #64748b;
-  border-bottom: 1px solid #e2e8f0;
+  text-align: left !important;
+  padding: 12px 14px !important;
+  background: #e2e8f0 !important;
+  color: #0f172a !important;
+  font-weight: 800 !important;
+  font-size: 12px !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.5px !important;
+  border-bottom: 2px solid #cbd5e1 !important;
+  border-right: 1px solid #cbd5e1 !important;
+}
+
+.results-data-table th:last-child {
+  border-right: none !important;
 }
 
 .results-data-table td {
-  padding: 12px;
-  border-bottom: 1px solid #f1f5f9;
+  padding: 12px 14px !important;
+  border-bottom: 1px solid #cbd5e1 !important;
+  border-right: 1px solid #e2e8f0 !important;
+  color: #0f172a !important;
+  background: #ffffff !important;
+  vertical-align: middle !important;
+}
+
+.results-data-table td:last-child {
+  border-right: none !important;
+}
+
+.results-data-table tr:nth-child(even) td {
+  background: #f8fafc !important;
+}
+
+.results-data-table tr:hover td {
+  background: #eff6ff !important;
+}
+
+.results-data-table tr:last-child td {
+  border-bottom: none !important;
 }
 
 /* Complaint Form */
@@ -596,14 +714,39 @@
   align-self: flex-start;
 }
 
-/* Fix text contrast in Student Dashboard on light background */
-.eduexam-shell h1,
-.eduexam-shell h2,
-.eduexam-shell h3,
-.eduexam-shell h4,
-.eduexam-shell h5,
-.eduexam-shell h6 {
+/* All Cards, Settings, Profile, Complaints, Notifications Light Theme Overrides */
+.eduexam-shell .content-card {
+  background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%) !important;
+  border: 1px solid #cbd5e1 !important;
+  border-radius: 16px !important;
+  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.05) !important;
+}
+
+/* Fix text contrast in Student Dashboard inside cards */
+.eduexam-shell .content-card h1,
+.eduexam-shell .content-card h2,
+.eduexam-shell .content-card h3,
+.eduexam-shell .content-card h4,
+.eduexam-shell .content-card h5,
+.eduexam-shell .content-card h6 {
   color: #0f172a !important;
+}
+
+.eduexam-shell .greeting-title,
+.greeting-title {
+  color: #ffffff !important;
+  font-size: 26px !important;
+  font-weight: 900 !important;
+  letter-spacing: -0.02em !important;
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.5) !important;
+}
+
+.eduexam-shell .greeting-sub,
+.greeting-sub {
+  color: #fbbf24 !important;
+  font-size: 13.5px !important;
+  font-weight: 800 !important;
+  margin-top: 4px !important;
 }
 
 .eduexam-shell p,

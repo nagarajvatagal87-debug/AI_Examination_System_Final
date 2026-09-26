@@ -104,10 +104,74 @@ export default function EvaluationDetail() {
       </div>
 
       {!student.submissionId ? (
-        <div className="ce-field" style={{ maxWidth: 420, marginTop: 20 }}>
-          <label>No answer sheet uploaded yet</label>
-          <input type="file" accept="application/pdf" onChange={(e) => setFile(e.target.files[0])} />
-          <button className="fd-btn" style={{ marginTop: 10 }} onClick={handleUploadAnswer}>Upload Answer Sheet</button>
+        <div style={{
+          background: 'linear-gradient(135deg, #ffffff 0%, #f8fafc 100%)',
+          border: '2px dashed #94a3b8',
+          borderRadius: 16,
+          padding: '36px 32px',
+          maxWidth: 600,
+          margin: '24px 0',
+          boxShadow: '0 4px 20px rgba(15, 23, 42, 0.05)',
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          textAlign: 'center',
+          gap: 16
+        }}>
+          <div style={{ fontSize: 42 }}>📄</div>
+          <div>
+            <h3 style={{ margin: 0, fontSize: 18, fontWeight: 800, color: '#0f172a', webkitTextFillColor: '#0f172a' }}>
+              Upload {student.full_name}'s Answer Sheet PDF
+            </h3>
+            <p style={{ margin: '6px 0 0 0', fontSize: 13, color: '#475569', fontWeight: 600, maxWidth: 460, lineHeight: 1.5 }}>
+              Select the scanned handwritten answer sheet PDF for USN <strong>{student.registration_no}</strong>. The AI agent will extract answers via Vision OCR and evaluate them against the course notes.
+            </p>
+          </div>
+
+          <div style={{ width: '100%', maxWidth: 400, marginTop: 10 }}>
+            <input
+              type="file"
+              accept="application/pdf"
+              id="answer-pdf-input"
+              onChange={(e) => setFile(e.target.files[0])}
+              style={{
+                width: '100%',
+                padding: '10px 14px',
+                borderRadius: 10,
+                border: '1.5px solid #cbd5e1',
+                background: '#ffffff',
+                color: '#0f172a',
+                fontSize: 13,
+                fontWeight: 600
+              }}
+            />
+          </div>
+
+          {file && (
+            <div style={{ fontSize: 13, color: '#2563eb', fontWeight: 700, background: '#eff6ff', padding: '6px 16px', borderRadius: 20, border: '1px solid #bfdbfe' }}>
+              Selected File: {file.name}
+            </div>
+          )}
+
+          <button
+            onClick={handleUploadAnswer}
+            disabled={!file}
+            style={{
+              marginTop: 10,
+              padding: '12px 28px',
+              fontSize: 14,
+              fontWeight: 800,
+              background: file ? 'linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%)' : '#cbd5e1',
+              color: '#ffffff',
+              border: 'none',
+              borderRadius: 10,
+              boxShadow: file ? '0 4px 14px rgba(37, 99, 235, 0.35)' : 'none',
+              cursor: file ? 'pointer' : 'not-allowed',
+              transition: 'all 0.2s ease'
+            }}
+          >
+            🚀 Upload & Run RAG AI Evaluation
+          </button>
         </div>
       ) : (
         <>

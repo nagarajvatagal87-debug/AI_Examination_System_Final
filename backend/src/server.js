@@ -52,7 +52,7 @@ app.use("/api/profile", profileRoutes);
 app.use((req, res) => res.status(404).json({ error: "Route not found" }));
 
 const PORT = process.env.PORT || 4000;
-app.listen(PORT, async () => {
-  console.log(`Backend API running on http://localhost:${PORT}`);
+app.listen(PORT, "0.0.0.0", async () => {
+  console.log(`Backend API running on http://127.0.0.1:${PORT}`);
   await seedDepartments();
 });

@@ -96,14 +96,14 @@ export default function Evaluation() {
 
         {exams.length > 0 && (
           <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-            <label style={{ fontSize: 13, color: '#94a3b8', fontWeight: 600 }}>Select Exam:</label>
+            <label style={{ fontSize: 13, color: '#0f172a', fontWeight: 800 }}>Select Exam:</label>
             <select
               value={activeId}
               onChange={(e) => {
                 setSelectedExamId(e.target.value)
                 setSearchParams({ examId: e.target.value })
               }}
-              style={{ padding: '8px 14px', borderRadius: 8, background: '#1e293b', color: '#f8fafc', border: '1px solid rgba(255,255,255,0.15)', fontWeight: 600 }}
+              style={{ padding: '8px 16px', borderRadius: 10, background: '#ffffff', color: '#0f172a', border: '1px solid #cbd5e1', fontWeight: 700, fontSize: 13, boxShadow: '0 2px 8px rgba(0,0,0,0.04)' }}
             >
               {exams.map((ex) => (
                 <option key={ex.id} value={ex.id}>{ex.subjectName} - {ex.title}</option>
@@ -115,39 +115,39 @@ export default function Evaluation() {
 
       {/* Step 1: Upload / Select Subject Course Notes PDF (Applies to all students) */}
       {exam && (
-        <div style={{ background: 'rgba(30, 41, 59, 0.6)', border: '1px solid rgba(59,130,246,0.3)', borderRadius: 14, padding: 20 }}>
-          <h4 style={{ margin: '0 0 10px 0', fontSize: 15, color: '#60a5fa' }}>
+        <div style={{ background: 'linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%)', border: '1.5px solid #bfdbfe', borderRadius: 16, padding: '22px 26px', boxShadow: '0 8px 24px rgba(37, 99, 235, 0.08)' }}>
+          <h4 style={{ margin: '0 0 8px 0', fontSize: 16, color: '#1e40af', fontWeight: 900 }}>
             📚 Step 1: Subject Course Notes & Syllabus PDF (RAG Grounding Document)
           </h4>
-          <p style={{ fontSize: 12, color: '#94a3b8', margin: '0 0 14px 0' }}>
+          <p style={{ fontSize: 13, color: '#334155', fontWeight: 600, margin: '0 0 16px 0' }}>
             Course notes uploaded here apply to <strong>ALL students</strong> taking <em>{exam.title}</em>. The AI agent evaluates answers against these notes.
           </p>
 
-          <form onSubmit={handleUploadCourseNotes} style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
+          <form onSubmit={handleUploadCourseNotes} style={{ display: 'flex', gap: 14, alignItems: 'center', flexWrap: 'wrap' }}>
             <input
               type="file"
               accept="application/pdf"
               onChange={(e) => setNoteFile(e.target.files[0])}
-              style={{ fontSize: 13, color: '#f8fafc' }}
+              style={{ fontSize: 13, color: '#0f172a', fontWeight: 600 }}
             />
             <button
               type="submit"
               disabled={!noteFile}
               className="fd-btn"
-              style={{ padding: '8px 18px', fontSize: 13 }}
+              style={{ padding: '10px 22px', fontSize: 13, fontWeight: 800, background: 'linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%)', color: '#ffffff', borderRadius: 10, border: 'none', boxShadow: '0 4px 14px rgba(37,99,235,0.3)', cursor: noteFile ? 'pointer' : 'not-allowed', opacity: noteFile ? 1 : 0.6 }}
             >
               📤 Upload Course Notes
             </button>
           </form>
 
-          {uploadMsg && <p style={{ fontSize: 12, color: '#34d399', margin: '10px 0 0 0' }}>{uploadMsg}</p>}
+          {uploadMsg && <p style={{ fontSize: 13, color: '#059669', fontWeight: 700, margin: '12px 0 0 0' }}>{uploadMsg}</p>}
 
           <div style={{ marginTop: 14, display: 'flex', gap: 10, flexWrap: 'wrap' }}>
             {courseMaterials.length === 0 ? (
-              <span style={{ fontSize: 12, color: '#94a3b8', fontStyle: 'italic' }}>Default syllabus notes active for {exam.subjects?.name || 'Subject'}.</span>
+              <span style={{ fontSize: 13, color: '#475569', fontStyle: 'italic', fontWeight: 600 }}>Default syllabus notes active for {exam.subjects?.name || 'Subject'}.</span>
             ) : (
               courseMaterials.map((m) => (
-                <span key={m.id} style={{ fontSize: 11, background: 'rgba(59,130,246,0.2)', border: '1px solid #3b82f6', color: '#93c5fd', padding: '4px 10px', borderRadius: 20 }}>
+                <span key={m.id} style={{ fontSize: 12, background: '#ffffff', border: '1px solid #bfdbfe', color: '#1d4ed8', padding: '5px 14px', borderRadius: 20, fontWeight: 700, boxShadow: '0 2px 6px rgba(37,99,235,0.08)' }}>
                   📄 {m.file_name || m.title} (Active Notes)
                 </span>
               ))
@@ -177,19 +177,38 @@ export default function Evaluation() {
 
           <table className="ev-table">
             <thead>
-              <tr><th>Student Name</th><th>Register No. (USN)</th><th>Evaluation Status</th><th>Action</th></tr>
+              <tr>
+                <th>Student Name</th>
+                <th style={{ textAlign: 'center' }}>Register No. (USN)</th>
+                <th>Evaluation Status</th>
+                <th style={{ textAlign: 'right' }}>Action</th>
+              </tr>
             </thead>
             <tbody>
               {filtered.map((s) => (
                 <tr key={s.id} onClick={() => navigate(`/faculty/evaluation/${activeId}/${s.id}`)} className="ev-row">
                   <td><strong>{s.full_name}</strong></td>
-                  <td>{s.registration_no}</td>
+                  <td style={{ textAlign: 'center', fontWeight: 700, fontFamily: 'monospace', fontSize: 13, color: '#1e293b' }}>{s.registration_no}</td>
                   <td>
                     <span className={`ev-status ${s.evaluationStatus}`}>
                       {s.evaluationStatus === 'verified' || s.evaluationStatus === 'published' ? '✓ Evaluated' : s.evaluationStatus === 'not_uploaded' ? '— Pending Answer PDF' : '⏳ Review Pending'}
                     </span>
                   </td>
-                  <td className="ev-arrow">Evaluate ›</td>
+                  <td style={{ textAlign: 'right' }}>
+                    {s.evaluationStatus === 'not_uploaded' ? (
+                      <button className="ev-btn-action upload" onClick={(e) => { e.stopPropagation(); navigate(`/faculty/evaluation/${activeId}/${s.id}`) }}>
+                        📤 Upload PDF
+                      </button>
+                    ) : s.evaluationStatus === 'verified' || s.evaluationStatus === 'published' ? (
+                      <button className="ev-btn-action view" onClick={(e) => { e.stopPropagation(); navigate(`/faculty/evaluation/${activeId}/${s.id}`) }}>
+                        🔍 View & Grade ›
+                      </button>
+                    ) : (
+                      <button className="ev-btn-action review" onClick={(e) => { e.stopPropagation(); navigate(`/faculty/evaluation/${activeId}/${s.id}`) }}>
+                        ⏳ Review ›
+                      </button>
+                    )}
+                  </td>
                 </tr>
               ))}
               {filtered.length === 0 && <tr><td colSpan={4} className="hint">No students found.</td></tr>}

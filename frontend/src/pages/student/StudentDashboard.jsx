@@ -311,8 +311,13 @@ export default function StudentDashboard() {
       {/* EduExam AI Sidebar */}
       <aside className="eduexam-sidebar">
         <div className="eduexam-brand">
-          <div className="eduexam-logo">🎓</div>
-          <div className="eduexam-brand-name">EduExam AI</div>
+          <div className="eduexam-logo-frame">
+            <img src="/dsi-logo.png" alt="DSI Logo" className="eduexam-logo-img" />
+          </div>
+          <div>
+            <div className="eduexam-brand-name">DSATM</div>
+            <div className="eduexam-brand-sub">Student Portal</div>
+          </div>
         </div>
 
         <nav className="eduexam-nav">
@@ -427,9 +432,14 @@ export default function StudentDashboard() {
             />
           </div>
 
+          <div className="top-header-center">
+            <h1 className="header-college-title-center">DAYANANDA SAGAR ACADEMY OF TECHNOLOGY AND MANAGEMENT</h1>
+            <p className="header-dashboard-subtitle-center">🎓 Student Dashboard</p>
+          </div>
+
           <div className="top-header-right">
             <NotificationBell count={0} />
-            <div className="header-icon-btn">⚙️</div>
+            <div className="header-icon-btn" onClick={() => setActiveTab('settings')} style={{ cursor: 'pointer' }} title="Settings">⚙️</div>
 
             <div className="user-profile-badge" onClick={() => setActiveTab('profile')} style={{ cursor: 'pointer' }}>
               <div className="user-avatar-circle" style={{ width: 36, height: 36, borderRadius: '50%', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#2563eb', color: '#fff', fontWeight: 800 }}>
@@ -1201,18 +1211,18 @@ export default function StudentDashboard() {
                   </div>
 
                   <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: 14, marginBottom: 20 }}>
-                    <div style={{ background: '#ffffff', padding: 14, borderRadius: 12, border: '1px solid #e2e8f0', textAlign: 'center' }}>
-                      <div style={{ fontSize: 11, color: '#64748b', fontWeight: 800, textTransform: 'uppercase' }}>Tests Completed</div>
+                    <div style={{ background: 'linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%)', padding: 16, borderRadius: 12, border: '1px solid #bfdbfe', textAlign: 'center', boxShadow: '0 4px 12px rgba(37, 99, 235, 0.06)' }}>
+                      <div style={{ fontSize: 11, color: '#1e40af', fontWeight: 800, textTransform: 'uppercase' }}>Tests Completed</div>
                       <div style={{ fontSize: 26, fontWeight: 900, color: '#2563eb', marginTop: 4 }}>{practiceScores.length}</div>
                     </div>
-                    <div style={{ background: '#ffffff', padding: 14, borderRadius: 12, border: '1px solid #e2e8f0', textAlign: 'center' }}>
-                      <div style={{ fontSize: 11, color: '#64748b', fontWeight: 800, textTransform: 'uppercase' }}>Average Accuracy</div>
+                    <div style={{ background: 'linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%)', padding: 16, borderRadius: 12, border: '1px solid #a7f3d0', textAlign: 'center', boxShadow: '0 4px 12px rgba(16, 185, 129, 0.06)' }}>
+                      <div style={{ fontSize: 11, color: '#065f46', fontWeight: 800, textTransform: 'uppercase' }}>Average Accuracy</div>
                       <div style={{ fontSize: 26, fontWeight: 900, color: '#10b981', marginTop: 4 }}>
                         {Math.round(practiceScores.reduce((acc, curr) => acc + (curr.percentage || 0), 0) / practiceScores.length)}%
                       </div>
                     </div>
-                    <div style={{ background: '#ffffff', padding: 14, borderRadius: 12, border: '1px solid #e2e8f0', textAlign: 'center' }}>
-                      <div style={{ fontSize: 11, color: '#64748b', fontWeight: 800, textTransform: 'uppercase' }}>Highest Score</div>
+                    <div style={{ background: 'linear-gradient(135deg, #faf5ff 0%, #f3e8ff 100%)', padding: 16, borderRadius: 12, border: '1px solid #e9d5ff', textAlign: 'center', boxShadow: '0 4px 12px rgba(147, 51, 234, 0.06)' }}>
+                      <div style={{ fontSize: 11, color: '#6b21a8', fontWeight: 800, textTransform: 'uppercase' }}>Highest Score</div>
                       <div style={{ fontSize: 26, fontWeight: 900, color: '#7c3aed', marginTop: 4 }}>
                         {Math.max(...practiceScores.map((s) => s.score || 0))} / {practiceScores[0]?.total || 5}
                       </div>
@@ -1222,16 +1232,16 @@ export default function StudentDashboard() {
                   {/* Visual Bar Charts */}
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
                     {practiceScores.slice(0, 5).map((sc, idx) => (
-                      <div key={sc.id || idx} style={{ background: '#ffffff', padding: '12px 16px', borderRadius: 10, border: '1px solid #e2e8f0' }}>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: 13, marginBottom: 6 }}>
+                      <div key={sc.id || idx} style={{ background: 'linear-gradient(135deg, #f0f4fe 0%, #e2e8f0 100%)', padding: '14px 18px', borderRadius: 12, border: '1px solid #cbd5e1', boxShadow: '0 2px 6px rgba(15, 23, 42, 0.04)' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: 13, marginBottom: 8 }}>
                           <span style={{ fontWeight: 700, color: '#0f172a' }}>
                             {sc.subject} <span style={{ color: '#64748b', fontWeight: 500, fontSize: 12 }}>({sc.date})</span>
                           </span>
-                          <span style={{ fontWeight: 900, color: sc.percentage >= 80 ? '#10b981' : sc.percentage >= 60 ? '#f59e0b' : '#ef4444' }}>
+                          <span style={{ fontWeight: 900, color: sc.percentage >= 80 ? '#10b981' : sc.percentage >= 60 ? '#d97706' : '#ef4444' }}>
                             Score: {sc.score} / {sc.total} ({sc.percentage}%)
                           </span>
                         </div>
-                        <div style={{ height: 10, background: '#f1f5f9', borderRadius: 5, overflow: 'hidden' }}>
+                        <div style={{ height: 10, background: '#ffffff', borderRadius: 5, overflow: 'hidden', border: '1px solid #cbd5e1' }}>
                           <div style={{
                             width: `${sc.percentage}%`, height: '100%', borderRadius: 5,
                             background: sc.percentage >= 80 ? 'linear-gradient(90deg, #10b981, #059669)' : sc.percentage >= 60 ? 'linear-gradient(90deg, #f59e0b, #d97706)' : 'linear-gradient(90deg, #ef4444, #dc2626)',
@@ -1262,7 +1272,7 @@ export default function StudentDashboard() {
 
           {/* Tab: Attendance */}
           {activeTab === 'attendance' && (
-            <div className="content-card" style={{ padding: '24px 28px', background: '#f8fafc' }}>
+            <div className="content-card" style={{ padding: '24px 28px', background: 'linear-gradient(135deg, #ffffff 0%, #f8fafc 100%)' }}>
               <ExactAttendanceView attendanceData={attendanceData} />
             </div>
           )}
@@ -1288,22 +1298,22 @@ export default function StudentDashboard() {
               </div>
 
               {savedBookmarks.length === 0 ? (
-                <div style={{ padding: 32, textAlign: 'center', color: '#94a3b8', background: '#f8fafc', borderRadius: 12, border: '1px dashed #cbd5e1' }}>
+                <div style={{ padding: 32, textAlign: 'center', color: '#64748b', background: 'linear-gradient(135deg, #f0f4fe 0%, #e2e8f0 100%)', borderRadius: 12, border: '1px solid #cbd5e1' }}>
                   <div style={{ fontSize: 32, marginBottom: 8 }}>🔖</div>
                   <strong style={{ color: '#0f172a' }}>No bookmarks saved yet.</strong>
-                  <p style={{ fontSize: 13, margin: '6px 0 0 0', color: '#64748b' }}>Click the 🔖 Bookmark button next to any AI Study response or PDF page note to save it here.</p>
+                  <p style={{ fontSize: 13, margin: '6px 0 0 0', color: '#475569' }}>Click the 🔖 Bookmark button next to any AI Study response or PDF page note to save it here.</p>
                 </div>
               ) : (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
                   {savedBookmarks.map((bm) => (
-                    <div key={bm.id} style={{ background: '#f8fafc', padding: 18, borderRadius: 12, border: '1px solid #e2e8f0' }}>
+                    <div key={bm.id} style={{ background: 'linear-gradient(135deg, #f0f4fe 0%, #e2e8f0 100%)', padding: 18, borderRadius: 12, border: '1px solid #cbd5e1' }}>
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
                         <strong style={{ fontSize: 15, color: '#0f172a' }}>{bm.title}</strong>
-                        <span style={{ fontSize: 11, color: '#64748b', background: '#e2e8f0', padding: '3px 8px', borderRadius: 4, fontWeight: 700 }}>
+                        <span style={{ fontSize: 11, color: '#475569', background: '#ffffff', padding: '3px 8px', borderRadius: 4, fontWeight: 700, border: '1px solid #cbd5e1' }}>
                           {bm.subject} · {bm.date}
                         </span>
                       </div>
-                      <div style={{ fontSize: 13, color: '#334155', whiteSpace: 'pre-wrap', lineHeight: 1.6, background: '#ffffff', padding: 12, borderRadius: 8, border: '1px solid #cbd5e1' }}>
+                      <div style={{ fontSize: 13, color: '#0f172a', whiteSpace: 'pre-wrap', lineHeight: 1.6, background: '#ffffff', padding: 12, borderRadius: 8, border: '1px solid #cbd5e1' }}>
                         {bm.content}
                       </div>
                     </div>
@@ -1371,7 +1381,7 @@ export default function StudentDashboard() {
                 </p>
 
                 {dbComplaints.length === 0 ? (
-                  <div style={{ padding: 24, textAlign: 'center', color: '#94a3b8', background: '#f8fafc', borderRadius: 8, border: '1px dashed #cbd5e1' }}>
+                  <div style={{ padding: 24, textAlign: 'center', color: '#64748b', background: 'linear-gradient(135deg, #f0f4fe 0%, #e2e8f0 100%)', borderRadius: 12, border: '1px solid #cbd5e1' }}>
                     You have not submitted any internal mark complaints.
                   </div>
                 ) : (
@@ -1383,11 +1393,11 @@ export default function StudentDashboard() {
                       const isRejected = statusStr === 'rejected'
 
                       return (
-                        <div key={c.id} style={{ background: '#f8fafc', padding: 18, borderRadius: 12, border: '1px solid #e2e8f0' }}>
+                        <div key={c.id} style={{ background: 'linear-gradient(135deg, #f0f4fe 0%, #e2e8f0 100%)', padding: 18, borderRadius: 12, border: '1px solid #cbd5e1' }}>
                           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
                             <div>
                               <strong style={{ fontSize: 15, color: '#0f172a' }}>{c.subject_name || c.subject_code || 'Subject'}</strong>
-                              <span style={{ fontSize: 12, color: '#64748b', marginLeft: 8 }}>• {qTitle}</span>
+                              <span style={{ fontSize: 12, color: '#475569', marginLeft: 8 }}>• {qTitle}</span>
                             </div>
                             <span style={{
                               padding: '4px 10px', borderRadius: 6, fontSize: 11, fontWeight: 800, textTransform: 'uppercase',
@@ -1399,7 +1409,7 @@ export default function StudentDashboard() {
                             </span>
                           </div>
 
-                          <div style={{ fontSize: 13, color: '#334155', marginBottom: 10, background: '#ffffff', padding: 12, borderRadius: 8, border: '1px solid #cbd5e1' }}>
+                          <div style={{ fontSize: 13, color: '#0f172a', marginBottom: 10, background: '#ffffff', padding: 12, borderRadius: 8, border: '1px solid #cbd5e1' }}>
                             <strong>Your Appeal Reason:</strong> "{c.reason}"
                           </div>
 

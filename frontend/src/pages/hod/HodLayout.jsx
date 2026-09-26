@@ -51,11 +51,42 @@ export default function HodLayout() {
       </aside>
 
       <div className="hl-main">
-        <header className="hl-topbar">
-          <div className="hl-topbar-title">HOD Dashboard</div>
-          <div className="hl-topbar-actions">
+        <header className="hl-topbar" style={{
+          padding: '12px 28px',
+          background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 100%)',
+          borderBottom: '1.5px solid rgba(245, 158, 11, 0.35)',
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          boxShadow: '0 4px 20px rgba(0,0,0,0.4)',
+          width: '100%'
+        }}>
+          <div style={{ flex: 1 }} />
+          <div style={{ flex: 3, textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+            <h1 style={{
+              fontSize: 15.5,
+              fontWeight: 900,
+              letterSpacing: '0.9px',
+              textTransform: 'uppercase',
+              color: '#ffffff',
+              background: 'linear-gradient(135deg, #ffffff 0%, #fef08a 45%, #93c5fd 100%)',
+              WebkitBackgroundClip: 'text',
+              WebkitTextFillColor: 'transparent',
+              margin: 0,
+              lineHeight: 1.25,
+              filter: 'drop-shadow(0 2px 6px rgba(0,0,0,0.6))'
+            }}>
+              DAYANANDA SAGAR ACADEMY OF TECHNOLOGY AND MANAGEMENT
+            </h1>
+            <p style={{ fontSize: 13, fontWeight: 800, color: '#38bdf8', margin: '3px 0 0 0', letterSpacing: '0.5px' }}>
+              👩‍💼 Department HOD Portal
+            </p>
+          </div>
+          <div className="hl-topbar-actions" style={{ flex: 1, justifyContent: 'flex-end', display: 'flex', alignItems: 'center', gap: 14 }}>
             <NotificationBell />
-            <span className="hl-topbar-name">{user?.fullName}</span>
+            <span className="hl-topbar-name" style={{ color: '#ffffff', background: 'rgba(255, 255, 255, 0.1)', border: '1px solid rgba(255, 255, 255, 0.2)', padding: '6px 14px', borderRadius: 20, fontWeight: 700, fontSize: 13 }}>
+              {user?.fullName}
+            </span>
           </div>
         </header>
         <main className="hl-content">

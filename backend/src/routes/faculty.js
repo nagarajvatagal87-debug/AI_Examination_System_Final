@@ -887,23 +887,30 @@ router.get("/exams/:examId/students", async (req, res) => {
     if (examError) throw examError;
 
     const departmentId = exam.subjects?.department_id;
+    const enrolledIds = getEnrolledStudentIds(exam.subject_id);
+
+    const { data: submissions } = await supabaseAdmin
+      .from("answer_submissions")
+      .select("id, student_id, status")
+      .eq("exam_id", examId);
+
+    const submissionStudentIds = (submissions || []).map((s) => s.student_id).filter(Boolean);
+    const validStudentIdsSet = new Set([...enrolledIds, ...submissionStudentIds]);
+
     let studentsQuery = supabaseAdmin
       .from("profiles")
       .select("id, full_name, registration_no, year, section, department_id")
       .eq("role", "student")
       .order("registration_no");
 
-    if (departmentId) {
+    if (validStudentIdsSet.size > 0) {
+      studentsQuery = studentsQuery.in("id", Array.from(validStudentIdsSet));
+    } else if (departmentId) {
       studentsQuery = studentsQuery.eq("department_id", departmentId);
     }
 
     const { data: students, error: studentsError } = await studentsQuery;
     if (studentsError) throw studentsError;
-
-    const { data: submissions } = await supabaseAdmin
-      .from("answer_submissions")
-      .select("id, student_id, status")
-      .eq("exam_id", examId);
 
     const submissionIds = (submissions || []).map((s) => s.id);
 
@@ -1268,7 +1275,7 @@ router.post("/submissions/:submissionId/publish", async (req, res) => {
 
     const { data: submission } = await supabaseAdmin
       .from("answer_submissions")
-      .select("student_id, exam_id, exams(title)")
+      .select("student_id, exam_id, total_marks, max_marks, exams(title, total_marks, subject_id, subjects(name, code))")
       .eq("id", submissionId)
       .single();
 
@@ -1278,19 +1285,28 @@ router.post("/submissions/:submissionId/publish", async (req, res) => {
       .eq("id", submission.student_id)
       .single();
 
+    const subjectName = submission?.exams?.subjects?.name
+      ? `${submission.exams.subjects.name} (${submission.exams.subjects.code || ''})`
+      : 'Course Subject';
+
     await supabaseAdmin.from("notifications").insert({
       recipient_id: submission.student_id,
       type: "marks_published",
-      title: "Marks Published",
-      body: `Your ${submission.exams.title} marks have been published.`,
+      title: `Marks Published: ${subjectName}`,
+      body: `Your ${subjectName} — ${submission.exams.title} marks have been published.`,
       related_exam_id: submission.exam_id,
     });
 
+    const { sendInternalResultEmail } = require("../services/emailService");
+
     if (student?.email) {
-      sendEmail(
+      sendInternalResultEmail(
         student.email,
-        "Marks Published",
-        `Hi ${student.full_name}, your ${submission.exams.title} marks have been published. Log in to view your results.`
+        student.full_name,
+        submission.exams.title,
+        submission.total_marks || 0,
+        submission.max_marks || submission.exams?.total_marks || 50,
+        subjectName
       ).catch((e) => console.error("Email send failed:", e.message));
     }
 

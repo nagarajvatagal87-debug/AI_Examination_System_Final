@@ -1,0 +1,289 @@
+.ps-container {
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+}
+
+.ps-status-bar {
+  padding: 12px 18px;
+  border-radius: 12px;
+  font-size: 13px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  box-shadow: 0 2px 8px rgba(15, 23, 42, 0.04);
+}
+
+.ps-status-bar.success {
+  background: #f0fdf4 !important;
+  color: #166534 !important;
+  border: 1px solid #bbf7d0 !important;
+}
+
+.ps-status-bar.error {
+  background: #fef2f2 !important;
+  color: #991b1b !important;
+  border: 1px solid #fca5a5 !important;
+}
+
+/* 1. Profile Photo Panel - Light Sky Blue */
+.ps-photo-card {
+  position: relative;
+  background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%) !important;
+  border: 1.5px solid #bae6fd !important;
+  border-radius: 20px !important;
+  padding: 24px 28px;
+  box-shadow: 0 8px 30px rgba(2, 132, 199, 0.08) !important;
+}
+
+.ps-card-title {
+  font-size: 17px;
+  font-weight: 800;
+  color: #0f172a !important;
+  margin: 0 0 18px 0;
+  font-family: var(--font-heading, inherit);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.ps-photo-body {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  flex-wrap: wrap;
+}
+
+.ps-avatar-wrapper {
+  position: relative;
+  width: 96px;
+  height: 96px;
+  border-radius: 50%;
+  overflow: hidden;
+  background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%);
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 38px;
+  font-weight: 900;
+  box-shadow: 0 8px 24px rgba(2, 132, 199, 0.3);
+  border: 4px solid #ffffff;
+  flex-shrink: 0;
+}
+
+.ps-avatar-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.ps-photo-info {
+  flex: 1;
+}
+
+.ps-user-name {
+  margin: 0 0 4px 0;
+  font-size: 20px;
+  font-weight: 900;
+  color: #0f172a !important;
+  font-family: var(--font-heading, inherit);
+}
+
+.ps-user-details {
+  margin: 0 0 16px 0;
+  font-size: 13px;
+  color: #0369a1 !important;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.ps-id-badge {
+  background: #ffffff;
+  padding: 3px 10px;
+  border-radius: 12px;
+  border: 1px solid #7dd3fc;
+  font-weight: 800;
+  color: #0284c7;
+}
+
+.ps-upload-form {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.ps-file-input {
+  padding: 8px 14px;
+  font-size: 12px;
+  background: #ffffff !important;
+  border: 1px solid #cbd5e1 !important;
+  border-radius: 10px;
+  color: #0f172a !important;
+  cursor: pointer;
+}
+
+.ps-btn-upload {
+  padding: 9px 20px;
+  background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%) !important;
+  color: #ffffff !important;
+  border: none;
+  border-radius: 10px;
+  font-weight: 800;
+  font-size: 13px;
+  cursor: pointer;
+  box-shadow: 0 4px 14px rgba(2, 132, 199, 0.3);
+  transition: all 0.2s ease;
+}
+
+.ps-btn-upload:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 18px rgba(2, 132, 199, 0.4);
+}
+
+.ps-btn-upload:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  box-shadow: none;
+}
+
+/* 2. Identity Form Panel - Light White / Slate */
+.ps-identity-card {
+  background: #ffffff !important;
+  border: 1.5px solid #cbd5e1 !important;
+  border-radius: 20px !important;
+  padding: 24px 28px;
+  box-shadow: 0 8px 30px rgba(15, 23, 42, 0.05) !important;
+  position: relative;
+  overflow: hidden;
+}
+
+.ps-identity-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 5px;
+  background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
+}
+
+.ps-form-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 18px;
+}
+
+.ps-field-group {
+  display: flex;
+  flex-direction: column;
+}
+
+.ps-label {
+  font-size: 12px;
+  color: #475569 !important;
+  font-weight: 700;
+  margin-bottom: 6px;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.ps-input {
+  width: 100%;
+  padding: 11px 16px;
+  border-radius: 12px;
+  border: 1px solid #cbd5e1 !important;
+  font-size: 14px;
+  color: #0f172a !important;
+  background: #ffffff !important;
+  outline: none;
+  transition: all 0.2s ease;
+  box-sizing: border-box;
+}
+
+.ps-input:focus {
+  border-color: #0284c7 !important;
+  box-shadow: 0 0 0 3px rgba(2, 132, 199, 0.15) !important;
+}
+
+.ps-input:disabled {
+  background: #f8fafc !important;
+  border-color: #e2e8f0 !important;
+  color: #475569 !important;
+  font-weight: 700;
+  cursor: not-allowed;
+}
+
+.ps-select {
+  width: 100%;
+  padding: 11px 16px;
+  border-radius: 12px;
+  border: 1px solid #cbd5e1 !important;
+  font-size: 14px;
+  color: #0f172a !important;
+  background: #ffffff !important;
+  outline: none;
+  cursor: pointer;
+  box-sizing: border-box;
+}
+
+.ps-btn-save {
+  margin-top: 22px;
+  padding: 12px 28px;
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%) !important;
+  color: #ffffff !important;
+  border: none;
+  border-radius: 12px;
+  font-weight: 800;
+  font-size: 14px;
+  cursor: pointer;
+  box-shadow: 0 4px 16px rgba(16, 185, 129, 0.3);
+  transition: all 0.2s ease;
+}
+
+.ps-btn-save:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 22px rgba(16, 185, 129, 0.4);
+}
+
+/* 3. Security Panel - Soft Amber */
+.ps-security-card {
+  background: linear-gradient(135deg, #fff7ed 0%, #ffedd5 100%) !important;
+  border: 1.5px solid #fed7aa !important;
+  border-radius: 20px !important;
+  padding: 24px 28px;
+  box-shadow: 0 8px 30px rgba(234, 88, 12, 0.06) !important;
+}
+
+/* 4. Preferences Panel - Soft Violet */
+.ps-pref-card {
+  background: linear-gradient(135deg, #f5f3ff 0%, #ede9fe 100%) !important;
+  border: 1.5px solid #ddd6fe !important;
+  border-radius: 20px !important;
+  padding: 24px 28px;
+  box-shadow: 0 8px 30px rgba(124, 58, 237, 0.06) !important;
+}
+
+.ps-pref-list {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  font-size: 13.5px;
+  color: #334155;
+  font-weight: 600;
+}
+
+.ps-pref-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: #ffffff;
+  padding: 12px 16px;
+  border-radius: 12px;
+  border: 1px solid #c4b5fd;
+  cursor: pointer;
+}

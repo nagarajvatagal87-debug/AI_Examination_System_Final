@@ -62,7 +62,7 @@ async function publishSubmission({ submissionId, actorId }) {
 
   const { data: submission } = await supabaseAdmin
     .from("answer_submissions")
-    .select("student_id, exam_id, exams(title)")
+    .select("student_id, exam_id, total_marks, max_marks, exams(title, total_marks, subject_id, subjects(name, code))")
     .eq("id", submissionId)
     .single();
 
@@ -72,18 +72,29 @@ async function publishSubmission({ submissionId, actorId }) {
     .eq("id", submission.student_id)
     .single();
 
+  const subjectName = submission?.exams?.subjects?.name
+    ? `${submission.exams.subjects.name} (${submission.exams.subjects.code || ''})`
+    : 'Course Subject';
+
   await supabaseAdmin.from("notifications").insert({
     recipient_id: submission.student_id,
     type: "marks_published",
-    title: "Marks Published",
-    body: `Your ${submission.exams.title} marks have been published.`,
+    title: `Marks Published: ${subjectName}`,
+    body: `Your ${subjectName} — ${submission.exams.title} marks have been published.`,
   });
 
-  sendEmail(
-    student.email,
-    "Marks Published",
-    `Hi ${student.full_name}, your ${submission.exams.title} marks have been published. Log in to view your results.`
-  ).catch((e) => console.error("Email send failed:", e.message));
+  const { sendInternalResultEmail } = require("./emailService");
+
+  if (student?.email) {
+    sendInternalResultEmail(
+      student.email,
+      student.full_name,
+      submission.exams.title,
+      submission.total_marks || 0,
+      submission.max_marks || submission.exams?.total_marks || 50,
+      subjectName
+    ).catch((e) => console.error("Email send failed:", e.message));
+  }
 
   await supabaseAdmin.from("audit_logs").insert({
     actor_id: actorId,

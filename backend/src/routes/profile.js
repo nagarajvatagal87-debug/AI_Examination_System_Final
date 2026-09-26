@@ -38,13 +38,16 @@ router.get("/", async (req, res) => {
   }
 });
 
-// PUT /api/profile  body: { fullName, avatarUrl }
+// PUT /api/profile  body: { fullName, avatarUrl, registrationNo, gender, mobile }
 router.put("/", async (req, res) => {
   try {
-    const { fullName, avatarUrl } = req.body;
+    const { fullName, avatarUrl, registrationNo, registration_no, gender, mobile } = req.body;
     const updatePayload = {};
     if (fullName) updatePayload.full_name = fullName;
     if (avatarUrl !== undefined) updatePayload.avatar_url = avatarUrl;
+    if (registrationNo || registration_no) updatePayload.registration_no = registrationNo || registration_no;
+    if (gender) updatePayload.gender = gender;
+    if (mobile) updatePayload.mobile = mobile;
 
     const { data, error } = await supabaseAdmin
       .from("profiles")

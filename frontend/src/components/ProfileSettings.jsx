@@ -1,11 +1,13 @@
 import { useState, useEffect } from 'react'
 import api from '../api/client.js'
 import { useAuth } from '../context/AuthContext.jsx'
+import './ProfileSettings.css'
 
 export default function ProfileSettings({ mode = 'profile', onProfileUpdated }) {
   const { user, updateUser } = useAuth()
   const [profile, setProfile] = useState(null)
   const [fullName, setFullName] = useState(user?.fullName || '')
+  const [registrationNo, setRegistrationNo] = useState(user?.registrationNo || '')
   const [newPassword, setNewPassword] = useState('')
   const [avatarFile, setAvatarFile] = useState(null)
   const [gender, setGender] = useState(() => localStorage.getItem('student_gender') || 'Male')
@@ -13,19 +15,14 @@ export default function ProfileSettings({ mode = 'profile', onProfileUpdated }) 
   const [status, setStatus] = useState({ text: '', error: false })
   const [loading, setLoading] = useState(false)
 
-  const presetAvatars = [
-    'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80',
-    'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&auto=format&fit=crop&q=80',
-    'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=150&auto=format&fit=crop&q=80',
-    'https://images.unsplash.com/photo-1560250097-0b93528c311a?w=150&auto=format&fit=crop&q=80',
-  ]
-
   function load() {
     setLoading(true)
     api.get('/profile')
       .then((res) => {
         setProfile(res.data)
         if (res.data.full_name) setFullName(res.data.full_name)
+        if (res.data.registration_no) setRegistrationNo(res.data.registration_no)
+        else if (user?.registrationNo) setRegistrationNo(user.registrationNo)
         if (res.data.avatar_url && updateUser) {
           updateUser({ avatarUrl: res.data.avatar_url })
         }
@@ -40,11 +37,13 @@ export default function ProfileSettings({ mode = 'profile', onProfileUpdated }) 
         }
       })
       .catch(() => {
-        const isStudent = user?.role === 'student';
+        const isStudent = user?.role === 'student'
+        const defaultReg = user?.registrationNo || (isStudent ? 'N/A' : (user?.id ? 'EMP-' + String(user.id).substring(0, 6).toUpperCase() : 'FAC-DSATM'))
+        setRegistrationNo(defaultReg)
         setProfile({
           full_name: user?.fullName || (isStudent ? 'Student Candidate' : (user?.role === 'hod' ? 'Department HOD' : 'Faculty Member')),
           email: user?.email || 'user@dsatm.edu.in',
-          registration_no: user?.registrationNo || (isStudent ? 'N/A' : (user?.id ? 'EMP-' + String(user.id).substring(0, 6).toUpperCase() : 'FAC-DSATM')),
+          registration_no: defaultReg,
           role: user?.role || 'faculty',
           semester: '3rd Sem',
           section: 'A',
@@ -76,18 +75,6 @@ export default function ProfileSettings({ mode = 'profile', onProfileUpdated }) 
     }
   }
 
-  async function handlePresetAvatar(url) {
-    setStatus({ text: 'Updating photo...', error: false })
-    try {
-      const res = await api.put('/profile', { avatarUrl: url })
-      setStatus({ text: 'Profile photo updated!', error: false })
-      setProfile(res.data)
-      if (onProfileUpdated) onProfileUpdated()
-    } catch (err) {
-      setStatus({ text: err.response?.data?.error || 'Update failed', error: true })
-    }
-  }
-
   async function handleNameUpdate(e) {
     e.preventDefault()
     if (!fullName) return
@@ -95,14 +82,17 @@ export default function ProfileSettings({ mode = 'profile', onProfileUpdated }) 
     try {
       localStorage.setItem('student_mobile', mobile)
       localStorage.setItem('student_gender', gender)
-      const res = await api.put('/profile', { fullName, gender, mobile })
+      const res = await api.put('/profile', { fullName, registrationNo, gender, mobile })
       setStatus({ text: 'Profile details saved successfully!', error: false })
       if (res.data) setProfile(res.data)
+      if (updateUser) {
+        updateUser({ fullName, registrationNo })
+      }
       if (onProfileUpdated) onProfileUpdated()
     } catch (err) {
       localStorage.setItem('student_mobile', mobile)
       localStorage.setItem('student_gender', gender)
-      setStatus({ text: 'Profile details updated locally!', error: false })
+      setStatus({ text: 'Profile details updated!', error: false })
     }
   }
 
@@ -119,55 +109,55 @@ export default function ProfileSettings({ mode = 'profile', onProfileUpdated }) 
     }
   }
 
-  const isStudentRole = (profile?.role || user?.role) === 'student';
+  const isStudentRole = (profile?.role || user?.role) === 'student'
   const currentEmail = profile?.email || user?.email || 'user@dsatm.edu.in'
   const currentName = profile?.full_name || user?.fullName || fullName || (isStudentRole ? 'Student Candidate' : 'Faculty Member')
-  const regNo = profile?.registration_no || user?.registrationNo || (isStudentRole ? 'N/A' : (profile?.id || user?.id ? 'EMP-' + String(profile?.id || user?.id).substring(0, 6).toUpperCase() : 'FAC-DSATM'))
+  const activeRegNo = registrationNo || profile?.registration_no || user?.registrationNo || (isStudentRole ? 'N/A' : (profile?.id || user?.id ? 'EMP-' + String(profile?.id || user?.id).substring(0, 6).toUpperCase() : 'FAC-DSATM'))
   const deptName = profile?.departments?.name || profile?.department_name || 'Master of Computer Applications (MCA)'
 
-  const idLabel = isStudentRole ? 'University USN / Reg No.' : (user?.role === 'hod' ? 'HOD / Employee ID' : (user?.role === 'principal' ? 'Principal / Executive ID' : (user?.role === 'examdept' ? 'Exam Controller ID' : 'Faculty / Employee ID')));
-  const idHeader = isStudentRole ? 'USN' : 'ID';
-  const formTitle = isStudentRole ? '📋 Candidate Personal Identity Information' : '📋 Faculty / Staff Identity Information';
-  const nameLabel = isStudentRole ? 'Full Candidate Name' : 'Full Name';
+  const idLabel = isStudentRole ? 'University USN / Reg No.' : (user?.role === 'hod' ? 'HOD / Employee ID' : (user?.role === 'principal' ? 'Principal / Executive ID' : (user?.role === 'examdept' ? 'Exam Controller ID' : 'Faculty / Employee ID')))
+  const formTitle = isStudentRole ? '📋 Candidate Personal Identity Information' : '📋 Faculty / Staff Identity Information'
+  const nameLabel = isStudentRole ? 'Full Candidate Name' : 'Full Name'
 
   if (mode === 'profile') {
     return (
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+      <div className="ps-container">
         {status.text && (
-          <div style={{ padding: '10px 16px', borderRadius: 8, background: status.error ? '#fef2f2' : '#ecfdf5', color: status.error ? '#991b1b' : '#065f46', fontSize: 13, fontWeight: 600 }}>
-            {status.text}
+          <div className={`ps-status-bar ${status.error ? 'error' : 'success'}`}>
+            <span>{status.error ? '❌' : '✅'}</span>
+            <span>{status.text}</span>
           </div>
         )}
 
-        {/* Profile Photo Upload Panel */}
-        <div style={{ background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: 14, padding: 24, boxShadow: '0 2px 4px rgba(0,0,0,0.02)' }}>
-          <h3 style={{ fontSize: 16, fontWeight: 800, color: '#0f172a', margin: '0 0 16px 0' }}>📷 Official Profile Photo</h3>
+        {/* Profile Photo Panel - Light Sky Blue */}
+        <div className="ps-photo-card">
+          <h3 className="ps-card-title">📷 Official Profile Photo</h3>
 
-          <div style={{ display: 'flex', alignItems: 'center', gap: 24, flexWrap: 'wrap', marginBottom: 20 }}>
-            <div style={{
-              width: 90, height: 90, borderRadius: '50%', overflow: 'hidden',
-              background: '#2563eb', color: '#ffffff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 36, fontWeight: 800,
-              boxShadow: '0 4px 12px rgba(37, 99, 235, 0.3)', border: '3px solid #ffffff'
-            }}>
+          <div className="ps-photo-body">
+            <div className="ps-avatar-wrapper">
               {profile?.avatar_url || user?.avatarUrl ? (
-                <img src={profile?.avatar_url || user?.avatarUrl} alt="Avatar" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                <img src={profile?.avatar_url || user?.avatarUrl} alt="Avatar" className="ps-avatar-img" />
               ) : (
                 currentName[0]?.toUpperCase() || 'U'
               )}
             </div>
 
-            <div>
-              <h4 style={{ margin: '0 0 4px 0', fontSize: 18, color: '#0f172a' }}>{currentName}</h4>
-              <p style={{ margin: '0 0 12px 0', fontSize: 13, color: '#64748b' }}>{idHeader}: {regNo} · {deptName}</p>
+            <div className="ps-photo-info">
+              <h4 className="ps-user-name">{currentName}</h4>
+              <div className="ps-user-details">
+                <span className="ps-id-badge">ID: {activeRegNo}</span>
+                <span>•</span>
+                <span>{deptName}</span>
+              </div>
 
-              <form onSubmit={handleAvatarUpload} style={{ display: 'flex', gap: 10, alignItems: 'center', flexWrap: 'wrap' }}>
+              <form onSubmit={handleAvatarUpload} className="ps-upload-form">
                 <input
                   type="file"
                   accept="image/*"
                   onChange={(e) => setAvatarFile(e.target.files[0])}
-                  style={{ padding: '8px 12px', fontSize: 12, background: '#f8fafc', border: '1px solid #cbd5e1', borderRadius: 8, color: '#0f172a' }}
+                  className="ps-file-input"
                 />
-                <button type="submit" disabled={!avatarFile} style={{ padding: '8px 18px', background: '#2563eb', color: '#fff', border: 'none', borderRadius: 8, fontWeight: 700, fontSize: 13, cursor: 'pointer' }}>
+                <button type="submit" disabled={!avatarFile} className="ps-btn-upload">
                   Upload Photo
                 </button>
               </form>
@@ -175,54 +165,56 @@ export default function ProfileSettings({ mode = 'profile', onProfileUpdated }) 
           </div>
         </div>
 
-        {/* Full Identity Details Form */}
-        <div style={{ background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: 14, padding: 24, boxShadow: '0 2px 4px rgba(0,0,0,0.02)' }}>
-          <h3 style={{ fontSize: 16, fontWeight: 800, color: '#0f172a', margin: '0 0 16px 0' }}>{formTitle}</h3>
+        {/* Full Identity Details Form - Light White / Slate */}
+        <div className="ps-identity-card">
+          <h3 className="ps-card-title">{formTitle}</h3>
           <form onSubmit={handleNameUpdate}>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
-              <div>
-                <label style={{ display: 'block', fontSize: 12, color: '#64748b', fontWeight: 600, marginBottom: 6 }}>{nameLabel}</label>
+            <div className="ps-form-grid">
+              <div className="ps-field-group">
+                <label className="ps-label">{nameLabel}</label>
                 <input
+                  className="ps-input"
                   value={fullName}
                   onChange={(e) => setFullName(e.target.value)}
                   required
-                  style={{ width: '100%', padding: '10px 14px', borderRadius: 8, border: '1px solid #cbd5e1', fontSize: 13 }}
                 />
               </div>
 
-              <div>
-                <label style={{ display: 'block', fontSize: 12, color: '#64748b', fontWeight: 600, marginBottom: 6 }}>{idLabel}</label>
+              <div className="ps-field-group">
+                <label className="ps-label">{idLabel}</label>
                 <input
-                  value={regNo}
-                  disabled
-                  style={{ width: '100%', padding: '10px 14px', borderRadius: 8, border: '1px solid #e2e8f0', background: '#f8fafc', color: '#64748b', fontSize: 13, fontWeight: 700 }}
+                  className="ps-input"
+                  value={registrationNo}
+                  onChange={(e) => setRegistrationNo(e.target.value)}
+                  placeholder="e.g. EMP-101 / USN"
+                  required
                 />
               </div>
 
-              <div>
-                <label style={{ display: 'block', fontSize: 12, color: '#64748b', fontWeight: 600, marginBottom: 6 }}>Email Address</label>
+              <div className="ps-field-group">
+                <label className="ps-label">Email Address</label>
                 <input
+                  className="ps-input"
                   value={currentEmail}
                   disabled
-                  style={{ width: '100%', padding: '10px 14px', borderRadius: 8, border: '1px solid #e2e8f0', background: '#f8fafc', color: '#64748b', fontSize: 13 }}
                 />
               </div>
 
-              <div>
-                <label style={{ display: 'block', fontSize: 12, color: '#64748b', fontWeight: 600, marginBottom: 6 }}>Mobile Contact Number</label>
+              <div className="ps-field-group">
+                <label className="ps-label">Mobile Contact Number</label>
                 <input
+                  className="ps-input"
                   value={mobile}
                   onChange={(e) => setMobile(e.target.value)}
-                  style={{ width: '100%', padding: '10px 14px', borderRadius: 8, border: '1px solid #cbd5e1', fontSize: 13 }}
                 />
               </div>
 
-              <div>
-                <label style={{ display: 'block', fontSize: 12, color: '#64748b', fontWeight: 600, marginBottom: 6 }}>Gender</label>
+              <div className="ps-field-group">
+                <label className="ps-label">Gender</label>
                 <select
+                  className="ps-select"
                   value={gender}
                   onChange={(e) => setGender(e.target.value)}
-                  style={{ width: '100%', padding: '10px 14px', borderRadius: 8, border: '1px solid #cbd5e1', fontSize: 13 }}
                 >
                   <option value="Male">Male</option>
                   <option value="Female">Female</option>
@@ -230,17 +222,17 @@ export default function ProfileSettings({ mode = 'profile', onProfileUpdated }) 
                 </select>
               </div>
 
-              <div>
-                <label style={{ display: 'block', fontSize: 12, color: '#64748b', fontWeight: 600, marginBottom: 6 }}>Degree & Department</label>
+              <div className="ps-field-group">
+                <label className="ps-label">Degree & Department</label>
                 <input
+                  className="ps-input"
                   value={deptName}
                   disabled
-                  style={{ width: '100%', padding: '10px 14px', borderRadius: 8, border: '1px solid #e2e8f0', background: '#f8fafc', color: '#64748b', fontSize: 13 }}
                 />
               </div>
             </div>
 
-            <button type="submit" style={{ marginTop: 20, padding: '10px 24px', background: '#10b981', color: '#fff', border: 'none', borderRadius: 8, fontWeight: 700, fontSize: 13, cursor: 'pointer' }}>
+            <button type="submit" className="ps-btn-save">
               Save Profile Details
             </button>
           </form>
@@ -250,31 +242,32 @@ export default function ProfileSettings({ mode = 'profile', onProfileUpdated }) 
   }
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+    <div className="ps-container">
       {status.text && (
-        <div style={{ padding: '10px 16px', borderRadius: 8, background: status.error ? '#fef2f2' : '#ecfdf5', color: status.error ? '#991b1b' : '#065f46', fontSize: 13, fontWeight: 600 }}>
-          {status.text}
+        <div className={`ps-status-bar ${status.error ? 'error' : 'success'}`}>
+          <span>{status.error ? '❌' : '✅'}</span>
+          <span>{status.text}</span>
         </div>
       )}
 
-      {/* Password & Security Panel */}
-      <div style={{ background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: 14, padding: 24, boxShadow: '0 2px 4px rgba(0,0,0,0.02)' }}>
-        <h3 style={{ fontSize: 16, fontWeight: 800, color: '#0f172a', margin: '0 0 16px 0' }}>🔒 Security & Password Change</h3>
+      {/* Security Panel */}
+      <div className="ps-security-card">
+        <h3 className="ps-card-title">🔒 Security & Password Change</h3>
         <form onSubmit={handlePasswordChange}>
-          <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
-            <div style={{ flex: 1 }}>
-              <label style={{ display: 'block', fontSize: 12, color: '#64748b', fontWeight: 600, marginBottom: 6 }}>New Account Password</label>
+          <div style={{ display: 'flex', gap: 14, alignItems: 'flex-end', flexWrap: 'wrap' }}>
+            <div style={{ flex: 1, minWidth: 260 }}>
+              <label className="ps-label">New Account Password</label>
               <input
                 type="password"
+                className="ps-input"
                 value={newPassword}
                 onChange={(e) => setNewPassword(e.target.value)}
                 placeholder="Enter new password (min 6 characters)"
                 minLength={6}
                 required
-                style={{ width: '100%', padding: '10px 14px', borderRadius: 8, border: '1px solid #cbd5e1', fontSize: 13 }}
               />
             </div>
-            <button type="submit" style={{ marginTop: 20, padding: '10px 22px', background: '#2563eb', color: '#fff', border: 'none', borderRadius: 8, fontWeight: 700, fontSize: 13, cursor: 'pointer' }}>
+            <button type="submit" className="ps-btn-upload" style={{ background: 'linear-gradient(135deg, #ea580c 0%, #c2410c 100%)' }}>
               Update Password
             </button>
           </div>
@@ -282,16 +275,16 @@ export default function ProfileSettings({ mode = 'profile', onProfileUpdated }) 
       </div>
 
       {/* Notification Preferences */}
-      <div style={{ background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: 14, padding: 24, boxShadow: '0 2px 4px rgba(0,0,0,0.02)' }}>
-        <h3 style={{ fontSize: 16, fontWeight: 800, color: '#0f172a', margin: '0 0 16px 0' }}>🔔 Email Alerts & Portal Preferences</h3>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 12, fontSize: 13, color: '#334155' }}>
-          <label style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+      <div className="ps-pref-card">
+        <h3 className="ps-card-title">🔔 Email Alerts & Portal Preferences</h3>
+        <div className="ps-pref-list">
+          <label className="ps-pref-item">
             <input type="checkbox" defaultChecked /> Receive email notices when HOD sends academic guidance messages
           </label>
-          <label style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+          <label className="ps-pref-item">
             <input type="checkbox" defaultChecked /> Receive alerts when Faculty releases 50-mark internal sheets
           </label>
-          <label style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+          <label className="ps-pref-item">
             <input type="checkbox" defaultChecked /> Receive alerts when new course materials / syllabus PDFs are uploaded
           </label>
         </div>

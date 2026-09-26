@@ -5,37 +5,39 @@
 }
 
 .evd-back {
-  background: rgba(30, 41, 59, 0.6);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  color: var(--primary);
+  background: #ffffff !important;
+  border: 1px solid #cbd5e1 !important;
+  color: #2563eb !important;
   cursor: pointer;
   font-size: 13px;
-  font-weight: 600;
-  padding: 8px 14px;
-  border-radius: var(--radius-md);
+  font-weight: 700;
+  padding: 8px 16px;
+  border-radius: 10px;
   align-self: flex-start;
-  transition: var(--transition-fast);
+  box-shadow: 0 2px 8px rgba(15, 23, 42, 0.04);
+  transition: all 0.15s ease;
 }
 
 .evd-back:hover {
-  background: rgba(99, 102, 241, 0.2);
-  color: #ffffff;
+  background: #eff6ff !important;
+  border-color: #3b82f6 !important;
 }
 
 .evd-title {
   margin: 0;
   font-size: 24px;
-  font-weight: 800;
+  font-weight: 900;
   font-family: var(--font-heading);
-  background: linear-gradient(135deg, #ffffff 0%, #cbd5e1 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
+  color: #0f172a !important;
+  background: none !important;
+  -webkit-text-fill-color: #0f172a !important;
 }
 
 .evd-sub {
   margin: 2px 0 16px;
   font-size: 14px;
-  color: var(--text-sub);
+  color: #475569 !important;
+  font-weight: 600;
 }
 
 .evd-split {
@@ -46,12 +48,10 @@
 
 .evd-pdf-panel, .evd-ai-panel {
   flex: 1;
-  background: rgba(15, 23, 42, 0.75);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: var(--radius-xl);
-  box-shadow: var(--shadow-lg);
+  background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%) !important;
+  border: 1px solid #cbd5e1 !important;
+  border-radius: 16px !important;
+  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.05) !important;
   overflow: hidden;
   display: flex;
   flex-direction: column;
@@ -60,11 +60,11 @@
 .evd-panel-header {
   padding: 14px 20px;
   font-family: var(--font-heading);
-  font-weight: 700;
+  font-weight: 800;
   font-size: 15px;
-  color: var(--text-bright);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-  background: rgba(30, 41, 59, 0.4);
+  color: #0f172a !important;
+  border-bottom: 1px solid #e2e8f0;
+  background: #f1f5f9 !important;
 }
 
 .evd-pdf-frame {
@@ -79,36 +79,37 @@
   flex-wrap: wrap;
   gap: 8px;
   padding: 14px 18px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-  background: rgba(15, 23, 42, 0.4);
+  border-bottom: 1px solid #e2e8f0;
+  background: #f8fafc !important;
 }
 
 .evd-q-tab {
   padding: 8px 14px;
-  border-radius: var(--radius-md);
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  background: rgba(30, 41, 59, 0.6);
-  color: var(--text-sub);
+  border-radius: 8px;
+  border: 1px solid #cbd5e1 !important;
+  background: #ffffff !important;
+  color: #475569 !important;
   font-size: 13px;
-  font-weight: 600;
+  font-weight: 700;
   cursor: pointer;
-  transition: var(--transition-fast);
+  transition: all 0.15s ease;
 }
 
 .evd-q-tab:hover {
-  background: rgba(99, 102, 241, 0.2);
-  color: #ffffff;
+  background: #eff6ff !important;
+  color: #2563eb !important;
+  border-color: #3b82f6 !important;
 }
 
 .evd-q-tab.active {
-  background: var(--primary-gradient);
-  color: #ffffff;
-  border-color: rgba(255, 255, 255, 0.2);
-  box-shadow: 0 4px 12px rgba(99, 102, 241, 0.35);
+  background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%) !important;
+  color: #ffffff !important;
+  border-color: #2563eb !important;
+  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
 }
 
 .evd-q-tab.done {
-  border-color: rgba(16, 185, 129, 0.4);
+  border-color: #10b981 !important;
 }
 
 .evd-q-detail {
@@ -120,16 +121,17 @@
   display: flex;
   justify-content: space-between;
   font-size: 14px;
-  font-weight: 700;
-  color: var(--text-bright);
+  font-weight: 800;
+  color: #0f172a !important;
   margin-bottom: 8px;
 }
 
 .evd-q-text {
   font-size: 14px;
-  color: var(--text-main);
+  color: #334155 !important;
   margin-bottom: 18px;
   line-height: 1.5;
+  font-weight: 600;
 }
 
 .evd-block {
@@ -138,49 +140,52 @@
 
 .evd-block-label {
   font-size: 12px;
-  font-weight: 700;
+  font-weight: 800;
   text-transform: uppercase;
-  color: var(--text-sub);
+  color: #475569 !important;
   letter-spacing: 0.05em;
   margin-bottom: 6px;
 }
 
 .evd-ocr {
   font-size: 13px;
-  color: var(--text-main);
+  color: #0f172a !important;
   white-space: pre-wrap;
-  background: rgba(30, 41, 59, 0.6);
+  background: #f8fafc !important;
   padding: 12px 14px;
-  border-radius: var(--radius-md);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 10px;
+  border: 1px solid #e2e8f0 !important;
   line-height: 1.5;
+  font-weight: 500;
 }
 
 .evd-evidence {
   font-size: 13px;
-  color: #a5b4fc;
+  color: #1e40af !important;
   font-style: italic;
-  background: rgba(99, 102, 241, 0.1);
-  padding: 10px 12px;
-  border-radius: var(--radius-md);
-  border: 1px solid rgba(99, 102, 241, 0.2);
+  background: #eff6ff !important;
+  padding: 10px 14px;
+  border-radius: 10px;
+  border: 1px solid #bfdbfe !important;
+  font-weight: 600;
 }
 
 .evd-warn {
-  color: #f87171;
+  color: #dc2626 !important;
   font-size: 12px;
   margin-left: 8px;
-  font-weight: 600;
+  font-weight: 700;
 }
 
 .evd-suggested {
   font-size: 15px;
-  color: var(--text-bright);
+  color: #065f46 !important;
   margin-bottom: 16px;
-  background: rgba(16, 185, 129, 0.1);
-  border: 1px solid rgba(16, 185, 129, 0.25);
+  background: #ecfdf5 !important;
+  border: 1px solid #a7f3d0 !important;
   padding: 12px 14px;
-  border-radius: var(--radius-md);
+  border-radius: 10px;
+  font-weight: 800;
 }
 
 .evd-final {
@@ -192,23 +197,29 @@
 
 .evd-final label {
   font-size: 13px;
-  font-weight: 600;
-  color: var(--text-bright);
+  font-weight: 700;
+  color: #0f172a !important;
 }
 
 .evd-final input {
   width: 90px !important;
+  background: #ffffff !important;
+  color: #0f172a !important;
+  border: 1px solid #cbd5e1 !important;
+  border-radius: 8px;
+  padding: 8px 10px;
+  font-weight: 800;
 }
 
 .evd-total-bar {
   margin-top: 16px;
   font-family: var(--font-heading);
   font-size: 16px;
-  font-weight: 700;
-  color: #34d399;
-  background: rgba(16, 185, 129, 0.15);
-  border: 1px solid rgba(16, 185, 129, 0.3);
+  font-weight: 800;
+  color: #065f46 !important;
+  background: #dcfce7 !important;
+  border: 1px solid #86efac !important;
   padding: 14px 20px;
-  border-radius: var(--radius-lg);
+  border-radius: 12px;
   text-align: right;
 }

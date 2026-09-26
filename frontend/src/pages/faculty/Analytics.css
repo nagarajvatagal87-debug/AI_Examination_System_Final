@@ -1,67 +1,120 @@
 .an-title {
-  margin: 0 0 20px;
+  margin: 0 0 4px;
   font-size: 24px;
-  font-weight: 800;
-  font-family: var(--font-heading);
-  background: linear-gradient(135deg, #ffffff 0%, #cbd5e1 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
+  font-weight: 900;
+  font-family: var(--font-heading, inherit);
+  color: #0f172a !important;
+  letter-spacing: -0.01em;
 }
 
 .an-cards {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 20px;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 18px;
   margin-bottom: 24px;
 }
 
 .an-card {
-  background: rgba(30, 41, 59, 0.6);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: var(--radius-lg);
-  padding: 24px;
-  text-align: center;
-  transition: var(--transition-fast);
+  border-radius: 18px !important;
+  padding: 20px 22px;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 4px 16px rgba(15, 23, 42, 0.04) !important;
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1) !important;
+  position: relative;
+  overflow: hidden;
 }
 
 .an-card:hover {
-  transform: translateY(-2px);
-  border-color: rgba(99, 102, 241, 0.4);
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+  transform: translateY(-4px) !important;
+  box-shadow: 0 12px 28px rgba(15, 23, 42, 0.08) !important;
 }
 
-.an-card-value {
-  font-family: var(--font-heading);
-  font-size: 32px;
+.an-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.an-card-icon {
+  font-size: 22px;
+}
+
+.an-card-chip {
+  font-size: 11px;
   font-weight: 800;
-  color: var(--primary);
+  padding: 3px 9px;
+  border-radius: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+/* 1. Soft Sky Blue Card */
+.an-card-blue {
+  background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%) !important;
+  border: 1px solid #bae6fd !important;
+}
+.an-card-blue .an-card-value { color: #0284c7 !important; }
+.an-card-blue .an-card-label { color: #0369a1 !important; }
+.an-card-chip.blue { background: #ffffff !important; color: #0284c7 !important; border: 1px solid #7dd3fc !important; }
+
+/* 2. Soft Emerald Green Card */
+.an-card-green {
+  background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%) !important;
+  border: 1px solid #a7f3d0 !important;
+}
+.an-card-green .an-card-value { color: #059669 !important; }
+.an-card-green .an-card-label { color: #047857 !important; }
+.an-card-chip.green { background: #ffffff !important; color: #059669 !important; border: 1px solid #6ee7b7 !important; }
+
+/* 3. Soft Amber / Coral Card */
+.an-card-amber {
+  background: linear-gradient(135deg, #fff7ed 0%, #ffedd5 100%) !important;
+  border: 1px solid #fed7aa !important;
+}
+.an-card-amber .an-card-value { color: #ea580c !important; }
+.an-card-amber .an-card-label { color: #c2410c !important; }
+.an-card-chip.amber { background: #ffffff !important; color: #ea580c !important; border: 1px solid #fdba74 !important; }
+
+/* 4. Soft Violet Card */
+.an-card-purple {
+  background: linear-gradient(135deg, #f5f3ff 0%, #ede9fe 100%) !important;
+  border: 1px solid #ddd6fe !important;
+}
+.an-card-purple .an-card-value { color: #7c3aed !important; }
+.an-card-purple .an-card-label { color: #6d28d9 !important; }
+.an-card-chip.purple { background: #ffffff !important; color: #7c3aed !important; border: 1px solid #c4b5fd !important; }
+
+.an-card-value {
+  font-family: var(--font-heading, inherit);
+  font-size: 34px;
+  font-weight: 900;
+  line-height: 1.1;
+  letter-spacing: -0.02em;
 }
 
 .an-card-label {
-  font-size: 13px;
-  font-weight: 600;
-  color: var(--text-sub);
-  margin-top: 6px;
+  font-size: 12px;
+  font-weight: 700;
+  margin-top: 8px;
   text-transform: uppercase;
   letter-spacing: 0.05em;
 }
 
+/* Chart Sections */
 .an-section {
-  background: rgba(15, 23, 42, 0.75);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: var(--radius-xl);
+  background: #ffffff !important;
+  border: 1px solid #e2e8f0 !important;
+  border-radius: 18px !important;
   padding: 24px;
-  margin-bottom: 24px;
-  box-shadow: var(--shadow-lg);
+  margin-bottom: 20px;
+  box-shadow: 0 4px 20px rgba(15, 23, 42, 0.04) !important;
 }
 
 .an-section h3 {
-  margin: 0 0 16px;
+  margin: 0 0 18px;
   font-size: 16px;
-  font-weight: 700;
-  color: var(--text-bright);
+  font-weight: 800;
+  color: #0f172a !important;
 }

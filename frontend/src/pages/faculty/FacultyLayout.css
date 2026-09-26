@@ -1,17 +1,15 @@
 .fl-wrap {
   display: flex;
   min-height: 100vh;
-  background: var(--bg-gradient);
+  background: linear-gradient(135deg, #eef2ff 0%, #e0e7ff 35%, #f1f5f9 70%, #ede9fe 100%) !important;
   font-family: var(--font-body);
 }
 
 .fl-sidebar {
   width: 260px;
-  background: rgba(15, 23, 42, 0.85);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
+  background: #0f172a !important;
   border-right: 1px solid rgba(255, 255, 255, 0.08);
-  color: var(--text-main);
+  color: #cbd5e1;
   display: flex;
   flex-direction: column;
   padding: 24px 18px;
@@ -180,44 +178,54 @@
   display: flex;
   flex-direction: column;
   min-width: 0;
-}
-
-.fl-topbar {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 18px 32px;
-  background: rgba(15, 23, 42, 0.6);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-}
-
-.fl-topbar-title {
-  font-family: var(--font-heading);
-  font-weight: 800;
-  font-size: 18px;
-  color: var(--text-bright);
-}
-
-.fl-topbar-actions {
-  display: flex;
-  align-items: center;
-  gap: 16px;
-  font-size: 14px;
-  color: var(--text-main);
-  font-weight: 500;
-}
-
-.fl-topbar-name {
-  background: rgba(30, 41, 59, 0.6);
-  padding: 6px 14px;
-  border-radius: 20px;
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: linear-gradient(135deg, #eef2ff 0%, #e0e7ff 35%, #f1f5f9 70%, #ede9fe 100%) !important;
 }
 
 .fl-content {
   padding: 32px;
   flex: 1;
   overflow-y: auto;
+}
+
+/* Faculty Light Theme Base Styles */
+.fl-content .glass-card,
+.fl-content .dh-section-box {
+  background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+  border: 1px solid #cbd5e1;
+  border-radius: 16px;
+  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.05);
+}
+
+.fl-content h1,
+.fl-content h2,
+.fl-content h3,
+.fl-content h4,
+.fl-content h5,
+.fl-content h6,
+.fl-content .dh-card-value,
+.fl-content .qa-title,
+.fl-content .act-title,
+.fl-content .fac-sub-name,
+.fl-content .legend-item {
+  color: #0f172a !important;
+}
+
+.fl-content p,
+.fl-content .dh-card-label,
+.fl-content .qa-sub,
+.fl-content .act-time,
+.fl-content .fac-sub-count,
+.fl-content .total-label {
+  color: #475569 !important;
+}
+
+.fl-content input[type="text"],
+.fl-content input[type="number"],
+.fl-content input[type="email"],
+.fl-content input[type="password"],
+.fl-content select,
+.fl-content textarea {
+  background: #ffffff !important;
+  color: #0f172a !important;
+  border: 1px solid #cbd5e1 !important;
 }

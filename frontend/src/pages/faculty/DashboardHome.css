@@ -1,23 +1,51 @@
+/* Faculty Dashboard Main Layout & Cards */
+.dh-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+/* Greeting Banner Card */
 .dh-greeting-card {
   padding: 24px 28px;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  background: radial-gradient(circle at 0% 0%, rgba(99, 102, 241, 0.2) 0%, rgba(15, 23, 42, 0.8) 100%);
-  border-radius: var(--radius-lg);
+  background: linear-gradient(135deg, #f0f4fe 0%, #e0e9fe 100%) !important;
+  border: 1px solid #bfdbfe !important;
+  border-radius: 16px !important;
+  box-shadow: 0 4px 16px rgba(37, 99, 235, 0.06) !important;
+}
+
+.dh-welcome {
+  font-size: 22px;
+  font-weight: 900;
+  color: #0f172a !important;
+  margin: 0 0 6px 0;
+  letter-spacing: -0.01em;
+}
+
+.dh-sub {
+  font-size: 13px;
+  font-weight: 600;
+  color: #475569 !important;
+  margin: 0;
 }
 
 .quote-pill {
   font-family: var(--font-heading);
   font-size: 13px;
   font-style: italic;
-  color: #a5b4fc;
-  background: rgba(255, 255, 255, 0.06);
-  border: 1px solid rgba(165, 180, 252, 0.2);
-  padding: 8px 18px;
+  font-weight: 700;
+  color: #1e40af !important;
+  background: #ffffff !important;
+  border: 1px solid #bfdbfe !important;
+  padding: 10px 20px;
   border-radius: 20px;
+  box-shadow: 0 2px 8px rgba(37, 99, 235, 0.08);
 }
 
+/* 4 Key Stat Cards - Pastel Gradient Themes matching Student Dashboard */
 .dh-cards {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
@@ -28,8 +56,41 @@
   display: flex;
   align-items: center;
   gap: 16px;
-  padding: 20px 24px;
-  text-align: left;
+  padding: 22px 24px;
+  border-radius: 16px !important;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.dh-card:hover {
+  transform: translateY(-3px);
+}
+
+/* Card 1: My Subjects (Pastel Blue) */
+.dh-card:nth-child(1) {
+  background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%) !important;
+  border: 1px solid #bfdbfe !important;
+  box-shadow: 0 8px 20px rgba(37, 99, 235, 0.08) !important;
+}
+
+/* Card 2: Active Exams (Pastel Green) */
+.dh-card:nth-child(2) {
+  background: linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%) !important;
+  border: 1px solid #a7f3d0 !important;
+  box-shadow: 0 8px 20px rgba(16, 185, 129, 0.08) !important;
+}
+
+/* Card 3: Total Students (Pastel Purple) */
+.dh-card:nth-child(3) {
+  background: linear-gradient(135deg, #faf5ff 0%, #f3e8ff 100%) !important;
+  border: 1px solid #e9d5ff !important;
+  box-shadow: 0 8px 20px rgba(147, 51, 234, 0.08) !important;
+}
+
+/* Card 4: Pending Evaluations (Pastel Orange) */
+.dh-card:nth-child(4), .dh-card.highlight {
+  background: linear-gradient(135deg, #fff7ed 0%, #ffedd5 100%) !important;
+  border: 1px solid #fed7aa !important;
+  box-shadow: 0 8px 20px rgba(234, 88, 12, 0.08) !important;
 }
 
 .card-icon-bubble {
@@ -41,28 +102,26 @@
   justify-content: center;
   font-size: 24px;
   flex-shrink: 0;
+  background: #ffffff !important;
+  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.08) !important;
 }
-
-.card-icon-bubble.blue { background: rgba(59, 130, 246, 0.15); }
-.card-icon-bubble.green { background: rgba(16, 185, 129, 0.15); }
-.card-icon-bubble.purple { background: rgba(168, 85, 247, 0.15); }
-.card-icon-bubble.orange { background: rgba(245, 158, 11, 0.15); }
 
 .dh-card-value {
   font-family: var(--font-heading);
   font-size: 28px;
-  font-weight: 800;
-  color: var(--text-bright);
+  font-weight: 900;
+  color: #0f172a !important;
+  line-height: 1;
 }
 
 .dh-card-label {
-  font-size: 12px;
-  color: var(--text-sub);
-  margin-top: 2px;
-  text-transform: none;
-  letter-spacing: normal;
+  font-size: 13px;
+  font-weight: 700;
+  color: #475569 !important;
+  margin-top: 4px;
 }
 
+/* Grid splits */
 .dh-grid-split {
   display: grid;
   grid-template-columns: 1.5fr 1fr;
@@ -70,7 +129,37 @@
 }
 
 .dh-section-box {
+  background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%) !important;
+  border: 1px solid #cbd5e1 !important;
+  border-radius: 16px !important;
   padding: 24px;
+  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.05) !important;
+}
+
+.dh-section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.dh-section-header h3 {
+  font-size: 16px;
+  font-weight: 800;
+  color: #0f172a !important;
+  margin: 0;
+}
+
+.dh-link {
+  font-size: 13px;
+  color: #2563eb !important;
+  font-weight: 700;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.dh-link:hover {
+  text-decoration: underline;
 }
 
 /* Faculty Subjects Grid */
@@ -82,27 +171,30 @@
 }
 
 .fac-sub-card {
-  background: rgba(15, 23, 42, 0.6);
-  border: 1px solid var(--glass-border);
-  border-radius: var(--radius-md);
-  padding: 14px 16px;
-  transition: var(--transition-fast);
+  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%) !important;
+  border: 1px solid #cbd5e1 !important;
+  border-radius: 12px !important;
+  padding: 16px;
+  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.04) !important;
+  transition: transform 0.15s ease, border-color 0.15s ease;
 }
 
 .fac-sub-card:hover {
   transform: translateY(-2px);
-  border-color: var(--glass-border-active);
+  border-color: #3b82f6 !important;
+  box-shadow: 0 6px 16px rgba(59, 130, 246, 0.12) !important;
 }
 
 .fac-sub-name {
   font-weight: 700;
   font-size: 14px;
-  color: var(--text-bright);
+  color: #0f172a !important;
 }
 
 .fac-sub-count {
   font-size: 12px;
-  color: var(--text-sub);
+  font-weight: 600;
+  color: #64748b !important;
   margin-top: 4px;
 }
 
@@ -135,8 +227,8 @@
 .donut-percent {
   font-family: var(--font-heading);
   font-size: 24px;
-  font-weight: 800;
-  color: #10b981;
+  font-weight: 900;
+  color: #10b981 !important;
 }
 
 .donut-legend {
@@ -150,7 +242,8 @@
   align-items: center;
   gap: 8px;
   font-size: 13px;
-  color: var(--text-bright);
+  font-weight: 700;
+  color: #0f172a !important;
 }
 
 .dot {
@@ -164,7 +257,8 @@
 
 .total-label {
   font-size: 12px;
-  color: var(--text-sub);
+  font-weight: 600;
+  color: #64748b !important;
   margin-top: 4px;
 }
 
@@ -173,14 +267,24 @@
   display: inline-block;
   text-decoration: none;
   font-size: 13px;
-  padding: 8px 16px;
+  font-weight: 700;
+  padding: 9px 18px;
+  background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%) !important;
+  color: #ffffff !important;
+  border-radius: 10px !important;
+  box-shadow: 0 4px 14px rgba(37, 99, 235, 0.3) !important;
+  transition: transform 0.15s ease;
+}
+
+.eval-btn-cta:hover {
+  transform: translateY(-1px);
 }
 
 /* Recent Activities Timeline */
 .act-list {
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 14px;
   margin-top: 14px;
 }
 
@@ -188,6 +292,10 @@
   display: flex;
   align-items: flex-start;
   gap: 14px;
+  padding: 12px 14px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
 }
 
 .act-icon {
@@ -199,22 +307,21 @@
   justify-content: center;
   font-size: 18px;
   flex-shrink: 0;
+  background: #ffffff !important;
+  border: 1px solid #cbd5e1 !important;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
 }
-
-.act-icon.blue { background: rgba(59, 130, 246, 0.15); }
-.act-icon.purple { background: rgba(168, 85, 247, 0.15); }
-.act-icon.green { background: rgba(16, 185, 129, 0.15); }
-.act-icon.orange { background: rgba(245, 158, 11, 0.15); }
 
 .act-title {
   font-size: 13px;
-  font-weight: 600;
-  color: var(--text-bright);
+  font-weight: 700;
+  color: #0f172a !important;
 }
 
 .act-time {
-  font-size: 11px;
-  color: var(--text-sub);
+  font-size: 12px;
+  font-weight: 500;
+  color: #64748b !important;
   margin-top: 2px;
 }
 
@@ -230,32 +337,35 @@
   display: flex;
   align-items: center;
   gap: 16px;
-  padding: 14px 18px;
-  border-radius: var(--radius-md);
-  border: 1px solid var(--glass-border);
-  background: rgba(15, 23, 42, 0.6);
+  padding: 16px 20px;
+  border-radius: 12px !important;
+  border: 1px solid #cbd5e1 !important;
+  background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%) !important;
   text-decoration: none;
-  transition: var(--transition-fast);
+  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.04) !important;
+  transition: transform 0.2s ease, border-color 0.2s ease, background 0.2s ease;
 }
 
 .qa-button:hover {
-  border-color: var(--glass-border-active);
+  background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%) !important;
+  border-color: #3b82f6 !important;
   transform: translateX(4px);
-  background: rgba(30, 41, 59, 0.8);
+  box-shadow: 0 8px 20px rgba(37, 99, 235, 0.12) !important;
 }
 
 .qa-icon {
-  font-size: 24px;
+  font-size: 26px;
 }
 
 .qa-title {
-  font-weight: 700;
+  font-weight: 800;
   font-size: 14px;
-  color: var(--text-bright);
+  color: #0f172a !important;
 }
 
 .qa-sub {
   font-size: 12px;
-  color: var(--text-sub);
+  font-weight: 500;
+  color: #475569 !important;
   margin-top: 2px;
 }

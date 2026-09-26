@@ -1,0 +1,231 @@
+.hm-card {
+  background: #ffffff !important;
+  border-radius: 20px !important;
+  border: 1px solid #cbd5e1 !important;
+  padding: 24px;
+  box-shadow: 0 8px 30px rgba(15, 23, 42, 0.05) !important;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+/* Header Bar */
+.hm-header-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-bottom: 16px;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.hm-hod-profile {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.hm-avatar {
+  width: 46px;
+  height: 46px;
+  border-radius: 14px;
+  background: linear-gradient(135deg, #e0f2fe 0%, #bae6fd 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24px;
+  border: 1px solid #7dd3fc;
+}
+
+.hm-hod-name {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 800;
+  color: #0f172a !important;
+  font-family: var(--font-heading, inherit);
+}
+
+.hm-hod-role {
+  font-size: 12px;
+  color: #0284c7 !important;
+  font-weight: 700;
+}
+
+.hm-status-pill {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 14px;
+  border-radius: 20px;
+  background: #f0fdf4 !important;
+  border: 1px solid #a7f3d0 !important;
+  color: #059669 !important;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.hm-status-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #10b981;
+  box-shadow: 0 0 8px #10b981;
+}
+
+/* Chat Body */
+.hm-chat-body {
+  background: #f8fafc !important;
+  border-radius: 16px !important;
+  border: 1.5px solid #cbd5e1 !important;
+  padding: 20px;
+  min-height: 280px;
+  max-height: 420px;
+  overflow-y: auto;
+}
+
+.hm-no-messages {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 220px;
+  color: #64748b;
+  text-align: center;
+}
+
+.hm-no-messages h4 {
+  margin: 10px 0 4px 0;
+  color: #0f172a !important;
+  font-size: 16px;
+  font-weight: 800;
+}
+
+.hm-no-messages p {
+  margin: 0;
+  font-size: 13px;
+}
+
+.hm-messages-list {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.hm-msg-group {
+  display: flex;
+  flex-direction: column;
+  max-width: 75%;
+}
+
+.hm-msg-group.from-hod {
+  align-self: flex-start;
+}
+
+.hm-msg-group.from-me {
+  align-self: flex-end;
+  align-items: flex-end;
+}
+
+.hm-msg-meta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 4px;
+  padding: 0 4px;
+}
+
+.hm-msg-sender {
+  font-size: 11px;
+  font-weight: 800;
+  color: #475569 !important;
+  text-transform: uppercase;
+}
+
+.hm-msg-time {
+  font-size: 11px;
+  color: #94a3b8 !important;
+}
+
+.hm-msg-bubble {
+  padding: 12px 18px;
+  border-radius: 16px;
+  font-size: 14px;
+  line-height: 1.5;
+  word-break: break-word;
+}
+
+/* From HOD: Light Sky Blue Card Bubble */
+.hm-msg-group.from-hod .hm-msg-bubble {
+  background: #ffffff !important;
+  border: 1px solid #cbd5e1 !important;
+  color: #0f172a !important;
+  border-top-left-radius: 4px;
+  box-shadow: 0 3px 10px rgba(15, 23, 42, 0.04);
+}
+
+/* From Me (Faculty): Light Indigo Card Bubble */
+.hm-msg-group.from-me .hm-msg-bubble {
+  background: linear-gradient(135deg, #e0e7ff 0%, #c7d2fe 100%) !important;
+  border: 1px solid #a5b4fc !important;
+  color: #1e1b4b !important;
+  border-top-right-radius: 4px;
+  box-shadow: 0 3px 12px rgba(99, 102, 241, 0.12);
+  font-weight: 600;
+}
+
+/* Input Form Bar */
+.hm-input-bar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding-top: 8px;
+}
+
+.hm-input {
+  flex: 1;
+  padding: 12px 18px;
+  border-radius: 12px;
+  background: #ffffff !important;
+  border: 1px solid #cbd5e1 !important;
+  font-size: 14px;
+  color: #0f172a !important;
+  outline: none;
+  transition: all 0.2s ease;
+}
+
+.hm-input:focus {
+  border-color: #4f46e5 !important;
+  box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.15) !important;
+}
+
+.hm-send-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 22px;
+  border-radius: 12px;
+  border: none;
+  background: linear-gradient(135deg, #4f46e5 0%, #3b82f6 100%) !important;
+  color: #ffffff !important;
+  font-size: 13px;
+  font-weight: 800;
+  cursor: pointer;
+  box-shadow: 0 4px 14px rgba(79, 70, 229, 0.25);
+  transition: all 0.2s ease;
+}
+
+.hm-send-btn:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(79, 70, 229, 0.35);
+}
+
+.hm-send-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  box-shadow: none;
+}
+
+.hm-loading, .hm-empty-box {
+  padding: 40px;
+  text-align: center;
+  color: #64748b;
+}

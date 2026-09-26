@@ -3,13 +3,37 @@ import { useNavigate } from 'react-router-dom'
 import api from '../../api/client.js'
 import './Notifications.css'
 
-const TYPE_ICON = {
-  marks_published: '📊',
-  new_message: '📩',
-  department_results_published: '📢',
-  exam_results_published: '📢',
-  rag_sync: '🤖',
-  system: '⚡',
+const TYPE_CONFIG = {
+  rag_sync: {
+    icon: '🤖',
+    chip: 'RAG AI Engine',
+    themeClass: 'nf-theme-green',
+  },
+  system: {
+    icon: '⚡',
+    chip: 'Academic Rule',
+    themeClass: 'nf-theme-amber',
+  },
+  marks_published: {
+    icon: '📊',
+    chip: 'Marks Published',
+    themeClass: 'nf-theme-blue',
+  },
+  department_results_published: {
+    icon: '📢',
+    chip: 'Portal Alert',
+    themeClass: 'nf-theme-purple',
+  },
+  exam_results_published: {
+    icon: '🏆',
+    chip: 'Exam Results',
+    themeClass: 'nf-theme-blue',
+  },
+  new_message: {
+    icon: '📩',
+    chip: 'HOD Message',
+    themeClass: 'nf-theme-purple',
+  },
 }
 
 const DEFAULT_NOTIFICATIONS = [
@@ -41,6 +65,7 @@ const DEFAULT_NOTIFICATIONS = [
 
 export default function Notifications() {
   const [notifications, setNotifications] = useState([])
+  const [filter, setFilter] = useState('all')
   const navigate = useNavigate()
 
   useEffect(() => { load() }, [])
@@ -66,27 +91,90 @@ export default function Notifications() {
     else if (n.related_exam_id) navigate(`/faculty/results?examId=${n.related_exam_id}`)
   }
 
+  const unreadCount = notifications.filter((n) => !n.read).length
+  const filteredList = notifications.filter((n) => {
+    if (filter === 'unread') return !n.read
+    return true
+  })
+
   return (
-    <div>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
+    <div className="nf-container">
+      <div className="nf-header-card">
         <div>
-          <h2 className="nf-title">🔔 System Activity & Notifications</h2>
-          <p style={{ margin: 0, fontSize: 13, color: '#94a3b8' }}>Real-time Alerts for Faculty Evaluation & Examination Updates</p>
+          <div className="nf-header-top">
+            <h2 className="nf-title">🔔 System Activity & Notifications</h2>
+            {unreadCount > 0 && <span className="nf-unread-count-chip">{unreadCount} New Alerts</span>}
+          </div>
+          <p className="nf-sub">Real-time Alerts for Faculty Evaluation & Examination Updates</p>
+        </div>
+
+        <div className="nf-filter-group">
+          <button
+            className={`nf-filter-btn ${filter === 'all' ? 'active' : ''}`}
+            onClick={() => setFilter('all')}
+          >
+            All Alerts ({notifications.length})
+          </button>
+          <button
+            className={`nf-filter-btn ${filter === 'unread' ? 'active' : ''}`}
+            onClick={() => setFilter('unread')}
+          >
+            Unread ({unreadCount})
+          </button>
         </div>
       </div>
 
       <div className="nf-list">
-        {notifications.map((n) => (
-          <div key={n.id} className={`nf-item ${n.read ? '' : 'unread'}`} onClick={() => markRead(n)}>
-            <span className="nf-icon">{TYPE_ICON[n.type] || '🔔'}</span>
-            <div className="nf-body">
-              <div className="nf-title-line">{n.title}</div>
-              {n.body && <div className="nf-desc">{n.body}</div>}
-              <div className="nf-time">{new Date(n.created_at).toLocaleString()}</div>
+        {filteredList.map((n) => {
+          const cfg = TYPE_CONFIG[n.type] || {
+            icon: '🔔',
+            chip: 'System Alert',
+            themeClass: 'nf-theme-blue',
+          }
+
+          const timeFormatted = new Date(n.created_at).toLocaleString([], {
+            month: 'short',
+            day: 'numeric',
+            year: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit',
+          })
+
+          return (
+            <div
+              key={n.id}
+              className={`nf-card ${n.read ? 'is-read' : 'is-unread'} ${cfg.themeClass}`}
+              onClick={() => markRead(n)}
+            >
+              <div className="nf-icon-box">
+                {cfg.icon}
+              </div>
+
+              <div className="nf-body-content">
+                <div className="nf-top-row">
+                  <span className="nf-category-chip">{cfg.chip}</span>
+                  <span className="nf-time-stamp">{timeFormatted}</span>
+                </div>
+                <h4 className="nf-card-title">{n.title}</h4>
+                {n.body && <p className="nf-card-desc">{n.body}</p>}
+              </div>
+
+              {!n.read && (
+                <div className="nf-new-badge">
+                  <span className="nf-pulsing-dot" />
+                  <span>NEW</span>
+                </div>
+              )}
             </div>
-            {!n.read && <span className="nf-dot" />}
+          )
+        })}
+
+        {filteredList.length === 0 && (
+          <div className="nf-empty-box">
+            <span style={{ fontSize: 32 }}>✨</span>
+            <p>No notifications matching current filter.</p>
           </div>
-        ))}
+        )}
       </div>
     </div>
   )
