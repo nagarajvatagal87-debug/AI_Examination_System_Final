@@ -1,9 +1,11 @@
 import { useState, useEffect } from 'react'
 import { useSearchParams } from 'react-router-dom'
+import { useAuth } from '../../context/AuthContext.jsx'
 import api from '../../api/client.js'
 import './Results.css'
 
 export default function Results() {
+  const { user } = useAuth()
   const [searchParams, setSearchParams] = useSearchParams()
   const examId = searchParams.get('examId')
 
@@ -66,14 +68,41 @@ export default function Results() {
     }
   }
 
+  async function handleExportResultsPdf() {
+    if (!activeId) return
+    setMsg('Generating official DSATM Result Sheet PDF...')
+    try {
+      const { data } = await api.post(`/faculty/exams/${activeId}/export-results-pdf`)
+      const url = data.download_url
+      const win = window.open(url, '_blank')
+      if (win) win.focus()
+
+      const a = document.createElement('a')
+      a.href = url
+      a.download = `Official-Result-Sheet-${exam?.title || 'DSATM'}.html`
+      document.body.appendChild(a)
+      a.click()
+      document.body.removeChild(a)
+      setMsg('Official Result Sheet PDF exported successfully!')
+    } catch (err) {
+      setMsg(err.response?.data?.error || 'PDF export failed')
+    }
+  }
+
   function handleDownloadSheet() {
-    const header = 'Register No,Student,Marks,Status\n'
-    const body = rows.map((r) => `${r.registrationNo},${r.fullName},${r.totalMarks}/${r.maxMarks},${r.status}`).join('\n')
-    const blob = new Blob([header + body], { type: 'text/csv' })
+    const sorted = [...rows].sort((a, b) => (Number(b.totalMarks) || 0) - (Number(a.totalMarks) || 0))
+    const facultyName = user?.full_name || user?.fullName || user?.name || 'Faculty In-Charge'
+    const titleBlock = `DAYANANDA SAGAR ACADEMY OF TECHNOLOGY AND MANAGEMENT\nDepartment of Master of Computer Applications\nOFFICIAL ASSESSMENT RESULT SHEET — ${exam?.title || 'Internal Examination'}\nSubject Name: ${exam?.subjectName || 'Computer Networks'}, Max Marks: ${exam?.total_marks || 50}, Date: ${new Date().toLocaleDateString('en-GB')}\nFaculty In-Charge: ${facultyName}\n\n`
+    const header = 'Rank,Register No (USN),Student Full Name,Marks Obtained,Max Marks,Percentage (%),Status\n'
+    const body = sorted.map((r, idx) => {
+      const pct = r.maxMarks > 0 ? Math.round((r.totalMarks / r.maxMarks) * 100) : 0
+      return `${idx + 1},${r.registrationNo},"${r.fullName}",${r.totalMarks},${r.maxMarks},${pct}%,${r.status}`
+    }).join('\n')
+    const blob = new Blob([titleBlock + header + body], { type: 'text/csv' })
     const url = URL.createObjectURL(blob)
     const a = document.createElement('a')
     a.href = url
-    a.download = `${exam?.title || 'result'}-sheet.csv`
+    a.download = `Official-Result-Sheet-${exam?.title || 'DSATM'}.csv`
     a.click()
     URL.revokeObjectURL(url)
   }
@@ -229,12 +258,22 @@ export default function Results() {
             >
               🚀 Publish Class Result to Students & HOD
             </button>
+
+            <button
+              className="rs-btn-secondary"
+              style={{ background: 'linear-gradient(135deg, #4f46e5 0%, #2563eb 100%)', color: '#fff' }}
+              disabled={rows.length === 0}
+              onClick={handleExportResultsPdf}
+            >
+              📄 Export Official Result Sheet (PDF / Print)
+            </button>
+
             <button
               className="rs-btn-secondary"
               disabled={rows.length === 0}
               onClick={handleDownloadSheet}
             >
-              📥 Download Result CSV Sheet
+              📥 Download Result CSV
             </button>
           </div>
         </>

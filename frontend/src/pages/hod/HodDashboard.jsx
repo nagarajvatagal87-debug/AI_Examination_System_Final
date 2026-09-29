@@ -4,22 +4,32 @@ import api from '../../api/client.js'
 import Sidebar from '../../components/Sidebar.jsx'
 import NotificationBell from '../../components/NotificationBell.jsx'
 import HeaderBanner from '../../components/HeaderBanner.jsx'
+import Notifications from '../faculty/Notifications.jsx'
+import HodPublicPublishSection from './HodPublicPublishSection.jsx'
+import '../student/StudentDashboard.css'
 import './HodDashboard.css'
 
 const SECTIONS = [
   { key: 'overview', label: 'Dashboard', icon: '📊' },
   { key: 'students', label: 'Department Students', icon: '🎓' },
   { key: 'faculty', label: 'Manage Faculty', icon: '👩‍🏫' },
+  { key: 'public_publish', label: 'Public Info & Toppers', icon: '📢' },
   { key: 'internals', label: '50m Internal Approval', icon: '📋' },
   { key: 'internal_analytics', label: 'Internal Analytics', icon: '📉' },
   { key: 'timetable', label: 'Exam Schedule & Hall Tickets', icon: '🎫' },
+  { key: 'academic_calendar', label: 'Academic Calendar', icon: '📅' },
   { key: 'mainexam', label: 'Main Exam Analytics', icon: '📈' },
   { key: 'attendance', label: 'Attendance', icon: '📅' },
   { key: 'results', label: 'Results & Ranking', icon: '🏆' },
+  { key: 'academic_reports', label: 'Academic Reports', icon: '📑' },
+  { key: 'faculty_communication', label: 'Faculty Communication', icon: '💬' },
+  { key: 'audit_logs', label: 'Audit Logs', icon: '🔐' },
+  { key: 'notifications', label: 'Notifications', icon: '🔔' },
   { key: 'settings', label: 'Settings & Profile', icon: '⚙️' },
 ]
 
 export default function HodDashboard() {
+  const { user } = useAuth()
   const [activeSection, setActiveSection] = useState('overview')
   const [overview, setOverview] = useState(null)
   const [error, setError] = useState('')
@@ -40,21 +50,36 @@ export default function HodDashboard() {
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh', background: 'var(--bg-gradient)', color: 'var(--text-main)' }}>
-      <HeaderBanner />
-
       <div className="hod-layout" style={{ flex: 1 }}>
         <Sidebar title="HOD Portal" subtitle="Department Oversight" items={sidebarItems} />
 
         <div className="hod-content">
-          <header className="hod-topbar glass-card" style={{ margin: '20px 24px 0', padding: '14px 24px', borderRadius: 14, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <div>
-              <h1 className="hod-page-title">{SECTIONS.find((s) => s.key === activeSection)?.label}</h1>
-              <p className="hod-page-sub">{overview?.department_name ? `${overview.department_name} — Performance & Academic Oversight` : 'Department Performance & Academic Oversight'}</p>
+          <header className="eduexam-top-header">
+            <div className="search-bar-wrap">
+              <span className="search-icon">🔍</span>
+              <input type="text" placeholder="Search subjects, faculty, students..." />
             </div>
-            <div style={{ textAlign: 'center', fontSize: 18, fontWeight: 900, color: '#38bdf8', letterSpacing: '0.6px', textShadow: '0 0 10px rgba(56,189,248,0.4)' }}>
-              🎓 Exam AI Platform — HOD Portal
+
+            <div className="top-header-center">
+              <h1 className="header-college-title-center">DAYANANDA SAGAR ACADEMY OF TECHNOLOGY AND MANAGEMENT</h1>
+              <p className="header-dashboard-subtitle-center">👩‍💼 HOD Dashboard — {overview?.department_name || 'MCA Department'}</p>
             </div>
-            <NotificationBell />
+
+            <div className="top-header-right">
+              <NotificationBell count={0} />
+              <div className="header-icon-btn" onClick={() => setActiveSection('settings')} style={{ cursor: 'pointer' }} title="Settings">⚙️</div>
+
+              <div className="user-profile-badge" onClick={() => setActiveSection('settings')} style={{ cursor: 'pointer' }}>
+                <div className="user-avatar-circle" style={{ width: 36, height: 36, borderRadius: '50%', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#2563eb', color: '#fff', fontWeight: 800 }}>
+                  {user?.avatarUrl ? <img src={user.avatarUrl} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : (user?.fullName?.[0] || 'H')}
+                </div>
+                <div>
+                  <div className="user-name-title">{user?.fullName || 'HOD User'}</div>
+                  <div className="user-sub-title">{overview?.department_name || 'MCA'} · Head of Dept</div>
+                </div>
+                <span className="caret-down">▾</span>
+              </div>
+            </div>
           </header>
 
         <main className="hod-main">
@@ -68,12 +93,18 @@ export default function HodDashboard() {
           {!loading && !error && activeSection === 'overview' && <OverviewSection overview={overview} />}
           {!loading && !error && activeSection === 'students' && <DepartmentStudentsSection />}
           {!loading && !error && activeSection === 'faculty' && <FacultyManagement />}
+          {!loading && !error && activeSection === 'public_publish' && <HodPublicPublishSection />}
           {!loading && !error && activeSection === 'internals' && <HodInternalApprovalSection />}
           {!loading && !error && activeSection === 'internal_analytics' && <HodInternalAnalyticsSection />}
           {!loading && !error && activeSection === 'timetable' && <HodExamTimetableSection overview={overview} />}
+          {!loading && !error && activeSection === 'academic_calendar' && <HodAcademicCalendarSection />}
           {!loading && !error && activeSection === 'mainexam' && <MainExamAnalyticsSection />}
           {!loading && !error && activeSection === 'attendance' && <HodAttendanceSection />}
           {!loading && !error && activeSection === 'results' && <ResultsSection />}
+          {!loading && !error && activeSection === 'academic_reports' && <HodAcademicReportsSection />}
+          {!loading && !error && activeSection === 'faculty_communication' && <HodFacultyCommunicationSection />}
+          {!loading && !error && activeSection === 'audit_logs' && <HodAuditLogsSection />}
+          {!loading && !error && activeSection === 'notifications' && <Notifications />}
           {!loading && !error && activeSection === 'settings' && <HodSettingsSection />}
         </main>
         </div>
@@ -167,11 +198,11 @@ function OverviewSection({ overview }) {
             ) : (
               passRates.map((p) => (
                 <div className="bar-row" key={p.subjectId || p.subjectName} style={{ marginBottom: 12 }}>
-                  <div className="bar-label" style={{ fontSize: 13 }}>{p.subjectName}</div>
-                  <div className="bar-track" style={{ background: '#1e193b', height: 10, borderRadius: 5 }}>
-                    <div className="bar-fill" style={{ width: `${p.passPercent}%`, background: p.passPercent > 75 ? '#34d399' : '#f59e0b', height: '100%', borderRadius: 5 }} />
+                  <div className="bar-label" style={{ fontSize: 13, color: '#1e293b', fontWeight: 600 }}>{p.subjectName}</div>
+                  <div className="bar-track" style={{ background: '#f1f5f9', height: 12, borderRadius: 6, border: '1px solid #cbd5e1' }}>
+                    <div className="bar-fill" style={{ width: `${p.passPercent}%`, background: p.passPercent > 75 ? 'linear-gradient(90deg, #10b981, #059669)' : 'linear-gradient(90deg, #4f46e5, #3b82f6)', height: '100%', borderRadius: 6 }} />
                   </div>
-                  <div className="bar-value" style={{ fontSize: 12, fontWeight: 700, color: '#c084fc' }}>{p.passPercent}%</div>
+                  <div className="bar-value" style={{ fontSize: 13, fontWeight: 800, color: '#4f46e5' }}>{p.passPercent}%</div>
                 </div>
               ))
             )}
@@ -187,11 +218,11 @@ function OverviewSection({ overview }) {
               onClick={handleDownloadResultSheet}
               disabled={downloading}
               style={{
-                background: 'rgba(59, 130, 246, 0.15)',
-                color: '#60a5fa',
-                border: '1px solid rgba(59, 130, 246, 0.3)',
+                background: '#eff6ff',
+                color: '#2563eb',
+                border: '1px solid #bfdbfe',
                 padding: '8px 16px',
-                borderRadius: 8,
+                borderRadius: 10,
                 fontWeight: 700,
                 fontSize: 13,
                 cursor: 'pointer',
@@ -204,14 +235,15 @@ function OverviewSection({ overview }) {
               onClick={handleTransferToPrincipal}
               disabled={transferred || topStudentsList.length === 0}
               style={{
-                background: transferred ? '#059669' : topStudentsList.length === 0 ? 'rgba(255,255,255,0.1)' : 'linear-gradient(135deg, #7c3aed, #4f46e5)',
-                color: '#fff',
+                background: transferred ? '#059669' : topStudentsList.length === 0 ? '#f1f5f9' : 'linear-gradient(135deg, #4f46e5, #3b82f6)',
+                color: (transferred || topStudentsList.length > 0) ? '#fff' : '#94a3b8',
                 border: 'none',
                 padding: '8px 16px',
-                borderRadius: 8,
+                borderRadius: 10,
                 fontWeight: 700,
                 fontSize: 13,
                 cursor: (transferred || topStudentsList.length === 0) ? 'default' : 'pointer',
+                boxShadow: (transferred || topStudentsList.length === 0) ? 'none' : '0 4px 12px rgba(79,70,229,0.25)'
               }}
             >
               {transferred ? '✓ Transferred to Principal' : '👑 Transfer Top 10 to Principal'}
@@ -229,10 +261,10 @@ function OverviewSection({ overview }) {
             <tbody>
               {topStudentsList.map((t, i) => (
                 <tr key={i}>
-                  <td style={{ fontWeight: 800, color: i < 3 ? '#f59e0b' : '#cbd5e1' }}>#{t.rank || (i + 1)}</td>
-                  <td style={{ fontWeight: 600 }}>{t.name || t.fullName || t.profiles?.full_name}</td>
-                  <td style={{ color: '#94a3b8' }}>{t.regNo || t.registrationNo || t.profiles?.registration_no}</td>
-                  <td style={{ fontWeight: 700, color: '#34d399' }}>{t.percentage}%</td>
+                  <td style={{ fontWeight: 800, color: i < 3 ? '#d97706' : '#475569' }}>#{t.rank || (i + 1)}</td>
+                  <td style={{ fontWeight: 600, color: '#0f172a' }}>{t.name || t.fullName || t.profiles?.full_name}</td>
+                  <td style={{ color: '#64748b' }}>{t.regNo || t.registrationNo || t.profiles?.registration_no}</td>
+                  <td style={{ fontWeight: 700, color: '#059669' }}>{t.percentage}%</td>
                 </tr>
               ))}
             </tbody>
@@ -267,6 +299,7 @@ function DepartmentStudentsSection() {
   const [subjectSem, setSubjectSem] = useState('2nd Sem')
 
   const [statusMsg, setStatusMsg] = useState('')
+  const [activeProfileStudentId, setActiveProfileStudentId] = useState(null)
 
   function loadData(sem = selectedSem) {
     setLoading(true)
@@ -364,42 +397,42 @@ function DepartmentStudentsSection() {
 
         {/* Add Subject Modal Form */}
         {showAddSubject && (
-          <form onSubmit={handleAddSubject} style={{ marginTop: 20, padding: 18, background: 'rgba(15,23,42,0.6)', borderRadius: 10, border: '1px solid rgba(192,132,252,0.3)', display: 'grid', gridTemplateColumns: '1fr 1fr 1fr auto', gap: 12, alignItems: 'end' }}>
+          <form onSubmit={handleAddSubject} style={{ marginTop: 20, padding: 18, background: '#f8fafc', borderRadius: 10, border: '1.5px solid #1e293b', display: 'grid', gridTemplateColumns: '1fr 1fr 1fr auto', gap: 12, alignItems: 'end' }}>
             <div>
-              <label style={{ display: 'block', fontSize: 12, color: '#cbd5e1', marginBottom: 4 }}>Subject Name</label>
-              <input placeholder="e.g., Computer Networks" value={subjectName} onChange={(e) => setSubjectName(e.target.value)} required style={{ width: '100%', padding: '8px 12px', borderRadius: 6, background: 'rgba(15,23,42,0.9)', color: '#fff', border: '1px solid rgba(255,255,255,0.18)' }} />
+              <label style={{ display: 'block', fontSize: 12, color: '#1e293b', fontWeight: 700, marginBottom: 4 }}>Subject Name</label>
+              <input placeholder="e.g., Computer Networks" value={subjectName} onChange={(e) => setSubjectName(e.target.value)} required style={{ width: '100%', padding: '8px 12px', borderRadius: 6, background: '#ffffff', color: '#0f172a', border: '1.5px solid #334155' }} />
             </div>
             <div>
-              <label style={{ display: 'block', fontSize: 12, color: '#cbd5e1', marginBottom: 4 }}>Subject Code</label>
-              <input placeholder="e.g., MMC204 / 22MCA31" value={subjectCode} onChange={(e) => setSubjectCode(e.target.value)} required style={{ width: '100%', padding: '8px 12px', borderRadius: 6, background: 'rgba(15,23,42,0.9)', color: '#fff', border: '1px solid rgba(255,255,255,0.18)' }} />
+              <label style={{ display: 'block', fontSize: 12, color: '#1e293b', fontWeight: 700, marginBottom: 4 }}>Subject Code</label>
+              <input placeholder="e.g., MMC204 / 22MCA31" value={subjectCode} onChange={(e) => setSubjectCode(e.target.value)} required style={{ width: '100%', padding: '8px 12px', borderRadius: 6, background: '#ffffff', color: '#0f172a', border: '1.5px solid #334155' }} />
             </div>
             <div>
-              <label style={{ display: 'block', fontSize: 12, color: '#cbd5e1', marginBottom: 4 }}>Semester</label>
-              <select value={subjectSem} onChange={(e) => setSubjectSem(e.target.value)} style={{ width: '100%', padding: '8px 12px', borderRadius: 6, background: 'rgba(15,23,42,0.9)', color: '#fff', border: '1px solid rgba(255,255,255,0.18)' }}>
+              <label style={{ display: 'block', fontSize: 12, color: '#1e293b', fontWeight: 700, marginBottom: 4 }}>Semester</label>
+              <select value={subjectSem} onChange={(e) => setSubjectSem(e.target.value)} style={{ width: '100%', padding: '8px 12px', borderRadius: 6, background: '#ffffff', color: '#0f172a', border: '1.5px solid #334155' }}>
                 <option value="1st Sem">1st Sem</option>
                 <option value="2nd Sem">2nd Sem</option>
                 <option value="3rd Sem">3rd Sem</option>
                 <option value="4th Sem">4th Sem</option>
               </select>
             </div>
-            <button type="submit" style={{ padding: '9px 18px', borderRadius: 6, border: 'none', background: '#7c3aed', color: '#fff', fontWeight: 800, cursor: 'pointer' }}>Save Subject</button>
+            <button type="submit" style={{ padding: '9px 18px', borderRadius: 6, border: '1.5px solid #1e293b', background: 'linear-gradient(135deg, #4f46e5 0%, #3b82f6 100%)', color: '#fff', fontWeight: 800, cursor: 'pointer' }}>Save Subject</button>
           </form>
         )}
 
         {/* Add Student Modal Form */}
         {showAddStudent && (
-          <form onSubmit={handleRegisterStudent} style={{ marginTop: 20, padding: 18, background: 'rgba(15,23,42,0.6)', borderRadius: 10, border: '1px solid rgba(56,189,248,0.3)', display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr auto', gap: 12, alignItems: 'end' }}>
+          <form onSubmit={handleRegisterStudent} style={{ marginTop: 20, padding: 18, background: '#f8fafc', borderRadius: 10, border: '1.5px solid #1e293b', display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr auto', gap: 12, alignItems: 'end' }}>
             <div>
-              <label style={{ display: 'block', fontSize: 12, color: '#cbd5e1', marginBottom: 4 }}>Full Candidate Name</label>
-              <input placeholder="e.g., Ameer Nagarasi" value={fullName} onChange={(e) => setFullName(e.target.value)} required style={{ width: '100%', padding: '8px 12px', borderRadius: 6, background: 'rgba(15,23,42,0.9)', color: '#fff', border: '1px solid rgba(255,255,255,0.18)' }} />
+              <label style={{ display: 'block', fontSize: 12, color: '#1e293b', fontWeight: 700, marginBottom: 4 }}>Full Candidate Name</label>
+              <input placeholder="e.g., Ameer Nagarasi" value={fullName} onChange={(e) => setFullName(e.target.value)} required style={{ width: '100%', padding: '8px 12px', borderRadius: 6, background: '#ffffff', color: '#0f172a', border: '1.5px solid #334155' }} />
             </div>
             <div>
-              <label style={{ display: 'block', fontSize: 12, color: '#cbd5e1', marginBottom: 4 }}>Register No / USN</label>
-              <input placeholder="e.g., 1DS23MCA001" value={registrationNo} onChange={(e) => setRegistrationNo(e.target.value)} required style={{ width: '100%', padding: '8px 12px', borderRadius: 6, background: 'rgba(15,23,42,0.9)', color: '#fff', border: '1px solid rgba(255,255,255,0.18)' }} />
+              <label style={{ display: 'block', fontSize: 12, color: '#1e293b', fontWeight: 700, marginBottom: 4 }}>Register No / USN</label>
+              <input placeholder="e.g., 1DS23MCA001" value={registrationNo} onChange={(e) => setRegistrationNo(e.target.value)} required style={{ width: '100%', padding: '8px 12px', borderRadius: 6, background: '#ffffff', color: '#0f172a', border: '1.5px solid #334155' }} />
             </div>
             <div>
-              <label style={{ display: 'block', fontSize: 12, color: '#cbd5e1', marginBottom: 4 }}>Semester</label>
-              <select value={studentSem} onChange={(e) => setStudentSem(e.target.value)} style={{ width: '100%', padding: '8px 12px', borderRadius: 6, background: 'rgba(15,23,42,0.9)', color: '#fff', border: '1px solid rgba(255,255,255,0.18)' }}>
+              <label style={{ display: 'block', fontSize: 12, color: '#1e293b', fontWeight: 700, marginBottom: 4 }}>Semester</label>
+              <select value={studentSem} onChange={(e) => setStudentSem(e.target.value)} style={{ width: '100%', padding: '8px 12px', borderRadius: 6, background: '#ffffff', color: '#0f172a', border: '1.5px solid #334155' }}>
                 <option value="1st Sem">1st Sem</option>
                 <option value="2nd Sem">2nd Sem</option>
                 <option value="3rd Sem">3rd Sem</option>
@@ -407,10 +440,10 @@ function DepartmentStudentsSection() {
               </select>
             </div>
             <div>
-              <label style={{ display: 'block', fontSize: 12, color: '#cbd5e1', marginBottom: 4 }}>Email Address</label>
-              <input type="email" placeholder="e.g., ameer@dsatm.edu.in" value={email} onChange={(e) => setEmail(e.target.value)} style={{ width: '100%', padding: '8px 12px', borderRadius: 6, background: 'rgba(15,23,42,0.9)', color: '#fff', border: '1px solid rgba(255,255,255,0.18)' }} />
+              <label style={{ display: 'block', fontSize: 12, color: '#1e293b', fontWeight: 700, marginBottom: 4 }}>Email Address</label>
+              <input type="email" placeholder="e.g., ameer@dsatm.edu.in" value={email} onChange={(e) => setEmail(e.target.value)} style={{ width: '100%', padding: '8px 12px', borderRadius: 6, background: '#ffffff', color: '#0f172a', border: '1.5px solid #334155' }} />
             </div>
-            <button type="submit" style={{ padding: '9px 18px', borderRadius: 6, border: 'none', background: '#0284c7', color: '#fff', fontWeight: 800, cursor: 'pointer' }}>Register Candidate</button>
+            <button type="submit" style={{ padding: '9px 18px', borderRadius: 6, border: '1.5px solid #1e293b', background: 'linear-gradient(135deg, #4f46e5 0%, #3b82f6 100%)', color: '#fff', fontWeight: 800, cursor: 'pointer' }}>Register Candidate</button>
           </form>
         )}
       </div>
@@ -418,16 +451,16 @@ function DepartmentStudentsSection() {
       {/* Subjects Roster Card */}
       {subjects.length > 0 && (
         <div className="hod-card" style={{ margin: 0 }}>
-          <h4 style={{ margin: '0 0 12px 0', fontSize: 15, color: '#c084fc' }}>📚 Department Registered Subjects ({subjects.length} Active)</h4>
+          <h4 style={{ margin: '0 0 12px 0', fontSize: 15, color: '#1e293b', fontWeight: 800 }}>📚 Department Registered Subjects ({subjects.length} Active)</h4>
           <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
             {subjects.map((sub, idx) => (
-              <div key={idx} style={{ padding: '8px 14px', borderRadius: 8, background: 'rgba(192,132,252,0.12)', border: '1px solid rgba(192,132,252,0.3)', color: '#e2e8f0', fontSize: 13, display: 'flex', alignItems: 'center', gap: 8 }}>
+              <div key={idx} style={{ padding: '8px 14px', borderRadius: 8, background: '#f1f5f9', border: '1.5px solid #1e293b', color: '#0f172a', fontSize: 13, display: 'flex', alignItems: 'center', gap: 8 }}>
                 <div>
-                  <strong>{sub.code}</strong> — {sub.name} <span style={{ color: '#c084fc', fontSize: 11 }}>({sub.semester})</span>
+                  <strong style={{ color: '#1e40af' }}>{sub.code}</strong> — {sub.name} <span style={{ color: '#475569', fontSize: 11, fontWeight: 700 }}>({sub.semester})</span>
                 </div>
                 <button
                   onClick={() => handleDeleteSubject(sub.id, sub.name)}
-                  style={{ background: 'transparent', border: 'none', color: '#f87171', cursor: 'pointer', fontWeight: 800, fontSize: 13, padding: '2px 4px' }}
+                  style={{ background: 'transparent', border: 'none', color: '#dc2626', cursor: 'pointer', fontWeight: 800, fontSize: 13, padding: '2px 4px' }}
                   title="Remove Subject"
                 >
                   ✖
@@ -443,13 +476,13 @@ function DepartmentStudentsSection() {
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
           <div>
             <h3 className="hod-card-title" style={{ margin: 0 }}>🎓 Department Student Roster ({students.length} Enrolled)</h3>
-            <p style={{ color: '#94a3b8', fontSize: 13, margin: '4px 0 0' }}>Semester-wise student search & registered courses taken breakdown</p>
+            <p style={{ color: '#475569', fontSize: 13, margin: '4px 0 0', fontWeight: 600 }}>Semester-wise student search & registered courses taken breakdown</p>
           </div>
           <div style={{ display: 'flex', gap: 10 }}>
             <select
               value={selectedSem}
               onChange={(e) => setSelectedSem(e.target.value)}
-              style={{ padding: '8px 12px', borderRadius: 8, border: '1px solid rgba(255,255,255,0.12)', background: 'rgba(255,255,255,0.05)', color: '#e5e7eb', fontSize: 13 }}
+              style={{ padding: '8px 12px', borderRadius: 8, border: '1.5px solid #334155', background: '#ffffff', color: '#0f172a', fontSize: 13, fontWeight: 600 }}
             >
               <option value="ALL">All Semesters</option>
               <option value="1st Sem">1st Sem</option>
@@ -462,13 +495,13 @@ function DepartmentStudentsSection() {
               placeholder="🔍 Search name or USN"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              style={{ padding: '8px 12px', borderRadius: 8, border: '1px solid rgba(255,255,255,0.12)', background: 'rgba(255,255,255,0.05)', color: '#e5e7eb', fontSize: 13, width: 220 }}
+              style={{ padding: '8px 12px', borderRadius: 8, border: '1.5px solid #334155', background: '#ffffff', color: '#0f172a', fontSize: 13, width: 220 }}
             />
           </div>
         </div>
 
         {loading ? (
-          <p>Loading student roster...</p>
+          <p style={{ color: '#475569' }}>Loading student roster...</p>
         ) : filtered.length === 0 ? (
           <div className="hod-empty">No student candidates registered yet. Click "+ Register Student Candidate" above to add students.</div>
         ) : (
@@ -481,6 +514,7 @@ function DepartmentStudentsSection() {
                 <th>Semester</th>
                 <th>Email</th>
                 <th>Courses Taken</th>
+                <th>Academic Profile</th>
               </tr>
             </thead>
             <tbody>
@@ -488,17 +522,25 @@ function DepartmentStudentsSection() {
                 const sCourses = s.registeredCourses || []
                 return (
                   <tr key={s.id || idx}>
-                    <td style={{ color: '#94a3b8' }}>{idx + 1}</td>
-                    <td style={{ fontWeight: 700, color: '#c084fc' }}>{s.registration_no || 'N/A'}</td>
-                    <td style={{ fontWeight: 600 }}>{s.full_name}</td>
-                    <td><span style={{ padding: '3px 8px', borderRadius: 4, background: 'rgba(59,130,246,0.15)', color: '#93c5fd', fontSize: 12 }}>{s.semester || '2nd Sem'}</span></td>
-                    <td style={{ color: '#94a3b8', fontSize: 13 }}>{s.email}</td>
+                    <td style={{ color: '#475569', fontWeight: 700 }}>{idx + 1}</td>
+                    <td style={{ fontWeight: 800, color: '#0f172a' }}>{s.registration_no || 'N/A'}</td>
+                    <td style={{ fontWeight: 700, color: '#0f172a' }}>{s.full_name}</td>
+                    <td><span style={{ padding: '4px 10px', borderRadius: 6, background: '#eff6ff', border: '1.5px solid #1e40af', color: '#1e40af', fontSize: 12, fontWeight: 700 }}>{s.semester || '2nd Sem'}</span></td>
+                    <td style={{ color: '#334155', fontSize: 13, fontWeight: 500 }}>{s.email}</td>
                     <td>
                       <button
                         onClick={() => setActiveCourseModalStudent(s)}
-                        style={{ padding: '4px 10px', borderRadius: 6, border: '1px solid rgba(56,189,248,0.4)', background: 'rgba(56,189,248,0.15)', color: '#38bdf8', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}
+                        style={{ padding: '5px 12px', borderRadius: 6, border: '1.5px solid #1e40af', background: '#eff6ff', color: '#1e40af', fontSize: 12, fontWeight: 800, cursor: 'pointer' }}
                       >
                         📖 View Courses ({sCourses.length})
+                      </button>
+                    </td>
+                    <td>
+                      <button
+                        onClick={() => setActiveProfileStudentId(s.id)}
+                        style={{ padding: '5px 12px', borderRadius: 6, border: '1.5px solid #a855f7', background: 'rgba(168,85,247,0.1)', color: '#a855f7', fontSize: 12, fontWeight: 800, cursor: 'pointer' }}
+                      >
+                        🎓 View Profile
                       </button>
                     </td>
                   </tr>
@@ -557,6 +599,14 @@ function DepartmentStudentsSection() {
           </div>
         )
       })()}
+
+      {/* Student Academic Profile Modal */}
+      {activeProfileStudentId && (
+        <StudentAcademicProfileModal
+          studentId={activeProfileStudentId}
+          onClose={() => setActiveProfileStudentId(null)}
+        />
+      )}
     </div>
   )
 }
@@ -1869,31 +1919,31 @@ function HodInternalAnalyticsSection() {
   const criticalCount = sortedData.filter((s) => s.pct < 40).length
 
   return (
-    <div className="hod-section-card glass-card" style={{ padding: 24 }}>
+    <div className="hod-section-card glass-card" style={{ padding: 24, border: '1.5px solid #1e293b', background: '#ffffff' }}>
       {/* Header */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20, flexWrap: 'wrap', gap: 12 }}>
         <div>
-          <h2 style={{ margin: 0, fontSize: 22, color: '#f8fafc', display: 'flex', alignItems: 'center', gap: 8 }}>
+          <h2 style={{ margin: 0, fontSize: 22, color: '#0f172a', display: 'flex', alignItems: 'center', gap: 8, fontWeight: 800 }}>
             📉 Department Internal Assessment Analytics & Performance Oversight
           </h2>
-          <p style={{ color: '#94a3b8', fontSize: 13, margin: '4px 0 0' }}>
+          <p style={{ color: '#475569', fontSize: 13, margin: '4px 0 0', fontWeight: 600 }}>
             Filter student performance per subject and specific internal exam round. Monitor real-time score charts and send direct guidance notices.
           </p>
         </div>
 
-        <div style={{ padding: '6px 14px', borderRadius: 20, background: 'rgba(16,185,129,0.15)', border: '1px solid rgba(16,185,129,0.4)', color: '#6ee7b7', fontSize: 12, fontWeight: 700, display: 'flex', alignItems: 'center', gap: 6 }}>
+        <div style={{ padding: '6px 14px', borderRadius: 20, background: '#ecfdf5', border: '1.5px solid #059669', color: '#047857', fontSize: 12, fontWeight: 800, display: 'flex', alignItems: 'center', gap: 6 }}>
           🟢 Marks Published & Announced by Subject Faculty
         </div>
       </div>
 
       {/* Control Filters */}
-      <div style={{ display: 'flex', gap: 16, alignItems: 'center', marginBottom: 24, flexWrap: 'wrap', background: 'rgba(15,23,42,0.6)', padding: 16, borderRadius: 12, border: '1px solid rgba(255,255,255,0.1)' }}>
+      <div style={{ display: 'flex', gap: 16, alignItems: 'center', marginBottom: 24, flexWrap: 'wrap', background: '#f8fafc', padding: 16, borderRadius: 12, border: '1.5px solid #1e293b' }}>
         <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-          <label style={{ fontSize: 13, color: '#c084fc', fontWeight: 700 }}>Select Subject:</label>
+          <label style={{ fontSize: 13, color: '#0f172a', fontWeight: 800 }}>Select Subject:</label>
           <select
             value={selectedSubject}
             onChange={(e) => setSelectedSubject(e.target.value)}
-            style={{ padding: '9px 14px', borderRadius: 8, background: 'rgba(15,23,42,0.9)', border: '1px solid rgba(192,132,252,0.4)', color: '#fff', fontSize: 13, fontWeight: 600, minWidth: 220 }}
+            style={{ padding: '9px 14px', borderRadius: 8, background: '#ffffff', border: '1.5px solid #334155', color: '#0f172a', fontSize: 13, fontWeight: 700, minWidth: 220 }}
           >
             {subjects.map((s) => (
               <option key={s.id} value={s.id}>{s.name} ({s.code || 'SUB'})</option>
@@ -1902,11 +1952,11 @@ function HodInternalAnalyticsSection() {
         </div>
 
         <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-          <label style={{ fontSize: 13, color: '#38bdf8', fontWeight: 700 }}>Internal Exam Round:</label>
+          <label style={{ fontSize: 13, color: '#0f172a', fontWeight: 800 }}>Internal Exam Round:</label>
           <select
             value={selectedInternal}
             onChange={(e) => setSelectedInternal(e.target.value)}
-            style={{ padding: '9px 14px', borderRadius: 8, background: 'rgba(15,23,42,0.9)', border: '1px solid rgba(56,189,248,0.4)', color: '#fff', fontSize: 13, fontWeight: 700 }}
+            style={{ padding: '9px 14px', borderRadius: 8, background: '#ffffff', border: '1.5px solid #334155', color: '#0f172a', fontSize: 13, fontWeight: 700 }}
           >
             <option value="internal1">📝 Internal 1 (50 Marks)</option>
             <option value="internal2">📝 Internal 2 (50 Marks)</option>
@@ -1914,11 +1964,11 @@ function HodInternalAnalyticsSection() {
         </div>
 
         <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginLeft: 'auto' }}>
-          <label style={{ fontSize: 13, color: '#a7f3d0', fontWeight: 700 }}>Sort Roster:</label>
+          <label style={{ fontSize: 13, color: '#0f172a', fontWeight: 800 }}>Sort Roster:</label>
           <select
             value={sortBy}
             onChange={(e) => setSortBy(e.target.value)}
-            style={{ padding: '9px 14px', borderRadius: 8, background: 'rgba(15,23,42,0.9)', border: '1px solid rgba(255,255,255,0.2)', color: '#fff', fontSize: 13 }}
+            style={{ padding: '9px 14px', borderRadius: 8, background: '#ffffff', border: '1.5px solid #334155', color: '#0f172a', fontSize: 13, fontWeight: 700 }}
           >
             <option value="desc">🔥 Highest Marks First</option>
             <option value="asc">⚠️ Lowest Marks First (Needs Guidance)</option>
@@ -1927,118 +1977,118 @@ function HodInternalAnalyticsSection() {
         </div>
       </div>
 
-      {msg && <p style={{ padding: '10px 14px', borderRadius: 8, background: msg.includes('❌') ? 'rgba(239,68,68,0.2)' : 'rgba(16,185,129,0.2)', color: msg.includes('❌') ? '#fca5a5' : '#6ee7b7', fontSize: 13, fontWeight: 700, marginBottom: 20 }}>{msg}</p>}
+      {msg && <p style={{ padding: '10px 14px', borderRadius: 8, background: msg.includes('❌') ? '#fef2f2' : '#ecfdf5', border: msg.includes('❌') ? '1.5px solid #dc2626' : '1.5px solid #059669', color: msg.includes('❌') ? '#991b1b' : '#047857', fontSize: 13, fontWeight: 800, marginBottom: 20 }}>{msg}</p>}
 
       {/* Real-time Summary Cards & Dynamic SVG Charts */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 16, marginBottom: 24 }}>
-        <div style={{ background: 'rgba(124,58,237,0.15)', border: '1px solid rgba(124,58,237,0.3)', borderRadius: 12, padding: 16 }}>
-          <div style={{ fontSize: 12, color: '#c4b5fd', fontWeight: 700 }}>STUDENTS ENROLLED</div>
-          <div style={{ fontSize: 26, fontWeight: 900, color: '#fff', marginTop: 4 }}>{totalStudents}</div>
-          <div style={{ fontSize: 11, color: '#a78bfa', marginTop: 2 }}>{currentSubjectObj?.name}</div>
+        <div style={{ background: '#f5f3ff', border: '1.5px solid #1e293b', borderRadius: 12, padding: 16 }}>
+          <div style={{ fontSize: 12, color: '#5b21b6', fontWeight: 800 }}>STUDENTS ENROLLED</div>
+          <div style={{ fontSize: 26, fontWeight: 900, color: '#0f172a', marginTop: 4 }}>{totalStudents}</div>
+          <div style={{ fontSize: 11, color: '#6d28d9', marginTop: 2, fontWeight: 600 }}>{currentSubjectObj?.name}</div>
         </div>
 
-        <div style={{ background: 'rgba(56,189,248,0.15)', border: '1px solid rgba(56,189,248,0.3)', borderRadius: 12, padding: 16 }}>
-          <div style={{ fontSize: 12, color: '#7dd3fc', fontWeight: 700 }}>AVERAGE SCORE</div>
-          <div style={{ fontSize: 26, fontWeight: 900, color: '#38bdf8', marginTop: 4 }}>{avgScore} / {maxMark}</div>
-          <div style={{ fontSize: 11, color: '#bae6fd', marginTop: 2 }}>Mean Subject Performance</div>
+        <div style={{ background: '#eff6ff', border: '1.5px solid #1e293b', borderRadius: 12, padding: 16 }}>
+          <div style={{ fontSize: 12, color: '#1e40af', fontWeight: 800 }}>AVERAGE SCORE</div>
+          <div style={{ fontSize: 26, fontWeight: 900, color: '#1d4ed8', marginTop: 4 }}>{avgScore} / {maxMark}</div>
+          <div style={{ fontSize: 11, color: '#2563eb', marginTop: 2, fontWeight: 600 }}>Mean Subject Performance</div>
         </div>
 
-        <div style={{ background: 'rgba(16,185,129,0.15)', border: '1px solid rgba(16,185,129,0.3)', borderRadius: 12, padding: 16 }}>
-          <div style={{ fontSize: 12, color: '#6ee7b7', fontWeight: 700 }}>PASS RATE (≥40%)</div>
-          <div style={{ fontSize: 26, fontWeight: 900, color: '#34d399', marginTop: 4 }}>{passPercentage}%</div>
-          <div style={{ fontSize: 11, color: '#a7f3d0', marginTop: 2 }}>{passCount} of {totalStudents} Passed</div>
+        <div style={{ background: '#ecfdf5', border: '1.5px solid #1e293b', borderRadius: 12, padding: 16 }}>
+          <div style={{ fontSize: 12, color: '#065f46', fontWeight: 800 }}>PASS RATE (≥40%)</div>
+          <div style={{ fontSize: 26, fontWeight: 900, color: '#047857', marginTop: 4 }}>{passPercentage}%</div>
+          <div style={{ fontSize: 11, color: '#059669', marginTop: 2, fontWeight: 600 }}>{passCount} of {totalStudents} Passed</div>
         </div>
 
-        <div style={{ background: 'rgba(245,158,11,0.15)', border: '1px solid rgba(245,158,11,0.3)', borderRadius: 12, padding: 16 }}>
-          <div style={{ fontSize: 12, color: '#fde68a', fontWeight: 700 }}>HIGHEST / LOWEST</div>
-          <div style={{ fontSize: 26, fontWeight: 900, color: '#fbbf24', marginTop: 4 }}>{maxScore} / {minScore}</div>
-          <div style={{ fontSize: 11, color: '#fef3c7', marginTop: 2 }}>Score Range</div>
+        <div style={{ background: '#fffbeb', border: '1.5px solid #1e293b', borderRadius: 12, padding: 16 }}>
+          <div style={{ fontSize: 12, color: '#92400e', fontWeight: 800 }}>HIGHEST / LOWEST</div>
+          <div style={{ fontSize: 26, fontWeight: 900, color: '#b45309', marginTop: 4 }}>{maxScore} / {minScore}</div>
+          <div style={{ fontSize: 11, color: '#d97706', marginTop: 2, fontWeight: 600 }}>Score Range</div>
         </div>
       </div>
 
       {/* Real-time Charts Section */}
       <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: 20, marginBottom: 24 }}>
         {/* Score Distribution Bar Chart */}
-        <div style={{ background: 'rgba(15,23,42,0.8)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 14, padding: 20 }}>
-          <h4 style={{ margin: '0 0 16px', fontSize: 15, color: '#f8fafc', display: 'flex', alignItems: 'center', gap: 8 }}>
+        <div style={{ background: '#ffffff', border: '1.5px solid #1e293b', borderRadius: 14, padding: 20 }}>
+          <h4 style={{ margin: '0 0 16px', fontSize: 15, color: '#0f172a', display: 'flex', alignItems: 'center', gap: 8, fontWeight: 800 }}>
             📊 Real-Time Score Bracket Distribution — {selectedInternal === 'internal1' ? 'Internal 1' : 'Internal 2'}
           </h4>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
             <div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, color: '#a7f3d0', marginBottom: 4, fontWeight: 700 }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, color: '#047857', marginBottom: 4, fontWeight: 800 }}>
                 <span>🌟 Excellence (80-100% | 40-50 Marks)</span>
                 <span>{excCount} Students ({totalStudents > 0 ? Math.round((excCount / totalStudents) * 100) : 0}%)</span>
               </div>
-              <div style={{ height: 12, borderRadius: 6, background: 'rgba(255,255,255,0.1)', overflow: 'hidden' }}>
-                <div style={{ width: `${totalStudents > 0 ? (excCount / totalStudents) * 100 : 0}%`, height: '100%', background: 'linear-gradient(90deg, #10b981, #34d399)', transition: 'width 0.4s ease' }} />
+              <div style={{ height: 12, borderRadius: 6, background: '#e2e8f0', border: '1px solid #1e293b', overflow: 'hidden' }}>
+                <div style={{ width: `${totalStudents > 0 ? (excCount / totalStudents) * 100 : 0}%`, height: '100%', background: 'linear-gradient(90deg, #059669, #10b981)', transition: 'width 0.4s ease' }} />
               </div>
             </div>
 
             <div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, color: '#7dd3fc', marginBottom: 4, fontWeight: 700 }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, color: '#1e40af', marginBottom: 4, fontWeight: 800 }}>
                 <span>👍 Good Performance (60-79% | 30-39 Marks)</span>
                 <span>{goodCount} Students ({totalStudents > 0 ? Math.round((goodCount / totalStudents) * 100) : 0}%)</span>
               </div>
-              <div style={{ height: 12, borderRadius: 6, background: 'rgba(255,255,255,0.1)', overflow: 'hidden' }}>
-                <div style={{ width: `${totalStudents > 0 ? (goodCount / totalStudents) * 100 : 0}%`, height: '100%', background: 'linear-gradient(90deg, #0284c7, #38bdf8)', transition: 'width 0.4s ease' }} />
+              <div style={{ height: 12, borderRadius: 6, background: '#e2e8f0', border: '1px solid #1e293b', overflow: 'hidden' }}>
+                <div style={{ width: `${totalStudents > 0 ? (goodCount / totalStudents) * 100 : 0}%`, height: '100%', background: 'linear-gradient(90deg, #1d4ed8, #3b82f6)', transition: 'width 0.4s ease' }} />
               </div>
             </div>
 
             <div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, color: '#fde68a', marginBottom: 4, fontWeight: 700 }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, color: '#b45309', marginBottom: 4, fontWeight: 800 }}>
                 <span>🟢 Average / Pass (40-59% | 20-29 Marks)</span>
                 <span>{avgCount} Students ({totalStudents > 0 ? Math.round((avgCount / totalStudents) * 100) : 0}%)</span>
               </div>
-              <div style={{ height: 12, borderRadius: 6, background: 'rgba(255,255,255,0.1)', overflow: 'hidden' }}>
-                <div style={{ width: `${totalStudents > 0 ? (avgCount / totalStudents) * 100 : 0}%`, height: '100%', background: 'linear-gradient(90deg, #d97706, #fbbf24)', transition: 'width 0.4s ease' }} />
+              <div style={{ height: 12, borderRadius: 6, background: '#e2e8f0', border: '1px solid #1e293b', overflow: 'hidden' }}>
+                <div style={{ width: `${totalStudents > 0 ? (avgCount / totalStudents) * 100 : 0}%`, height: '100%', background: 'linear-gradient(90deg, #d97706, #f59e0b)', transition: 'width 0.4s ease' }} />
               </div>
             </div>
 
             <div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, color: '#fca5a5', marginBottom: 4, fontWeight: 700 }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, color: '#b91c1c', marginBottom: 4, fontWeight: 800 }}>
                 <span>⚠️ Critical Risk / Needs Guidance (&lt;40% | 0-19 Marks)</span>
                 <span>{criticalCount} Students ({totalStudents > 0 ? Math.round((criticalCount / totalStudents) * 100) : 0}%)</span>
               </div>
-              <div style={{ height: 12, borderRadius: 6, background: 'rgba(255,255,255,0.1)', overflow: 'hidden' }}>
-                <div style={{ width: `${totalStudents > 0 ? (criticalCount / totalStudents) * 100 : 0}%`, height: '100%', background: 'linear-gradient(90deg, #dc2626, #f87171)', transition: 'width 0.4s ease' }} />
+              <div style={{ height: 12, borderRadius: 6, background: '#e2e8f0', border: '1px solid #1e293b', overflow: 'hidden' }}>
+                <div style={{ width: `${totalStudents > 0 ? (criticalCount / totalStudents) * 100 : 0}%`, height: '100%', background: 'linear-gradient(90deg, #dc2626, #ef4444)', transition: 'width 0.4s ease' }} />
               </div>
             </div>
           </div>
         </div>
 
         {/* Pass / Guidance Donut Gauge */}
-        <div style={{ background: 'rgba(15,23,42,0.8)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 14, padding: 20, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
-          <h4 style={{ margin: '0 0 12px', fontSize: 14, color: '#f8fafc', textAlign: 'center' }}>🎯 Performance Overview</h4>
+        <div style={{ background: '#ffffff', border: '1.5px solid #1e293b', borderRadius: 14, padding: 20, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
+          <h4 style={{ margin: '0 0 12px', fontSize: 14, color: '#0f172a', textAlign: 'center', fontWeight: 800 }}>🎯 Performance Overview</h4>
 
           <div style={{ position: 'relative', width: 120, height: 120, margin: '10px 0' }}>
             <svg width="120" height="120" viewBox="0 0 36 36">
-              <path d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="rgba(239,68,68,0.3)" strokeWidth="3.8" />
+              <path d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="#fca5a5" strokeWidth="3.8" />
               <path d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="#10b981" strokeWidth="3.8" strokeDasharray={`${passPercentage}, 100`} />
             </svg>
             <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
-              <span style={{ fontSize: 20, fontWeight: 900, color: '#fff' }}>{passPercentage}%</span>
-              <span style={{ fontSize: 10, color: '#6ee7b7' }}>Passing</span>
+              <span style={{ fontSize: 20, fontWeight: 900, color: '#0f172a' }}>{passPercentage}%</span>
+              <span style={{ fontSize: 10, color: '#047857', fontWeight: 700 }}>Passing</span>
             </div>
           </div>
 
           <div style={{ display: 'flex', gap: 12, marginTop: 8, fontSize: 11 }}>
-            <span style={{ color: '#6ee7b7', fontWeight: 700 }}>🟢 Passed: {passCount}</span>
-            <span style={{ color: '#f87171', fontWeight: 700 }}>🔴 Action: {failCount}</span>
+            <span style={{ color: '#047857', fontWeight: 800 }}>🟢 Passed: {passCount}</span>
+            <span style={{ color: '#dc2626', fontWeight: 800 }}>🔴 Action: {failCount}</span>
           </div>
         </div>
       </div>
 
       {/* Student Marks Table */}
-      <h3 style={{ margin: '0 0 12px', fontSize: 16, color: '#f8fafc' }}>
+      <h3 style={{ margin: '0 0 12px', fontSize: 16, color: '#0f172a', fontWeight: 800 }}>
         🎓 Student Roster & Marks Sheet ({selectedInternal === 'internal1' ? 'Internal 1' : 'Internal 2'})
       </h3>
 
       {loading ? (
-        <p style={{ color: '#94a3b8' }}>Loading student marks...</p>
+        <p style={{ color: '#475569' }}>Loading student marks...</p>
       ) : (
         <table className="hod-table" style={{ width: '100%', fontSize: 13 }}>
           <thead>
-            <tr style={{ background: 'rgba(124,58,237,0.2)', color: '#c084fc' }}>
+            <tr style={{ background: '#f1f5f9', color: '#0f172a' }}>
               <th>USN / REG NO</th>
               <th>STUDENT NAME</th>
               <th>EMAIL ADDRESS</th>
@@ -2051,22 +2101,22 @@ function HodInternalAnalyticsSection() {
           <tbody>
             {sortedData.map((st) => (
               <tr key={st.studentId}>
-                <td style={{ fontWeight: 700, color: '#38bdf8' }}>{st.registrationNo}</td>
-                <td style={{ fontWeight: 600, color: '#f8fafc' }}>{st.fullName}</td>
-                <td style={{ color: '#cbd5e1', fontSize: 12 }}>{st.email}</td>
-                <td style={{ fontWeight: 800, fontSize: 15, color: '#fff' }}>
+                <td style={{ fontWeight: 800, color: '#0f172a' }}>{st.registrationNo}</td>
+                <td style={{ fontWeight: 700, color: '#0f172a' }}>{st.fullName}</td>
+                <td style={{ color: '#334155', fontSize: 12, fontWeight: 500 }}>{st.email}</td>
+                <td style={{ fontWeight: 900, fontSize: 15, color: '#0f172a' }}>
                   {st.currentMark} / {st.maxMark}
                 </td>
-                <td style={{ fontWeight: 700, color: st.gradeColor }}>
+                <td style={{ fontWeight: 800, color: st.gradeColor }}>
                   {st.pct}% — {st.grade}
                 </td>
                 <td>
                   {st.isPass ? (
-                    <span style={{ padding: '3px 8px', borderRadius: 10, background: 'rgba(16,185,129,0.2)', color: '#34d399', fontSize: 11, fontWeight: 700 }}>
+                    <span style={{ padding: '4px 10px', borderRadius: 10, background: '#ecfdf5', border: '1px solid #059669', color: '#047857', fontSize: 11, fontWeight: 800 }}>
                       ✓ Eligible / Pass
                     </span>
                   ) : (
-                    <span style={{ padding: '3px 8px', borderRadius: 10, background: 'rgba(239,68,68,0.2)', color: '#f87171', fontSize: 11, fontWeight: 700 }}>
+                    <span style={{ padding: '4px 10px', borderRadius: 10, background: '#fef2f2', border: '1px solid #dc2626', color: '#b91c1c', fontSize: 11, fontWeight: 800 }}>
                       ⚠️ Needs Guidance
                     </span>
                   )}
@@ -2167,6 +2217,7 @@ function HodInternalApprovalSection() {
   const [messagingStudentId, setMessagingStudentId] = useState(null)
   const [noticeText, setNoticeText] = useState('')
   const [sendingNotice, setSendingNotice] = useState(false)
+  const [showApprovalHistory, setShowApprovalHistory] = useState(false)
 
   useEffect(() => {
     api.get('/hod/subjects').then((res) => {
@@ -2294,23 +2345,32 @@ function HodInternalApprovalSection() {
     <div className="hod-section-card glass-card" style={{ padding: 24 }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16, flexWrap: 'wrap', gap: 12 }}>
         <div>
-          <h2 style={{ margin: 0, fontSize: 20, color: '#f8fafc' }}>📋 Department 50-Mark Internal Assessment Approval & Oversight</h2>
-          <p style={{ color: '#94a3b8', fontSize: 13, margin: '4px 0 0' }}>
+          <h2 style={{ margin: 0, fontSize: 20, color: '#0f172a', fontWeight: 900 }}>📋 Department 50-Mark Internal Assessment Approval & Oversight</h2>
+          <p style={{ color: '#475569', fontSize: 13, margin: '4px 0 0', fontWeight: 500 }}>
             Review, sort, and edit faculty-submitted 50-mark internal sheets (Internal 1, Internal 2, Internal 3 & Assignment) before approving for Examination Department.
           </p>
         </div>
 
         <div style={{ display: 'flex', gap: 10 }}>
+          {selectedSubject && (
+            <button
+              onClick={() => setShowApprovalHistory(true)}
+              style={{ padding: '9px 16px', borderRadius: 8, border: '2px solid #7c3aed', background: 'rgba(124,58,237,0.1)', color: '#7c3aed', fontWeight: 800, fontSize: 13, cursor: 'pointer' }}
+            >
+              📜 Approval History
+            </button>
+          )}
+
           <button
             onClick={handleSaveEdits}
             disabled={savingEdits || !selectedSubject}
-            style={{ padding: '9px 16px', borderRadius: 8, border: '1px solid rgba(56,189,248,0.4)', background: 'rgba(56,189,248,0.15)', color: '#38bdf8', fontWeight: 700, fontSize: 13, cursor: 'pointer' }}
+            style={{ padding: '9px 16px', borderRadius: 8, border: '2px solid #0f172a', background: '#eff6ff', color: '#1d4ed8', fontWeight: 800, fontSize: 13, cursor: 'pointer' }}
           >
             {savingEdits ? '⏳ Saving...' : '💾 Save Marks Edits'}
           </button>
 
           {selectedSubject && (
-            <button className="fd-btn" onClick={handleApprove} style={{ padding: '9px 16px', borderRadius: 8, border: 'none', background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)', color: '#fff', fontWeight: 800, fontSize: 13, cursor: 'pointer' }}>
+            <button className="fd-btn" onClick={handleApprove} style={{ padding: '9px 16px', borderRadius: 8, border: '2px solid #0f172a', background: '#10b981', color: '#fff', fontWeight: 800, fontSize: 13, cursor: 'pointer' }}>
               ✓ Confirm & Approve Internal Sheet for Exam Dept
             </button>
           )}
@@ -2319,11 +2379,11 @@ function HodInternalApprovalSection() {
       
       <div style={{ display: 'flex', gap: 20, alignItems: 'center', marginBottom: 20, flexWrap: 'wrap' }}>
         <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
-          <label style={{ fontSize: 13, color: '#c084fc', fontWeight: 700 }}>Select Subject:</label>
+          <label style={{ fontSize: 13, color: '#1d4ed8', fontWeight: 800 }}>Select Subject:</label>
           <select
             value={selectedSubject}
             onChange={(e) => handleSelectSubject(e.target.value)}
-            style={{ padding: '8px 14px', borderRadius: 8, background: 'rgba(15,23,42,0.9)', border: '1px solid rgba(255,255,255,0.2)', color: '#fff', fontSize: 13 }}
+            style={{ padding: '8px 14px', borderRadius: 8, background: '#ffffff', border: '2px solid #0f172a', color: '#0f172a', fontSize: 13, fontWeight: 700 }}
           >
             {subjects.map((s) => (
               <option key={s.id} value={s.id}>{s.name} ({s.code || 'SUB'})</option>
@@ -2333,11 +2393,11 @@ function HodInternalApprovalSection() {
         </div>
 
         <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
-          <label style={{ fontSize: 13, color: '#38bdf8', fontWeight: 700 }}>Sort Scores:</label>
+          <label style={{ fontSize: 13, color: '#1d4ed8', fontWeight: 800 }}>Sort Scores:</label>
           <select
             value={sortBy}
             onChange={(e) => setSortBy(e.target.value)}
-            style={{ padding: '8px 14px', borderRadius: 8, background: 'rgba(15,23,42,0.9)', border: '1px solid rgba(255,255,255,0.2)', color: '#fff', fontSize: 13 }}
+            style={{ padding: '8px 14px', borderRadius: 8, background: '#ffffff', border: '2px solid #0f172a', color: '#0f172a', fontSize: 13, fontWeight: 700 }}
           >
             <option value="desc">🔥 Highest Marks First</option>
             <option value="asc">⚠️ Lowest Marks First</option>
@@ -2346,11 +2406,11 @@ function HodInternalApprovalSection() {
         </div>
       </div>
 
-      {msg && <p style={{ padding: '10px 14px', borderRadius: 6, background: msg.includes('❌') ? 'rgba(239,68,68,0.2)' : 'rgba(16,185,129,0.2)', color: msg.includes('❌') ? '#fca5a5' : '#6ee7b7', fontSize: 13, fontWeight: 700, marginBottom: 20 }}>{msg}</p>}
+      {msg && <p style={{ padding: '10px 14px', borderRadius: 6, background: msg.includes('❌') ? '#fef2f2' : '#ecfdf5', color: msg.includes('❌') ? '#dc2626' : '#059669', fontSize: 13, fontWeight: 700, marginBottom: 20, border: msg.includes('❌') ? '1.5px solid #dc2626' : '1.5px solid #059669' }}>{msg}</p>}
 
       <table className="hod-table" style={{ width: '100%', fontSize: 13 }}>
         <thead>
-          <tr style={{ background: 'rgba(124,58,237,0.2)', color: '#c084fc' }}>
+          <tr style={{ background: '#eff6ff', color: '#0f172a', borderBottom: '2px solid #0f172a' }}>
             <th>USN / REG NO</th>
             <th>STUDENT NAME</th>
             <th>INT-1 (15M)</th>
@@ -2365,8 +2425,8 @@ function HodInternalApprovalSection() {
         <tbody>
           {sortedRoster.map((st) => (
             <tr key={st.studentId}>
-              <td style={{ fontWeight: 700, color: '#38bdf8' }}>{st.registrationNo}</td>
-              <td style={{ fontWeight: 600 }}>{st.fullName}</td>
+              <td style={{ fontWeight: 800, color: '#1d4ed8' }}>{st.registrationNo}</td>
+              <td style={{ fontWeight: 700, color: '#0f172a' }}>{st.fullName}</td>
               <td>
                 <input
                   type="number"
@@ -2374,7 +2434,7 @@ function HodInternalApprovalSection() {
                   min={0}
                   value={st.internal1}
                   onChange={(e) => handleMarkChange(st.studentId, 'internal1', e.target.value)}
-                  style={{ width: 60, padding: '4px 6px', borderRadius: 6, background: 'rgba(0,0,0,0.4)', border: '1px solid rgba(255,255,255,0.2)', color: '#fff', textAlign: 'center' }}
+                  style={{ width: 60, padding: '4px 6px', borderRadius: 6, background: '#ffffff', border: '1.5px solid #0f172a', color: '#0f172a', fontWeight: 700, textAlign: 'center' }}
                 />
               </td>
               <td>
@@ -2384,7 +2444,7 @@ function HodInternalApprovalSection() {
                   min={0}
                   value={st.internal2}
                   onChange={(e) => handleMarkChange(st.studentId, 'internal2', e.target.value)}
-                  style={{ width: 60, padding: '4px 6px', borderRadius: 6, background: 'rgba(0,0,0,0.4)', border: '1px solid rgba(255,255,255,0.2)', color: '#fff', textAlign: 'center' }}
+                  style={{ width: 60, padding: '4px 6px', borderRadius: 6, background: '#ffffff', border: '1.5px solid #0f172a', color: '#0f172a', fontWeight: 700, textAlign: 'center' }}
                 />
               </td>
               <td>
@@ -2394,7 +2454,7 @@ function HodInternalApprovalSection() {
                   min={0}
                   value={st.internal3}
                   onChange={(e) => handleMarkChange(st.studentId, 'internal3', e.target.value)}
-                  style={{ width: 60, padding: '4px 6px', borderRadius: 6, background: 'rgba(0,0,0,0.4)', border: '1px solid rgba(255,255,255,0.2)', color: '#fff', textAlign: 'center' }}
+                  style={{ width: 60, padding: '4px 6px', borderRadius: 6, background: '#ffffff', border: '1.5px solid #0f172a', color: '#0f172a', fontWeight: 700, textAlign: 'center' }}
                 />
               </td>
               <td>
@@ -2404,17 +2464,17 @@ function HodInternalApprovalSection() {
                   min={0}
                   value={st.assignment}
                   onChange={(e) => handleMarkChange(st.studentId, 'assignment', e.target.value)}
-                  style={{ width: 60, padding: '4px 6px', borderRadius: 6, background: 'rgba(0,0,0,0.4)', border: '1px solid rgba(255,255,255,0.2)', color: '#fff', textAlign: 'center' }}
+                  style={{ width: 60, padding: '4px 6px', borderRadius: 6, background: '#ffffff', border: '1.5px solid #0f172a', color: '#0f172a', fontWeight: 700, textAlign: 'center' }}
                 />
               </td>
-              <td style={{ fontWeight: 900, color: st.isEligible ? '#34d399' : '#f87171' }}>{st.totalInternal} / 50</td>
+              <td style={{ fontWeight: 900, color: st.isEligible ? '#059669' : '#dc2626' }}>{st.totalInternal} / 50</td>
               <td>
                 {st.isEligible ? (
-                  <span style={{ padding: '4px 10px', borderRadius: 12, background: 'rgba(16,185,129,0.2)', color: '#34d399', fontSize: 12, fontWeight: 700 }}>
+                  <span style={{ padding: '4px 10px', borderRadius: 12, background: '#dcfce7', color: '#15803d', fontSize: 12, fontWeight: 800, border: '1px solid #86efac' }}>
                     ✓ Eligible (≥25)
                   </span>
                 ) : (
-                  <span style={{ padding: '4px 10px', borderRadius: 12, background: 'rgba(239,68,68,0.2)', color: '#f87171', fontSize: 12, fontWeight: 700 }}>
+                  <span style={{ padding: '4px 10px', borderRadius: 12, background: '#fee2e2', color: '#b91c1c', fontSize: 12, fontWeight: 800, border: '1px solid #fca5a5' }}>
                     ⚠️ Detained (&lt;25)
                   </span>
                 )}
@@ -2427,18 +2487,18 @@ function HodInternalApprovalSection() {
                       placeholder="Type guidance message..."
                       value={noticeText}
                       onChange={(e) => setNoticeText(e.target.value)}
-                      style={{ padding: '4px 8px', borderRadius: 6, border: '1px solid rgba(255,255,255,0.2)', background: 'rgba(0,0,0,0.6)', color: '#fff', fontSize: 12, width: 160 }}
+                      style={{ padding: '4px 8px', borderRadius: 6, border: '1.5px solid #0f172a', background: '#ffffff', color: '#0f172a', fontSize: 12, width: 160 }}
                     />
                     <button
                       onClick={() => handleSendNotice(st.studentId)}
                       disabled={sendingNotice}
-                      style={{ padding: '4px 10px', borderRadius: 6, border: 'none', background: '#10b981', color: '#fff', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}
+                      style={{ padding: '4px 10px', borderRadius: 6, border: 'none', background: '#10b981', color: '#fff', fontSize: 12, fontWeight: 800, cursor: 'pointer' }}
                     >
                       {sendingNotice ? '...' : 'Send'}
                     </button>
                     <button
                       onClick={() => setMessagingStudentId(null)}
-                      style={{ padding: '4px 8px', borderRadius: 6, border: '1px solid rgba(255,255,255,0.2)', background: 'transparent', color: '#cbd5e1', fontSize: 12, cursor: 'pointer' }}
+                      style={{ padding: '4px 8px', borderRadius: 6, border: '1px solid #cbd5e1', background: '#ffffff', color: '#475569', fontSize: 12, cursor: 'pointer' }}
                     >
                       ✖
                     </button>
@@ -2446,7 +2506,7 @@ function HodInternalApprovalSection() {
                 ) : (
                   <button
                     onClick={() => { setMessagingStudentId(st.studentId); setNoticeText('') }}
-                    style={{ padding: '4px 10px', borderRadius: 6, border: '1px solid rgba(124,58,237,0.4)', background: 'rgba(124,58,237,0.15)', color: '#c4b5fd', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}
+                    style={{ padding: '4px 10px', borderRadius: 6, border: '1.5px solid #0f172a', background: '#eff6ff', color: '#1d4ed8', fontSize: 12, fontWeight: 800, cursor: 'pointer' }}
                   >
                     💬 Send Notice (+ Email)
                   </button>
@@ -2459,6 +2519,13 @@ function HodInternalApprovalSection() {
           )}
         </tbody>
       </table>
+
+      {showApprovalHistory && (
+        <ApprovalHistoryModal
+          subjectId={selectedSubject}
+          onClose={() => setShowApprovalHistory(false)}
+        />
+      )}
     </div>
   )
 }
@@ -2501,45 +2568,732 @@ function HodSettingsSection() {
   return (
     <div className="hod-card" style={{ maxWidth: 650 }}>
       <h3 className="hod-card-title">⚙️ Head of Department — Profile & Settings</h3>
-      <p style={{ color: '#94a3b8', fontSize: 13, marginBottom: 20 }}>
+      <p style={{ color: '#475569', fontSize: 13, marginBottom: 20 }}>
         Manage your administrative HOD profile credentials and upload your official profile avatar photo.
       </p>
 
       <div style={{ display: 'flex', gap: 20, alignItems: 'center', marginBottom: 24 }}>
-        <div style={{ width: 80, height: 80, borderRadius: '50%', background: 'linear-gradient(135deg, #7c3aed, #db2777)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 32, fontWeight: 800, color: '#fff', overflow: 'hidden', border: '3px solid rgba(124,58,237,0.4)', boxShadow: '0 4px 12px rgba(0,0,0,0.4)' }}>
-          {avatarUrl ? <img src={avatarUrl} alt="HOD Avatar" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : fullName?.[0] || 'H'}
+        <div style={{ width: 80, height: 80, borderRadius: '50%', background: 'linear-gradient(135deg, #4f46e5, #3b82f6)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 32, fontWeight: 800, color: '#fff', overflow: 'hidden', border: '3px solid #bfdbfe', boxShadow: '0 4px 14px rgba(79,70,229,0.3)' }}>
+          {avatarUrl && !avatarUrl.includes('dsi-logo') && !avatarUrl.includes('logo') ? <img src={avatarUrl} alt="HOD Avatar" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : fullName?.[0]?.toUpperCase() || 'H'}
         </div>
         <div>
-          <h4 style={{ margin: '0 0 4px', fontSize: 18, color: '#f8fafc' }}>{fullName}</h4>
-          <p style={{ margin: 0, fontSize: 13, color: '#38bdf8' }}>Head of Department — MCA</p>
+          <h4 style={{ margin: '0 0 4px', fontSize: 18, color: '#0f172a', fontWeight: 800 }}>{fullName}</h4>
+          <p style={{ margin: 0, fontSize: 13, color: '#2563eb', fontWeight: 700 }}>Head of Department — MCA</p>
         </div>
       </div>
 
-      {msg && <p style={{ padding: '10px 14px', borderRadius: 8, background: 'rgba(16,185,129,0.2)', color: '#6ee7b7', fontSize: 13, fontWeight: 700, marginBottom: 16 }}>{msg}</p>}
+      {msg && <p style={{ padding: '10px 14px', borderRadius: 8, background: '#ecfdf5', color: '#065f46', fontSize: 13, fontWeight: 700, marginBottom: 16, border: '1px solid #a7f3d0' }}>{msg}</p>}
 
       <form onSubmit={handleSaveProfile} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
         <div>
-          <label style={{ display: 'block', fontSize: 12, color: '#c4b5fd', marginBottom: 6, fontWeight: 700 }}>Full Name</label>
-          <input value={fullName} onChange={(e) => setFullName(e.target.value)} required style={{ width: '100%', padding: '10px 14px', borderRadius: 8, background: 'rgba(15,23,42,0.9)', border: '1px solid rgba(255,255,255,0.2)', color: '#fff' }} />
+          <label style={{ display: 'block', fontSize: 12, color: '#475569', marginBottom: 6, fontWeight: 700 }}>Full Name</label>
+          <input value={fullName} onChange={(e) => setFullName(e.target.value)} required style={{ width: '100%', padding: '10px 14px', borderRadius: 8, background: '#ffffff', border: '1px solid #cbd5e1', color: '#0f172a' }} />
         </div>
         <div>
-          <label style={{ display: 'block', fontSize: 12, color: '#c4b5fd', marginBottom: 6, fontWeight: 700 }}>Email Address</label>
-          <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} required style={{ width: '100%', padding: '10px 14px', borderRadius: 8, background: 'rgba(15,23,42,0.9)', border: '1px solid rgba(255,255,255,0.2)', color: '#fff' }} />
+          <label style={{ display: 'block', fontSize: 12, color: '#475569', marginBottom: 6, fontWeight: 700 }}>Email Address</label>
+          <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} required style={{ width: '100%', padding: '10px 14px', borderRadius: 8, background: '#ffffff', border: '1px solid #cbd5e1', color: '#0f172a' }} />
         </div>
         <div>
-          <label style={{ display: 'block', fontSize: 12, color: '#c4b5fd', marginBottom: 6, fontWeight: 700 }}>📷 Upload Profile Avatar Photo File</label>
+          <label style={{ display: 'block', fontSize: 12, color: '#475569', marginBottom: 6, fontWeight: 700 }}>📷 Upload Profile Avatar Photo File</label>
           <input
             type="file"
             accept="image/*"
             onChange={handleFileChange}
-            style={{ width: '100%', padding: '10px 14px', borderRadius: 8, background: 'rgba(15,23,42,0.9)', border: '1px solid rgba(124,58,237,0.4)', color: '#fff', fontSize: 13, cursor: 'pointer' }}
+            style={{ width: '100%', padding: '10px 14px', borderRadius: 8, background: '#ffffff', border: '1px solid #cbd5e1', color: '#0f172a', fontSize: 13, cursor: 'pointer' }}
           />
-          <span style={{ fontSize: 11, color: '#94a3b8', marginTop: 4, display: 'block' }}>Select any image file (JPG, PNG) from your device. It will automatically update the avatar on top of the sidebar.</span>
+          <span style={{ fontSize: 11, color: '#64748b', marginTop: 4, display: 'block' }}>Select any image file (JPG, PNG) from your device. It will automatically update your profile picture.</span>
         </div>
-        <button type="submit" style={{ padding: '12px 24px', borderRadius: 8, border: 'none', background: 'linear-gradient(135deg, #10b981, #059669)', color: '#fff', fontWeight: 800, fontSize: 14, cursor: 'pointer', alignSelf: 'flex-start', marginTop: 8 }}>
+        <button type="submit" style={{ padding: '12px 24px', borderRadius: 8, border: 'none', background: 'linear-gradient(135deg, #10b981, #059669)', color: '#fff', fontWeight: 800, fontSize: 14, cursor: 'pointer', alignSelf: 'flex-start', marginTop: 8, boxShadow: '0 4px 12px rgba(16,185,129,0.3)' }}>
           Save Profile Settings
         </button>
       </form>
+    </div>
+  )
+}
+
+// ---------------------------------------------------------------------------
+// 📑 Academic Reports Section
+// ---------------------------------------------------------------------------
+function HodAcademicReportsSection() {
+  const [reportType, setReportType] = useState('student_roster')
+  const [subjects, setSubjects] = useState([])
+  const [selectedSubject, setSelectedSubject] = useState('')
+  const [selectedSem, setSelectedSem] = useState('ALL')
+  const [reportData, setReportData] = useState(null)
+  const [loading, setLoading] = useState(false)
+  const [downloading, setDownloading] = useState(false)
+
+  useEffect(() => {
+    api.get('/hod/subjects').then((res) => setSubjects(res.data || [])).catch(() => {})
+  }, [])
+
+  function loadReport() {
+    setLoading(true)
+    api.get(`/hod/reports?reportType=${reportType}&subjectId=${selectedSubject}&semester=${selectedSem}`)
+      .then((res) => setReportData(res.data))
+      .catch(() => setReportData(null))
+      .finally(() => setLoading(false))
+  }
+
+  useEffect(() => { loadReport() }, [reportType, selectedSubject, selectedSem])
+
+  function handleDownloadCSV() {
+    if (!reportData?.rows || reportData.rows.length === 0) return
+    setDownloading(true)
+    try {
+      const headers = Object.keys(reportData.rows[0])
+      const csvRows = [headers.join(',')]
+      reportData.rows.forEach(r => {
+        const line = headers.map(h => `"${r[h] ?? ''}"`).join(',')
+        csvRows.push(line)
+      })
+      const blob = new Blob([csvRows.join('\n')], { type: 'text/csv;charset=utf-8;' })
+      const url = window.URL.createObjectURL(blob)
+      const link = document.createElement('a')
+      link.href = url
+      link.setAttribute('download', `${(reportData.title || 'Report').replace(/[^a-zA-Z0-9]/g, '_')}.csv`)
+      document.body.appendChild(link)
+      link.click()
+      document.body.removeChild(link)
+      window.URL.revokeObjectURL(url)
+    } finally {
+      setDownloading(false)
+    }
+  }
+
+  const rows = reportData?.rows || []
+
+  return (
+    <div className="hod-card">
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20, flexWrap: 'wrap', gap: 12 }}>
+        <div>
+          <h3 className="hod-card-title" style={{ margin: 0 }}>📑 Academic Reports Generator</h3>
+          <p style={{ color: '#475569', fontSize: 13, margin: '4px 0 0' }}>
+            Generate real database-driven academic reports and export directly to CSV.
+          </p>
+        </div>
+        {rows.length > 0 && (
+          <button
+            onClick={handleDownloadCSV}
+            disabled={downloading}
+            style={{ padding: '9px 18px', borderRadius: 8, border: 'none', background: 'linear-gradient(135deg, #2563eb, #1d4ed8)', color: '#fff', fontWeight: 800, fontSize: 13, cursor: 'pointer' }}
+          >
+            {downloading ? '⏳ Exporting...' : '📥 Export Report (CSV)'}
+          </button>
+        )}
+      </div>
+
+      <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap', marginBottom: 20, background: '#f8fafc', padding: 16, borderRadius: 10, border: '1px solid #e2e8f0' }}>
+        <div>
+          <label style={{ display: 'block', fontSize: 12, color: '#475569', fontWeight: 700, marginBottom: 4 }}>Select Report Type:</label>
+          <select value={reportType} onChange={(e) => setReportType(e.target.value)} style={{ padding: '8px 12px', borderRadius: 8, border: '1px solid #cbd5e1', fontSize: 13, background: '#fff', color: '#0f172a', fontWeight: 700 }}>
+            <option value="student_roster">🎓 Student Roster Report</option>
+            <option value="internal_assessment">📋 Internal Assessment 50m Report</option>
+            <option value="attendance">📅 Department Attendance Report</option>
+            <option value="faculty_workload">👩‍🏫 Faculty Workload Report</option>
+            <option value="top_students">🏆 Top 10 Merit Students Report</option>
+          </select>
+        </div>
+
+        {reportType === 'internal_assessment' && (
+          <div>
+            <label style={{ display: 'block', fontSize: 12, color: '#475569', fontWeight: 700, marginBottom: 4 }}>Select Subject:</label>
+            <select value={selectedSubject} onChange={(e) => setSelectedSubject(e.target.value)} style={{ padding: '8px 12px', borderRadius: 8, border: '1px solid #cbd5e1', fontSize: 13, background: '#fff', color: '#0f172a', fontWeight: 700 }}>
+              <option value="">-- All Subjects --</option>
+              {subjects.map(s => <option key={s.id} value={s.id}>{s.name} ({s.code})</option>)}
+            </select>
+          </div>
+        )}
+
+        <div>
+          <label style={{ display: 'block', fontSize: 12, color: '#475569', fontWeight: 700, marginBottom: 4 }}>Semester Filter:</label>
+          <select value={selectedSem} onChange={(e) => setSelectedSem(e.target.value)} style={{ padding: '8px 12px', borderRadius: 8, border: '1px solid #cbd5e1', fontSize: 13, background: '#fff', color: '#0f172a', fontWeight: 700 }}>
+            <option value="ALL">All Semesters</option>
+            <option value="1st Sem">1st Sem</option>
+            <option value="2nd Sem">2nd Sem</option>
+            <option value="3rd Sem">3rd Sem</option>
+            <option value="4th Sem">4th Sem</option>
+          </select>
+        </div>
+      </div>
+
+      {loading ? (
+        <p style={{ color: '#475569' }}>Querying real database records...</p>
+      ) : rows.length === 0 ? (
+        <div className="hod-empty">No report data available yet.</div>
+      ) : (
+        <div style={{ overflowX: 'auto' }}>
+          <table className="hod-table">
+            <thead>
+              <tr>{Object.keys(rows[0]).map((h, i) => <th key={i}>{h}</th>)}</tr>
+            </thead>
+            <tbody>
+              {rows.map((row, idx) => (
+                <tr key={idx}>
+                  {Object.values(row).map((val, i) => <td key={i} style={{ fontSize: 13 }}>{val}</td>)}
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+    </div>
+  )
+}
+
+// ---------------------------------------------------------------------------
+// 📋 Academic Calendar Section
+// ---------------------------------------------------------------------------
+function HodAcademicCalendarSection() {
+  const [events, setEvents] = useState([])
+  const [loading, setLoading] = useState(true)
+  const [showAdd, setShowAdd] = useState(false)
+  const [title, setTitle] = useState('')
+  const [description, setDescription] = useState('')
+  const [eventType, setEventType] = useState('Internal Examination')
+  const [startDate, setStartDate] = useState('')
+  const [msg, setMsg] = useState('')
+
+  function loadEvents() {
+    setLoading(true)
+    api.get('/hod/calendar')
+      .then((res) => setEvents(res.data || []))
+      .catch(() => setEvents([]))
+      .finally(() => setLoading(false))
+  }
+
+  useEffect(() => { loadEvents() }, [])
+
+  async function handleCreateEvent(e) {
+    e.preventDefault()
+    if (!title) return
+    setMsg('Creating academic event...')
+    try {
+      await api.post('/hod/calendar', {
+        title,
+        description,
+        event_type: eventType,
+        start_datetime: startDate || new Date().toISOString(),
+        visibility: 'department',
+      })
+      setMsg('✅ Academic calendar event created successfully!')
+      setTitle('')
+      setDescription('')
+      setShowAdd(false)
+      loadEvents()
+    } catch (err) {
+      const backendErr = err.response?.data?.error || err.response?.data?.message || err.message || 'Failed to create event'
+      setMsg(`❌ ${backendErr}`)
+    }
+  }
+
+  async function handleDeleteEvent(id) {
+    if (!confirm('Delete this academic event?')) return
+    try {
+      await api.delete(`/hod/calendar/${id}`)
+      loadEvents()
+    } catch (err) {}
+  }
+
+  return (
+    <div className="hod-card">
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20, flexWrap: 'wrap', gap: 12 }}>
+        <div>
+          <h3 className="hod-card-title" style={{ margin: 0 }}>📋 Academic Calendar & Department Schedule</h3>
+          <p style={{ color: '#475569', fontSize: 13, margin: '4px 0 0' }}>
+            Central database-driven academic calendar linked across HOD, Faculty, Student, and Principal portals.
+          </p>
+        </div>
+        <button
+          onClick={() => setShowAdd(!showAdd)}
+          style={{ padding: '9px 18px', borderRadius: 8, border: 'none', background: 'linear-gradient(135deg, #7c3aed, #db2777)', color: '#fff', fontWeight: 800, fontSize: 13, cursor: 'pointer' }}
+        >
+          📅 + Add Academic Event
+        </button>
+      </div>
+
+      {msg && <p style={{ fontSize: 13, fontWeight: 700, color: msg.includes('❌') ? '#ef4444' : '#10b981', marginBottom: 16 }}>{msg}</p>}
+
+      {showAdd && (
+        <form onSubmit={handleCreateEvent} style={{ padding: 18, background: '#f8fafc', borderRadius: 10, border: '1.5px solid #0f172a', marginBottom: 20, display: 'grid', gridTemplateColumns: '1fr 1fr auto auto', gap: 12, alignItems: 'end' }}>
+          <div>
+            <label style={{ display: 'block', fontSize: 12, fontWeight: 700, color: '#0f172a', marginBottom: 4 }}>Event Title</label>
+            <input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="e.g. Internal Test-1 Commencement" required style={{ width: '100%', padding: '8px 12px', borderRadius: 6, border: '1.5px solid #cbd5e1' }} />
+          </div>
+          <div>
+            <label style={{ display: 'block', fontSize: 12, fontWeight: 700, color: '#0f172a', marginBottom: 4 }}>Event Type</label>
+            <select value={eventType} onChange={(e) => setEventType(e.target.value)} style={{ width: '100%', padding: '8px 12px', borderRadius: 6, border: '1.5px solid #cbd5e1' }}>
+              <option value="Internal Examination">Internal Examination</option>
+              <option value="Main Examination">Main Examination</option>
+              <option value="Assignment Deadline">Assignment Deadline</option>
+              <option value="Result Publication">Result Publication</option>
+              <option value="Academic Event">Academic Event</option>
+              <option value="Holiday">Holiday</option>
+            </select>
+          </div>
+          <div>
+            <label style={{ display: 'block', fontSize: 12, fontWeight: 700, color: '#0f172a', marginBottom: 4 }}>Event Date</label>
+            <input type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} style={{ padding: '8px 12px', borderRadius: 6, border: '1.5px solid #cbd5e1' }} />
+          </div>
+          <button type="submit" style={{ padding: '9px 18px', borderRadius: 6, border: 'none', background: '#2563eb', color: '#fff', fontWeight: 800, cursor: 'pointer' }}>Save Event</button>
+        </form>
+      )}
+
+      {loading ? (
+        <p style={{ color: '#475569' }}>Loading academic events...</p>
+      ) : events.length === 0 ? (
+        <div className="hod-empty">No academic events scheduled.</div>
+      ) : (
+        <table className="hod-table">
+          <thead>
+            <tr><th>Event Type</th><th>Title</th><th>Date</th><th>Visibility</th><th>Action</th></tr>
+          </thead>
+          <tbody>
+            {events.map((ev) => (
+              <tr key={ev.id}>
+                <td><span style={{ padding: '3px 10px', borderRadius: 12, background: '#eff6ff', border: '1px solid #bfdbfe', color: '#1d4ed8', fontSize: 11, fontWeight: 800 }}>{ev.event_type}</span></td>
+                <td style={{ fontWeight: 700, color: '#0f172a' }}>{ev.title}</td>
+                <td style={{ color: '#475569', fontSize: 13 }}>{new Date(ev.start_datetime).toLocaleDateString()}</td>
+                <td style={{ color: '#64748b', fontSize: 12 }}>{ev.visibility || 'Department'}</td>
+                <td>
+                  <button onClick={() => handleDeleteEvent(ev.id)} style={{ background: 'transparent', border: 'none', color: '#ef4444', fontWeight: 800, cursor: 'pointer' }}>✖ Remove</button>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      )}
+    </div>
+  )
+}
+
+// ---------------------------------------------------------------------------
+// 🔐 Audit Logs Section
+// ---------------------------------------------------------------------------
+function HodAuditLogsSection() {
+  const [logs, setLogs] = useState([])
+  const [loading, setLoading] = useState(true)
+  const [search, setSearch] = useState('')
+
+  useEffect(() => {
+    api.get('/hod/audit-logs')
+      .then((res) => setLogs(res.data || []))
+      .catch(() => setLogs([]))
+      .finally(() => setLoading(false))
+  }, [])
+
+  const filtered = logs.filter((l) =>
+    l.action?.toLowerCase().includes(search.toLowerCase()) ||
+    l.user_role?.toLowerCase().includes(search.toLowerCase()) ||
+    l.reason?.toLowerCase().includes(search.toLowerCase())
+  )
+
+  return (
+    <div className="hod-card">
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20, flexWrap: 'wrap', gap: 12 }}>
+        <div>
+          <h3 className="hod-card-title" style={{ margin: 0 }}>🔐 Immutable Academic Audit Logs</h3>
+          <p style={{ color: '#475569', fontSize: 13, margin: '4px 0 0' }}>
+            System activity audit trails for mark updates, exam approvals, condonations, and faculty assignments.
+          </p>
+        </div>
+        <input
+          placeholder="🔍 Filter audit actions..."
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          style={{ padding: '8px 12px', borderRadius: 8, border: '1.5px solid #cbd5e1', fontSize: 13, width: 220 }}
+        />
+      </div>
+
+      {loading ? (
+        <p style={{ color: '#475569' }}>Loading audit logs...</p>
+      ) : filtered.length === 0 ? (
+        <div className="hod-empty">No audit activity found.</div>
+      ) : (
+        <table className="hod-table">
+          <thead>
+            <tr><th>Timestamp</th><th>Action</th><th>User Role</th><th>Entity Type</th><th>Reason / Details</th></tr>
+          </thead>
+          <tbody>
+            {filtered.map((l) => (
+              <tr key={l.id}>
+                <td style={{ color: '#64748b', fontSize: 12, fontWeight: 600 }}>{new Date(l.created_at).toLocaleString()}</td>
+                <td style={{ fontWeight: 800, color: '#1d4ed8' }}>{l.action}</td>
+                <td><span style={{ padding: '2px 8px', borderRadius: 4, background: '#f1f5f9', color: '#475569', fontSize: 11, fontWeight: 700 }}>{l.user_role?.toUpperCase()}</span></td>
+                <td style={{ color: '#0f172a', fontWeight: 600 }}>{l.entity_type}</td>
+                <td style={{ color: '#334155', fontSize: 12 }}>{l.reason || l.new_value || 'System Action'}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      )}
+    </div>
+  )
+}
+
+// ---------------------------------------------------------------------------
+// 💬 Faculty Communication Section
+// ---------------------------------------------------------------------------
+function HodFacultyCommunicationSection() {
+  const [faculty, setFaculty] = useState([])
+  const [selectedFacultyId, setSelectedFacultyId] = useState('')
+  const [messages, setMessages] = useState([])
+  const [messageText, setMessageText] = useState('')
+  const [subjectText, setSubjectText] = useState('')
+  const [sending, setSending] = useState(false)
+  const [msg, setMsg] = useState('')
+
+  useEffect(() => {
+    api.get('/hod/faculty').then((res) => {
+      const list = res.data || []
+      setFaculty(list)
+      if (list.length > 0) setSelectedFacultyId(list[0].id)
+    }).catch(() => {})
+  }, [])
+
+  useEffect(() => {
+    if (!selectedFacultyId) return
+    api.get(`/hod/faculty-messages/${selectedFacultyId}`)
+      .then((res) => setMessages(res.data || []))
+      .catch(() => setMessages([]))
+  }, [selectedFacultyId])
+
+  async function handleSendMessage(e) {
+    e.preventDefault()
+    if (!messageText.trim() || !selectedFacultyId) return
+    setSending(true)
+    try {
+      await api.post('/hod/faculty-messages', {
+        facultyId: selectedFacultyId,
+        subject: subjectText || 'HOD Department Communication',
+        message: messageText,
+      })
+      setMsg('✅ Message sent successfully to faculty!')
+      setMessageText('')
+      setSubjectText('')
+      const res = await api.get(`/hod/faculty-messages/${selectedFacultyId}`)
+      setMessages(res.data || [])
+    } catch (err) {
+      setMsg(`❌ ${err.response?.data?.error || 'Failed to send message'}`)
+    } finally {
+      setSending(false)
+    }
+  }
+
+  const activeFacObj = faculty.find(f => f.id === selectedFacultyId)
+
+  return (
+    <div className="hod-card">
+      <h3 className="hod-card-title">💬 Faculty ↔ HOD Direct Communication</h3>
+      <p style={{ color: '#475569', fontSize: 13, marginBottom: 20 }}>
+        Real database-driven messaging channel between Head of Department and faculty members.
+      </p>
+
+      <div style={{ display: 'grid', gridTemplateColumns: '260px 1fr', gap: 20 }}>
+        {/* Faculty List */}
+        <div style={{ borderRight: '1px solid #e2e8f0', paddingRight: 16 }}>
+          <h4 style={{ margin: '0 0 12px 0', fontSize: 14, color: '#0f172a', fontWeight: 800 }}>Select Faculty:</h4>
+          {faculty.map((f) => (
+            <div
+              key={f.id}
+              onClick={() => setSelectedFacultyId(f.id)}
+              style={{ padding: '10px 14px', borderRadius: 8, background: selectedFacultyId === f.id ? '#eff6ff' : '#f8fafc', border: selectedFacultyId === f.id ? '1.5px solid #2563eb' : '1px solid #e2e8f0', marginBottom: 8, cursor: 'pointer' }}
+            >
+              <strong style={{ display: 'block', fontSize: 13, color: '#0f172a' }}>{f.full_name}</strong>
+              <span style={{ fontSize: 11, color: '#64748b' }}>{f.email}</span>
+            </div>
+          ))}
+          {faculty.length === 0 && <div className="hod-empty">No faculty members found.</div>}
+        </div>
+
+        {/* Chat Thread & Input */}
+        <div>
+          {activeFacObj && (
+            <h4 style={{ margin: '0 0 12px 0', fontSize: 15, color: '#1d4ed8', fontWeight: 800 }}>
+              Conversation with Prof. {activeFacObj.full_name}
+            </h4>
+          )}
+
+          <div style={{ height: 260, overflowY: 'auto', background: '#f8fafc', borderRadius: 10, padding: 14, border: '1px solid #e2e8f0', display: 'flex', flexDirection: 'column', gap: 10, marginBottom: 16 }}>
+            {messages.length === 0 ? (
+              <div className="hod-empty" style={{ margin: 'auto' }}>No messages yet. Send a message below.</div>
+            ) : (
+              messages.map((m) => (
+                <div key={m.id} style={{ alignSelf: m.sender_id === activeFacObj?.id ? 'flex-start' : 'flex-end', maxWidth: '75%' }}>
+                  <div style={{ padding: '8px 14px', borderRadius: 12, background: m.sender_id === activeFacObj?.id ? '#ffffff' : '#2563eb', color: m.sender_id === activeFacObj?.id ? '#0f172a' : '#ffffff', border: '1px solid #cbd5e1', fontSize: 13, boxShadow: '0 2px 6px rgba(0,0,0,0.04)' }}>
+                    <strong>{m.subject}</strong><br />
+                    {m.body}
+                  </div>
+                  <span style={{ fontSize: 10, color: '#64748b', display: 'block', marginTop: 2, textAlign: m.sender_id === activeFacObj?.id ? 'left' : 'right' }}>
+                    {new Date(m.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                  </span>
+                </div>
+              ))
+            )}
+          </div>
+
+          {msg && <p style={{ fontSize: 13, fontWeight: 700, color: msg.includes('❌') ? '#ef4444' : '#10b981', marginBottom: 12 }}>{msg}</p>}
+
+          <form onSubmit={handleSendMessage} style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+            <input
+              placeholder="Subject (e.g. Syllabus Progress / Internal Marks Notice)..."
+              value={subjectText}
+              onChange={(e) => setSubjectText(e.target.value)}
+              style={{ padding: '8px 12px', borderRadius: 8, border: '1.5px solid #cbd5e1', fontSize: 13 }}
+            />
+            <div style={{ display: 'flex', gap: 10 }}>
+              <input
+                placeholder="Type message body..."
+                value={messageText}
+                onChange={(e) => setMessageText(e.target.value)}
+                style={{ flex: 1, padding: '10px 14px', borderRadius: 8, border: '1.5px solid #cbd5e1', fontSize: 13 }}
+              />
+              <button type="submit" disabled={sending} style={{ padding: '10px 20px', borderRadius: 8, border: 'none', background: '#10b981', color: '#fff', fontWeight: 800, fontSize: 13, cursor: 'pointer' }}>
+                {sending ? 'Sending...' : 'Send Message'}
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+// ---------------------------------------------------------------------------
+// 🎓 STUDENT ACADEMIC PROFILE MODAL
+// ---------------------------------------------------------------------------
+function StudentAcademicProfileModal({ studentId, onClose }) {
+  const [profileData, setProfileData] = useState(null)
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    if (!studentId) return
+    setLoading(true)
+    api.get(`/hod/students/${studentId}/profile`)
+      .then((res) => setProfileData(res.data))
+      .catch((err) => console.error('Profile fetch error:', err))
+      .finally(() => setLoading(false))
+  }, [studentId])
+
+  if (!studentId) return null
+
+  return (
+    <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(15, 23, 42, 0.75)', backdropFilter: 'blur(8px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1100, padding: 20 }}>
+      <div style={{ background: '#ffffff', borderRadius: 20, border: '2px solid #2563eb', width: '100%', maxWidth: 780, maxHeight: '90vh', overflowY: 'auto', padding: 0, color: '#0f172a', boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.3)' }}>
+        
+        {/* Modal Header */}
+        <div style={{ background: 'linear-gradient(135deg, #1e40af 0%, #1d4ed8 100%)', padding: '20px 24px', borderRadius: '18px 18px 0 0', display: 'flex', justifyContent: 'space-between', alignItems: 'center', color: '#ffffff' }}>
+          <h2 style={{ margin: 0, fontSize: 20, fontWeight: 800, display: 'flex', alignItems: 'center', gap: 10 }}>
+            🎓 Student Academic Profile
+          </h2>
+          <button onClick={onClose} style={{ background: 'rgba(255,255,255,0.2)', border: 'none', color: '#ffffff', fontSize: 18, width: 32, height: 32, borderRadius: '50%', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800 }}>✖</button>
+        </div>
+
+        <div style={{ padding: 24 }}>
+          {loading ? (
+            <p style={{ color: '#475569', fontWeight: 600 }}>Loading student academic profile from live database...</p>
+          ) : !profileData ? (
+            <div className="hod-empty">No academic profile data available for this student.</div>
+          ) : (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+              
+              {/* Personal / Academic info card */}
+              <div style={{ background: '#f8fafc', borderRadius: 14, padding: 18, border: '1.5px solid #cbd5e1' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 16, marginBottom: 14 }}>
+                  <div style={{ width: 54, height: 54, borderRadius: '50%', background: 'linear-gradient(135deg, #2563eb, #1d4ed8)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 24, fontWeight: 800, color: '#ffffff', boxShadow: '0 4px 10px rgba(37,99,235,0.3)' }}>
+                    {profileData.student?.full_name?.[0]?.toUpperCase() || 'S'}
+                  </div>
+                  <div>
+                    <h3 style={{ margin: 0, fontSize: 20, color: '#0f172a', fontWeight: 800 }}>{profileData.student?.full_name}</h3>
+                    <p style={{ margin: '3px 0 0', color: '#1e40af', fontSize: 14, fontFamily: 'monospace', fontWeight: 700 }}>
+                      USN: {profileData.student?.registration_no || 'N/A'} · Email: {profileData.student?.email}
+                    </p>
+                  </div>
+                </div>
+                
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: 12, fontSize: 13, background: '#ffffff', padding: 12, borderRadius: 10, border: '1px solid #e2e8f0' }}>
+                  <div><span style={{ color: '#64748b', fontWeight: 600 }}>Semester:</span> <strong style={{ color: '#1e40af' }}>{profileData.student?.semester || '3rd Sem'}</strong></div>
+                  <div><span style={{ color: '#64748b', fontWeight: 600 }}>Academic Year:</span> <strong style={{ color: '#0f172a' }}>{profileData.student?.academic_year || '2025-2026'}</strong></div>
+                  <div><span style={{ color: '#64748b', fontWeight: 600 }}>Backlogs Count:</span> <strong style={{ color: profileData.backlogsCount > 0 ? '#dc2626' : '#166534' }}>{profileData.backlogsCount}</strong></div>
+                </div>
+              </div>
+
+              {/* Academic Alerts */}
+              {profileData.academicAlerts && profileData.academicAlerts.length > 0 && (
+                <div style={{ background: '#fef2f2', border: '1.5px solid #fca5a5', borderRadius: 12, padding: 14 }}>
+                  <h4 style={{ margin: '0 0 8px', color: '#991b1b', fontSize: 14, fontWeight: 800 }}>⚠️ Academic Alerts</h4>
+                  {profileData.academicAlerts.map((al, idx) => (
+                    <p key={idx} style={{ margin: '4px 0', fontSize: 13, color: '#dc2626', fontWeight: 600 }}>• {al.message}</p>
+                  ))}
+                </div>
+              )}
+
+              {/* Enrolled Subjects */}
+              <div>
+                <h4 style={{ margin: '0 0 10px', color: '#1e40af', fontSize: 15, fontWeight: 800 }}>📚 Enrolled Course Load ({profileData.enrolledSubjects?.length || 0} Subjects)</h4>
+                {profileData.enrolledSubjects?.length === 0 ? (
+                  <div style={{ color: '#64748b', fontSize: 13, background: '#f8fafc', padding: 12, borderRadius: 8 }}>No enrolled subjects found in live database.</div>
+                ) : (
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: 10 }}>
+                    {profileData.enrolledSubjects?.map((sub) => (
+                      <div key={sub.id} style={{ background: '#eff6ff', borderRadius: 10, padding: '10px 14px', border: '1.5px solid #bfdbfe' }}>
+                        <div style={{ color: '#1d4ed8', fontWeight: 800, fontSize: 12 }}>{sub.code}</div>
+                        <div style={{ color: '#0f172a', fontWeight: 700, fontSize: 13 }}>{sub.name}</div>
+                        <div style={{ color: '#475569', fontSize: 11, marginTop: 2 }}>{sub.semester || profileData.student?.semester}</div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {/* Attendance */}
+              <div>
+                <h4 style={{ margin: '0 0 10px', color: '#166534', fontSize: 15, fontWeight: 800 }}>📅 Subject Attendance Status</h4>
+                {profileData.attendance?.hasAttendance ? (
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 16, background: profileData.attendance.isEligible ? '#f0fdf4' : '#fef2f2', padding: 14, borderRadius: 12, border: profileData.attendance.isEligible ? '1.5px solid #86efac' : '1.5px solid #fca5a5' }}>
+                    <div style={{ fontSize: 26, fontWeight: 900, color: profileData.attendance.isEligible ? '#166534' : '#dc2626' }}>
+                      {profileData.attendance.overallPercentage}%
+                    </div>
+                    <div>
+                      <div style={{ fontWeight: 800, color: '#0f172a', fontSize: 14 }}>
+                        {profileData.attendance.isEligible ? '✓ Attendance Criteria Satisfied (≥75%)' : '🚫 Attendance Shortage (<75%)'}
+                      </div>
+                      <div style={{ fontSize: 12, color: '#475569', fontWeight: 600 }}>
+                        Hall Ticket Status: {profileData.attendance.isEligible ? 'Issued' : 'Blocked (Requires HOD Condonation)'}
+                      </div>
+                    </div>
+                  </div>
+                ) : (
+                  <div style={{ color: '#64748b', fontSize: 13, background: '#f8fafc', padding: 12, borderRadius: 8 }}>No attendance data available yet.</div>
+                )}
+              </div>
+
+              {/* Internal Assessment Marks */}
+              <div>
+                <h4 style={{ margin: '0 0 10px', color: '#6d28d9', fontSize: 15, fontWeight: 800 }}>📝 Internal Assessment Marks (50 Marks Scale)</h4>
+                {profileData.internalMarks?.length === 0 ? (
+                  <div style={{ color: '#64748b', fontSize: 13, background: '#f8fafc', padding: 12, borderRadius: 8 }}>No internal assessment marks published yet.</div>
+                ) : (
+                  <table className="hod-table" style={{ background: '#ffffff', border: '1.5px solid #cbd5e1' }}>
+                    <thead style={{ background: '#f1f5f9' }}>
+                      <tr>
+                        <th style={{ color: '#0f172a', fontWeight: 800 }}>Subject Name</th>
+                        <th style={{ color: '#0f172a', fontWeight: 800 }}>IAT-1</th>
+                        <th style={{ color: '#0f172a', fontWeight: 800 }}>IAT-2</th>
+                        <th style={{ color: '#0f172a', fontWeight: 800 }}>IAT-3</th>
+                        <th style={{ color: '#0f172a', fontWeight: 800 }}>Assignment</th>
+                        <th style={{ color: '#0f172a', fontWeight: 800 }}>Total (50)</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {profileData.internalMarks?.map((m, idx) => (
+                        <tr key={idx}>
+                          <td style={{ color: '#1e40af', fontWeight: 700 }}>{m.subjects?.name || 'Course Subject'}</td>
+                          <td style={{ fontWeight: 600 }}>{m.internal1_marks ?? '-'}</td>
+                          <td style={{ fontWeight: 600 }}>{m.internal2_marks ?? '-'}</td>
+                          <td style={{ fontWeight: 600 }}>{m.internal3_marks ?? '-'}</td>
+                          <td style={{ fontWeight: 600 }}>{m.assignment_marks ?? '-'}</td>
+                          <td style={{ fontWeight: 800, color: (m.total_internal_marks >= 25) ? '#166534' : '#dc2626' }}>
+                            {m.total_internal_marks ?? '-'} / 50
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                )}
+              </div>
+
+              {/* Main Examination Results */}
+              <div>
+                <h4 style={{ margin: '0 0 10px', color: '#9d174d', fontSize: 15, fontWeight: 800 }}>🏆 Main Examination Results</h4>
+                {profileData.mainExamResults?.length === 0 ? (
+                  <div style={{ color: '#64748b', fontSize: 13, background: '#f8fafc', padding: 12, borderRadius: 8, fontWeight: 500 }}>
+                    Main examination results have not been announced yet.
+                  </div>
+                ) : (
+                  <table className="hod-table" style={{ background: '#ffffff', border: '1.5px solid #cbd5e1' }}>
+                    <thead style={{ background: '#f1f5f9' }}>
+                      <tr><th>Exam Title</th><th>Grade</th><th>Total Marks</th><th>Result Status</th></tr>
+                    </thead>
+                    <tbody>
+                      {profileData.mainExamResults?.map((r, idx) => (
+                        <tr key={idx}>
+                          <td style={{ fontWeight: 700 }}>{r.exams?.title || 'Main Exam'}</td>
+                          <td>{r.grade || 'A'}</td>
+                          <td>{r.total_marks}</td>
+                          <td style={{ color: r.passed ? '#166534' : '#dc2626', fontWeight: 800 }}>
+                            {r.passed ? 'PASSED' : 'FAILED'}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                )}
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  )
+}
+
+// ---------------------------------------------------------------------------
+// 📜 INTERNAL EXAM APPROVAL HISTORY MODAL
+// ---------------------------------------------------------------------------
+function ApprovalHistoryModal({ subjectId, onClose }) {
+  const [history, setHistory] = useState([])
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    if (!subjectId) return
+    setLoading(true)
+    api.get(`/hod/subjects/${subjectId}/approval-history`)
+      .then((res) => setHistory(res.data || []))
+      .catch((err) => console.error('Approval history fetch error:', err))
+      .finally(() => setLoading(false))
+  }, [subjectId])
+
+  return (
+    <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(15, 23, 42, 0.75)', backdropFilter: 'blur(8px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1100, padding: 20 }}>
+      <div style={{ background: '#ffffff', borderRadius: 20, border: '2px solid #7c3aed', width: '100%', maxWidth: 680, maxHeight: '85vh', overflowY: 'auto', padding: 0, color: '#0f172a', boxShadow: '0 25px 50px -12px rgba(0,0,0,0.3)' }}>
+        
+        {/* Modal Header */}
+        <div style={{ background: 'linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%)', padding: '18px 24px', borderRadius: '18px 18px 0 0', display: 'flex', justifyContent: 'space-between', alignItems: 'center', color: '#ffffff' }}>
+          <h3 style={{ margin: 0, fontSize: 18, fontWeight: 800, display: 'flex', alignItems: 'center', gap: 8 }}>
+            📜 Internal Assessment Approval History
+          </h3>
+          <button onClick={onClose} style={{ background: 'rgba(255,255,255,0.2)', border: 'none', color: '#ffffff', fontSize: 18, width: 32, height: 32, borderRadius: '50%', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800 }}>✖</button>
+        </div>
+
+        <div style={{ padding: 24 }}>
+          {loading ? (
+            <p style={{ color: '#475569', fontWeight: 600 }}>Loading approval workflow history from live database...</p>
+          ) : history.length === 0 ? (
+            <div className="hod-empty">No approval history available.</div>
+          ) : (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+              {history.map((h, i) => (
+                <div key={h.id || i} style={{ background: '#f8fafc', borderRadius: 12, padding: 16, border: '1.5px solid #e2e8f0' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
+                    <span style={{ padding: '4px 10px', borderRadius: 6, background: h.status === 'APPROVED' ? '#dcfce7' : '#e0f2fe', color: h.status === 'APPROVED' ? '#15803d' : '#0369a1', fontSize: 12, fontWeight: 800, border: h.status === 'APPROVED' ? '1px solid #bbf7d0' : '1px solid #bae6fd' }}>
+                      {h.status || 'APPROVED'}
+                    </span>
+                    <span style={{ fontSize: 12, color: '#64748b', fontWeight: 600 }}>
+                      {new Date(h.created_at).toLocaleString()}
+                    </span>
+                  </div>
+                  <div style={{ fontSize: 14, color: '#0f172a', fontWeight: 700 }}>{h.action || 'Internal Marks Approval Action'}</div>
+                  {h.comments && <p style={{ margin: '6px 0 0', fontSize: 13, color: '#334155', fontWeight: 500 }}>Comments: {h.comments}</p>}
+                  <div style={{ fontSize: 12, color: '#64748b', marginTop: 6, fontWeight: 600 }}>
+                    Actioned by User ID: <code style={{ color: '#6d28d9', background: '#f3e8ff', padding: '2px 6px', borderRadius: 4 }}>{h.reviewed_by || h.submitted_by || 'HOD'}</code>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
     </div>
   )
 }

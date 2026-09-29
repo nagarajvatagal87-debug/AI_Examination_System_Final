@@ -198,9 +198,196 @@ export default function LmsPdfViewerModal({ material, onClose }) {
     }
   ]
 
-  const questionPool = (subLowerName.includes('deep') || subLowerName.includes('neural') || subLowerName.includes('learning') || subLowerName.includes('ai'))
-    ? allDeepLearningQuestions
-    : allGeneralDbQuestions
+  const allDevOpsQuestions = [
+    {
+      id: 'devops-1',
+      question: `In ${subjectName}, which containerization component isolates application dependencies and libraries into lightweight, portable image layers?`,
+      options: ['A. Docker Engine', 'B. Hypervisor Type-1', 'C. Java Virtual Machine', 'D. Apache Web Server'],
+      correct: 0,
+      explanation: 'Docker packages application code, runtime, system tools, and libraries into lightweight container images.',
+    },
+    {
+      id: 'devops-2',
+      question: 'In Kubernetes architecture, what is the smallest deployable computing unit that wraps one or more application containers?',
+      options: ['A. Pod', 'B. Worker Node', 'C. Ingress Controller', 'D. Kube-Scheduler'],
+      correct: 0,
+      explanation: 'A Pod is the basic execution unit in Kubernetes representing a single instance of a running process.',
+    },
+    {
+      id: 'devops-3',
+      question: 'Which Infrastructure as Code (IaC) tool uses declarative HCL (HashiCorp Configuration Language) files to manage cloud resources across AWS and Azure?',
+      options: ['A. Terraform', 'B. Shell Script', 'C. Cron Job', 'D. Dockerfile'],
+      correct: 0,
+      explanation: 'Terraform allows developers to define cloud infrastructure declaratively in HCL state configuration files.',
+    },
+    {
+      id: 'devops-4',
+      question: 'What is the primary function of a CI/CD Continuous Integration server like Jenkins or GitHub Actions?',
+      options: ['A. Automatically build, test, and validate code commits upon push', 'B. Compress database tables', 'C. Generate user passwords', 'D. Monitor CPU temperature'],
+      correct: 0,
+      explanation: 'Continuous Integration servers automatically build code, run automated tests, and report build status on every code push.',
+    },
+    {
+      id: 'devops-5',
+      question: 'In Git version control, which command combines feature branch commits onto a main branch while maintaining a clean, linear history?',
+      options: ['A. git rebase', 'B. git reset --hard', 'C. git clone', 'D. git status'],
+      correct: 0,
+      explanation: 'Git rebase rewrites commit history by moving branch base commits onto a target branch linearly.',
+    },
+    {
+      id: 'devops-6',
+      question: 'Which Configuration Management tool uses agentless SSH and YAML playbooks to automate server provisioning?',
+      options: ['A. Ansible', 'B. Nagios', 'C. Kubernetes Ingress', 'D. Nginx'],
+      correct: 0,
+      explanation: 'Ansible executes idempotent tasks over SSH using YAML playbooks without requiring remote agent daemons.',
+    },
+    {
+      id: 'devops-7',
+      question: 'In Kubernetes, which component monitors cluster state and schedules unscheduled Pods onto eligible Worker Nodes?',
+      options: ['A. kube-scheduler', 'B. kubelet', 'C. etcd', 'D. kube-proxy'],
+      correct: 0,
+      explanation: 'The kube-scheduler selects optimal worker nodes for newly created pods based on resource availability.',
+    },
+    {
+      id: 'devops-8',
+      question: 'What metric collection & alerting monitoring tool uses PromQL to query time-series metrics from microservices?',
+      options: ['A. Prometheus', 'B. Log4j', 'C. Redis', 'D. RabbitMQ'],
+      correct: 0,
+      explanation: 'Prometheus scrapes HTTP metrics endpoints and exposes PromQL for real-time time-series queries.',
+    },
+    {
+      id: 'devops-9',
+      question: 'In Docker, which instruction in a Dockerfile defines the default executable command to run when a container starts?',
+      options: ['A. CMD / ENTRYPOINT', 'B. FROM', 'C. COPY', 'D. EXPOSE'],
+      correct: 0,
+      explanation: 'CMD and ENTRYPOINT define the binary executable and arguments launched when starting a container.',
+    },
+    {
+      id: 'devops-10',
+      question: 'Which deployment strategy updates Pods incrementally in small batches with zero application downtime?',
+      options: ['A. Rolling Update', 'B. Recreate Strategy', 'C. Big Bang Deployment', 'D. Manual FTP Copy'],
+      correct: 0,
+      explanation: 'Rolling Update gradually replaces old Pod instances with new ones to maintain application availability.',
+    }
+  ]
+
+  const allJavaWebQuestions = [
+    {
+      id: 'java-1',
+      question: `In ${subjectName}, which JVM component automatically reclaims unused heap memory occupied by unreachable objects?`,
+      options: ['A. Garbage Collector (GC)', 'B. ClassLoader', 'C. Just-In-Time (JIT) Compiler', 'D. Bytecode Verifier'],
+      correct: 0,
+      explanation: 'Garbage Collection automatically frees memory occupied by unreferenced heap objects.',
+    },
+    {
+      id: 'java-2',
+      question: 'Which Spring Boot annotation marks a Java class as a RESTful web service controller returning JSON responses?',
+      options: ['A. @RestController', 'B. @Service', 'C. @Repository', 'D. @Component'],
+      correct: 0,
+      explanation: '@RestController combines @Controller and @ResponseBody to render JSON endpoints.',
+    },
+    {
+      id: 'java-3',
+      question: 'In Java Object-Oriented Programming (OOP), what principle allows a subclass method to override a superclass method implementation?',
+      options: ['A. Polymorphism', 'B. Encapsulation', 'C. Abstraction', 'D. Inheritance'],
+      correct: 0,
+      explanation: 'Method overriding demonstrates dynamic runtime polymorphism.',
+    }
+  ]
+
+  const allNetworksCloudQuestions = [
+    {
+      id: 'net-1',
+      question: `In ${subjectName}, which OSI layer is responsible for end-to-end process communication using TCP and UDP protocols?`,
+      options: ['A. Transport Layer (Layer 4)', 'B. Network Layer (Layer 3)', 'C. Data Link Layer (Layer 2)', 'D. Application Layer (Layer 7)'],
+      correct: 0,
+      explanation: 'Transport Layer manages segment transmission, flow control, and port addressing via TCP/UDP.',
+    },
+    {
+      id: 'net-2',
+      question: 'Which AWS cloud service provides scalable, resizable compute virtual machine instances in the cloud?',
+      options: ['A. Amazon EC2', 'B. Amazon S3', 'C. Amazon RDS', 'D. AWS Lambda'],
+      correct: 0,
+      explanation: 'Amazon EC2 provides virtual servers for running cloud application workloads.',
+    }
+  ]
+
+  const allOperatingSystemsQuestions = [
+    {
+      id: 'os-1',
+      question: `In ${subjectName}, which deadlock prevention algorithm checks resource request allocations against safe states?`,
+      options: ["A. Banker's Algorithm", "B. Round-Robin Scheduling", "C. First-In First-Out", "D. LRU Page Replacement"],
+      correct: 0,
+      explanation: "Banker's Algorithm simulates resource allocation to verify that no state leads to deadlock.",
+    },
+    {
+      id: 'os-2',
+      question: 'Which CPU scheduling algorithm assigns equal time slices (time quantum) to processes in a circular queue?',
+      options: ['A. Round-Robin (RR)', 'B. Shortest Job First (SJF)', 'C. Priority Scheduling', 'D. Multilevel Queue'],
+      correct: 0,
+      explanation: 'Round-Robin allocates CPU time quantum slices evenly to preemptively schedule processes.',
+    }
+  ]
+
+  const docTitleLower = (docTitle || '').toLowerCase()
+  const combinedText = `${subLowerName} ${docTitleLower}`
+
+  let questionPool = allGeneralDbQuestions
+  if (
+    combinedText.includes('devops') ||
+    combinedText.includes('docker') ||
+    combinedText.includes('kubernetes') ||
+    combinedText.includes('ci/cd') ||
+    combinedText.includes('deployment') ||
+    combinedText.includes('pipeline') ||
+    combinedText.includes('jenkins') ||
+    combinedText.includes('terraform') ||
+    combinedText.includes('ansible')
+  ) {
+    questionPool = allDevOpsQuestions
+  } else if (
+    combinedText.includes('deep') ||
+    combinedText.includes('neural') ||
+    combinedText.includes('learning') ||
+    combinedText.includes('ai') ||
+    combinedText.includes('machine') ||
+    combinedText.includes('cnn') ||
+    combinedText.includes('rnn')
+  ) {
+    questionPool = allDeepLearningQuestions
+  } else if (
+    combinedText.includes('dbms') ||
+    combinedText.includes('database') ||
+    combinedText.includes('sql') ||
+    combinedText.includes('relational') ||
+    combinedText.includes('query')
+  ) {
+    questionPool = allGeneralDbQuestions
+  } else if (
+    combinedText.includes('java') ||
+    combinedText.includes('web') ||
+    combinedText.includes('programming') ||
+    combinedText.includes('software') ||
+    combinedText.includes('oops') ||
+    combinedText.includes('script')
+  ) {
+    questionPool = allJavaWebQuestions
+  } else if (
+    combinedText.includes('network') ||
+    combinedText.includes('cyber') ||
+    combinedText.includes('security') ||
+    combinedText.includes('cloud') ||
+    combinedText.includes('aws')
+  ) {
+    questionPool = allNetworksCloudQuestions
+  } else if (
+    combinedText.includes('operating') ||
+    combinedText.includes('os') ||
+    combinedText.includes('system') ||
+    combinedText.includes('kernel')
+  ) {
+    questionPool = allOperatingSystemsQuestions
+  }
 
   function selectFreshUniqueQuestions(pool, count = 5) {
     try {

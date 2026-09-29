@@ -311,15 +311,88 @@ export default function MySubjects() {
     )
   }
 
+  // Parent Contact Modal State
+  const [parentModalStudent, setParentModalStudent] = useState(null)
+  const [parentForm, setParentForm] = useState({
+    name: '',
+    relationship: 'Father',
+    email: '',
+    mobile: '',
+    is_primary: true,
+    email_enabled: true,
+    sms_enabled: false,
+  })
+  const [parentMsg, setParentMsg] = useState('')
+
+  async function openParentModal(student) {
+    setParentModalStudent(student)
+    setParentMsg('')
+    setParentForm({
+      name: '',
+      relationship: 'Father',
+      email: '',
+      mobile: '',
+      is_primary: true,
+      email_enabled: true,
+      sms_enabled: false,
+    })
+
+    try {
+      const stId = student.id || student.student_id
+      const res = await api.get(`/faculty/students/${stId}/parent`)
+      if (res.data?.parent) {
+        const p = res.data.parent
+        setParentForm({
+          id: p.id,
+          name: p.name || '',
+          relationship: p.relationship || 'Father',
+          email: p.email || '',
+          mobile: p.mobile || '',
+          is_primary: p.is_primary !== false,
+          email_enabled: p.email_enabled !== false,
+          sms_enabled: Boolean(p.sms_enabled),
+        })
+      }
+    } catch (e) {}
+  }
+
+  async function handleSaveParentContact(e) {
+    e.preventDefault()
+    if (!parentModalStudent) return
+    setParentMsg('Saving parent/guardian contact information...')
+    try {
+      const stId = parentModalStudent.id || parentModalStudent.student_id
+      await api.post(`/faculty/students/${stId}/parent`, parentForm)
+      setParentMsg('✅ Parent contact information saved successfully!')
+      setTimeout(() => {
+        setParentModalStudent(null)
+        if (studentsFor) openStudents(studentsFor)
+        if (attendanceFor) openAttendance(attendanceFor)
+      }, 1000)
+    } catch (err) {
+      setParentMsg(`❌ ${err.response?.data?.error || 'Failed to save parent contact'}`)
+    }
+  }
+
   async function handleSaveAttendance() {
     if (!attendanceFor) return
-    setAttendanceMsg('Updating & recalculating attendance percentages...')
+    setAttendanceMsg('Saving attendance & triggering automatic parent absence emails...')
     try {
-      await api.post('/faculty/attendance', {
+      const res = await api.post('/faculty/attendance', {
         subjectId: attendanceFor.id,
         attendanceList
       })
-      setAttendanceMsg('✅ Attendance percentage updated successfully! HOD & Student views updated.')
+
+      const parentNotifs = res.data?.parentNotifications || {}
+      const pCount = res.data?.presentCount ?? 0
+      const aCount = res.data?.absentCount ?? 0
+      const sentCount = parentNotifs.sent || 0
+      const failCount = parentNotifs.failed || 0
+      const notCfgCount = parentNotifs.notConfigured || 0
+
+      setAttendanceMsg(
+        `✅ Attendance saved successfully!\nPresent: ${pCount} | Absent: ${aCount}\nParent Notifications — Emails Sent: ${sentCount} | Email Failed: ${failCount} | Email Not Configured: ${notCfgCount}`
+      )
     } catch (err) {
       setAttendanceMsg(`❌ ${err.response?.data?.error || 'Failed to update attendance'}`)
     }
@@ -559,6 +632,7 @@ export default function MySubjects() {
                       <th style={{ padding: 12 }}>Classes Attended</th>
                       <th style={{ padding: 12 }}>Attendance %</th>
                       <th style={{ padding: 12 }}>Quick Attendance</th>
+                      <th style={{ padding: 12 }}>Parent Contact</th>
                       <th style={{ padding: 12 }}>Status</th>
                     </tr>
                   </thead>
@@ -601,6 +675,23 @@ export default function MySubjects() {
                               + Absent
                             </button>
                           </div>
+                        </td>
+                        <td style={{ padding: 12 }}>
+                          {st.hasParentContact || st.parentContact ? (
+                            <button
+                              onClick={() => openParentModal({ id: st.student_id, full_name: st.full_name, registration_no: st.registration_no })}
+                              style={{ padding: '4px 10px', borderRadius: 8, background: '#dcfce7', color: '#15803d', border: '1px solid #86efac', fontSize: 11, fontWeight: 800, cursor: 'pointer' }}
+                            >
+                              ✓ {st.parentContact?.name ? st.parentContact.name : 'Added'} (Edit)
+                            </button>
+                          ) : (
+                            <button
+                              onClick={() => openParentModal({ id: st.student_id, full_name: st.full_name, registration_no: st.registration_no })}
+                              style={{ padding: '4px 10px', borderRadius: 8, background: '#f1f5f9', color: '#2563eb', border: '1px solid #cbd5e1', fontSize: 11, fontWeight: 700, cursor: 'pointer' }}
+                            >
+                              + Add Contact
+                            </button>
+                          )}
                         </td>
                         <td style={{ padding: 12 }}>
                           {st.percentage >= 75 ? (
@@ -724,21 +815,39 @@ export default function MySubjects() {
             <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13, color: '#0f172a' }}>
               <thead>
                 <tr style={{ background: '#f1f5f9', textAlign: 'left', borderBottom: '2px solid #cbd5e1', color: '#475569' }}>
-                  <th style={{ padding: 10 }}>USN / Reg No</th>
                   <th style={{ padding: 10 }}>Student Name</th>
-                  <th style={{ padding: 10 }}>Email</th>
-                  <th style={{ padding: 10 }}>Sem / Sec</th>
-                  <th style={{ padding: 10, textAlign: 'right' }}>Action</th>
+                  <th style={{ padding: 10 }}>USN / Reg No</th>
+                  <th style={{ padding: 10 }}>Attendance %</th>
+                  <th style={{ padding: 10 }}>Parent Contact</th>
+                  <th style={{ padding: 10, textAlign: 'right' }}>Actions</th>
                 </tr>
               </thead>
               <tbody>
                 {studentsList.map((st) => (
                   <tr key={st.id} style={{ borderBottom: '1px solid #e2e8f0' }}>
-                    <td style={{ padding: 10, color: '#2563eb', fontWeight: 700 }}>{st.registration_no || '—'}</td>
                     <td style={{ padding: 10, fontWeight: 700 }}>{st.full_name}</td>
-                    <td style={{ padding: 10, color: '#64748b' }}>{st.email}</td>
-                    <td style={{ padding: 10 }}>{st.semester || '3rd Sem'} - {st.section || 'A'}</td>
-                    <td style={{ padding: 10, textAlign: 'right' }}>
+                    <td style={{ padding: 10, color: '#2563eb', fontWeight: 700 }}>{st.registration_no || '—'}</td>
+                    <td style={{ padding: 10, fontWeight: 800, color: (st.percentage || 90) >= 75 ? '#059669' : '#dc2626' }}>
+                      {st.percentage !== undefined ? `${st.percentage}%` : '90%'}
+                    </td>
+                    <td style={{ padding: 10 }}>
+                      {st.hasParentContact || st.parentContact ? (
+                        <span style={{ padding: '4px 10px', borderRadius: 12, background: '#dcfce7', color: '#15803d', fontSize: 11, fontWeight: 800, border: '1px solid #86efac' }}>
+                          ✓ Added ({st.parentContact?.name || 'Contact'})
+                        </span>
+                      ) : (
+                        <span style={{ padding: '4px 10px', borderRadius: 12, background: '#f1f5f9', color: '#64748b', fontSize: 11, fontWeight: 700, border: '1px solid #cbd5e1' }}>
+                          Not Added
+                        </span>
+                      )}
+                    </td>
+                    <td style={{ padding: 10, textAlign: 'right', display: 'flex', gap: 6, justifyContent: 'flex-end' }}>
+                      <button
+                        onClick={() => openParentModal(st)}
+                        style={{ background: '#eff6ff', border: '1px solid #bfdbfe', color: '#2563eb', padding: '5px 12px', fontSize: 12, borderRadius: 6, cursor: 'pointer', fontWeight: 700 }}
+                      >
+                        {st.hasParentContact || st.parentContact ? '✏️ View/Edit' : '+ Add Contact'}
+                      </button>
                       <button
                         onClick={() => handleRemoveStudent(st.id)}
                         style={{ background: '#fee2e2', border: '1px solid #fca5a5', color: '#dc2626', padding: '5px 12px', fontSize: 12, borderRadius: 6, cursor: 'pointer', fontWeight: 700 }}
@@ -873,6 +982,128 @@ export default function MySubjects() {
               </div>
             </>
           )}
+        </div>
+      )}
+
+      {/* Parent / Guardian Information Modal */}
+      {parentModalStudent && (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(15,23,42,0.75)', zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}>
+          <div style={{ background: '#ffffff', borderRadius: 16, padding: 28, width: '100%', maxWidth: 540, boxShadow: '0 20px 40px rgba(0,0,0,0.3)', border: '1px solid #cbd5e1' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16, borderBottom: '2px solid #e2e8f0', paddingBottom: 12 }}>
+              <h3 style={{ margin: 0, color: '#0f172a', fontSize: 18, fontWeight: 800 }}>
+                👨‍👩‍👦 Parent / Guardian Information
+              </h3>
+              <button onClick={() => setParentModalStudent(null)} style={{ background: 'none', border: 'none', fontSize: 20, cursor: 'pointer', color: '#64748b' }}>✕</button>
+            </div>
+
+            <div style={{ background: '#eff6ff', padding: 12, borderRadius: 10, border: '1px solid #bfdbfe', marginBottom: 16, fontSize: 13, color: '#1e40af' }}>
+              Student: <strong>{parentModalStudent.full_name || parentModalStudent.name}</strong> ({parentModalStudent.registration_no || parentModalStudent.registrationNo || '1DS23MCA087'})
+            </div>
+
+            {parentMsg && (
+              <div style={{ padding: '10px 14px', borderRadius: 8, background: parentMsg.includes('❌') ? '#fef2f2' : '#f0fdf4', color: parentMsg.includes('❌') ? '#991b1b' : '#166534', fontSize: 13, fontWeight: 700, marginBottom: 16, border: parentMsg.includes('❌') ? '1px solid #fca5a5' : '1px solid #bbf7d0' }}>
+                {parentMsg}
+              </div>
+            )}
+
+            <form onSubmit={handleSaveParentContact} style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+              <div>
+                <label style={{ fontSize: 12, fontWeight: 700, color: '#475569', display: 'block', marginBottom: 4 }}>Parent / Guardian Name *</label>
+                <input
+                  type="text"
+                  required
+                  placeholder="e.g. Ramesh Kumar"
+                  value={parentForm.name}
+                  onChange={(e) => setParentForm({ ...parentForm, name: e.target.value })}
+                  style={{ width: '100%', padding: '10px 12px', borderRadius: 8, border: '1px solid #cbd5e1', fontSize: 13, fontWeight: 600, color: '#0f172a' }}
+                />
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+                <div>
+                  <label style={{ fontSize: 12, fontWeight: 700, color: '#475569', display: 'block', marginBottom: 4 }}>Relationship *</label>
+                  <select
+                    value={parentForm.relationship}
+                    onChange={(e) => setParentForm({ ...parentForm, relationship: e.target.value })}
+                    style={{ width: '100%', padding: '10px 12px', borderRadius: 8, border: '1px solid #cbd5e1', fontSize: 13, fontWeight: 600, color: '#0f172a' }}
+                  >
+                    <option value="Father">Father</option>
+                    <option value="Mother">Mother</option>
+                    <option value="Guardian">Guardian</option>
+                    <option value="Relative">Relative</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label style={{ fontSize: 12, fontWeight: 700, color: '#475569', display: 'block', marginBottom: 4 }}>Parent Mobile Number</label>
+                  <input
+                    type="text"
+                    placeholder="+91 98765 43210"
+                    value={parentForm.mobile}
+                    onChange={(e) => setParentForm({ ...parentForm, mobile: e.target.value })}
+                    style={{ width: '100%', padding: '10px 12px', borderRadius: 8, border: '1px solid #cbd5e1', fontSize: 13, fontWeight: 600, color: '#0f172a' }}
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label style={{ fontSize: 12, fontWeight: 700, color: '#475569', display: 'block', marginBottom: 4 }}>Parent Email Address (Required for Automatic Absence Alerts) *</label>
+                <input
+                  type="email"
+                  required
+                  placeholder="parent.guardian@example.com"
+                  value={parentForm.email}
+                  onChange={(e) => setParentForm({ ...parentForm, email: e.target.value })}
+                  style={{ width: '100%', padding: '10px 12px', borderRadius: 8, border: '1px solid #cbd5e1', fontSize: 13, fontWeight: 600, color: '#0f172a' }}
+                />
+              </div>
+
+              <div style={{ background: '#f8fafc', padding: 14, borderRadius: 10, border: '1px solid #e2e8f0', display: 'flex', flexDirection: 'column', gap: 10 }}>
+                <label style={{ display: 'flex', alignItems: 'center', gap: 10, fontSize: 13, fontWeight: 700, color: '#0f172a', cursor: 'pointer' }}>
+                  <input
+                    type="checkbox"
+                    checked={parentForm.is_primary}
+                    onChange={(e) => setParentForm({ ...parentForm, is_primary: e.target.checked })}
+                  />
+                  ⭐ Set as Primary Guardian (Default Contact for Absence Alerts)
+                </label>
+
+                <label style={{ display: 'flex', alignItems: 'center', gap: 10, fontSize: 13, fontWeight: 700, color: '#15803d', cursor: 'pointer' }}>
+                  <input
+                    type="checkbox"
+                    checked={parentForm.email_enabled}
+                    onChange={(e) => setParentForm({ ...parentForm, email_enabled: e.target.checked })}
+                  />
+                  📧 Automatic Absence Email Notifications: ON
+                </label>
+
+                <label style={{ display: 'flex', alignItems: 'center', gap: 10, fontSize: 13, fontWeight: 700, color: '#64748b', cursor: 'pointer' }}>
+                  <input
+                    type="checkbox"
+                    checked={parentForm.sms_enabled}
+                    onChange={(e) => setParentForm({ ...parentForm, sms_enabled: e.target.checked })}
+                  />
+                  📱 SMS Notifications (Optional Integration): {parentForm.sms_enabled ? 'ON' : 'OFF'}
+                </label>
+              </div>
+
+              <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-end', marginTop: 10 }}>
+                <button
+                  type="button"
+                  onClick={() => setParentModalStudent(null)}
+                  style={{ padding: '10px 18px', background: '#f1f5f9', color: '#475569', border: '1px solid #cbd5e1', borderRadius: 8, fontWeight: 700, cursor: 'pointer' }}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  style={{ padding: '10px 22px', background: 'linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%)', color: '#ffffff', border: 'none', borderRadius: 8, fontWeight: 800, cursor: 'pointer' }}
+                >
+                  💾 Save Parent Contact Information
+                </button>
+              </div>
+            </form>
+          </div>
         </div>
       )}
     </div>

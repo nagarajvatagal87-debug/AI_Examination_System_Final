@@ -4,6 +4,9 @@ import { useAuth } from '../../context/AuthContext.jsx'
 import NotificationBell from '../../components/NotificationBell.jsx'
 import HeaderBanner from '../../components/HeaderBanner.jsx'
 import ProfileSettings from '../../components/ProfileSettings.jsx'
+import Notifications from '../faculty/Notifications.jsx'
+import '../student/StudentDashboard.css'
+import './PrincipalDashboard.css'
 
 // Modular Components
 import PrincipalOverview from './PrincipalOverview.jsx'
@@ -26,7 +29,8 @@ const NAV = [
   { key: 'exam-overview', icon: '📋', label: 'Examination Overview' },
   { key: 'publish', icon: '📢', label: 'Publish College Info' },
   { key: 'messages', icon: '✉️', label: 'Messages & Invites' },
-  { key: 'profile', icon: '👤', label: 'Profile' },
+  { key: 'notifications', icon: '🔔', label: 'Notifications' },
+  { key: 'profile', icon: '⚙️', label: 'Profile & Settings' },
 ]
 
 export default function PrincipalDashboard() {
@@ -68,9 +72,6 @@ export default function PrincipalDashboard() {
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh', background: 'var(--bg-gradient)', color: 'var(--text-main)' }}>
-      {/* Top Institutional Header Banner */}
-      <HeaderBanner collegeName="DSATM - DAYANANDA SAGAR ACADEMY OF TECHNOLOGY AND MANAGEMENT" />
-
       <div className="pd-shell" style={{ flex: 1 }}>
         {/* Principal Portal Sidebar */}
         <aside className="pd-sidebar glass-card" style={{ borderRadius: 0, borderTop: 'none', borderBottom: 'none', borderLeft: 'none' }}>
@@ -87,8 +88,8 @@ export default function PrincipalDashboard() {
               )}
             </div>
             <div>
-              <div className="name" style={{ color: '#f8fafc', fontWeight: 800 }}>{user?.fullName || myProfile?.full_name || 'Principal'}</div>
-              <div className="role" style={{ color: '#94a3b8', fontSize: 12 }}>Principal · Institution Head</div>
+              <div className="name" style={{ color: '#0f172a', fontWeight: 800 }}>{user?.fullName || myProfile?.full_name || 'Principal'}</div>
+              <div className="role" style={{ color: '#1d4ed8', fontSize: 12, fontWeight: 700 }}>Principal · Institution Head</div>
             </div>
           </div>
 
@@ -108,12 +109,32 @@ export default function PrincipalDashboard() {
 
         {/* Main Content Workspace */}
         <main className="pd-main">
-          <header className="pd-topbar glass-card" style={{ margin: '20px 24px 0', padding: '14px 24px', borderRadius: 14 }}>
-            <div>
-              <h1 style={{ fontSize: 20, margin: 0, color: '#f8fafc' }}>{NAV.find((n) => n.key === active)?.label}</h1>
-              <div className="sub" style={{ fontSize: 12, color: '#94a3b8' }}>Institution-wide Oversight & Academic Governance</div>
+          <header className="eduexam-top-header">
+            <div className="search-bar-wrap">
+              <span className="search-icon">🔍</span>
+              <input type="text" placeholder="Search institution reports, departments..." />
             </div>
-            <NotificationBell />
+
+            <div className="top-header-center">
+              <h1 className="header-college-title-center">DAYANANDA SAGAR ACADEMY OF TECHNOLOGY AND MANAGEMENT</h1>
+              <p className="header-dashboard-subtitle-center">👑 Principal Dashboard — Academic Governance</p>
+            </div>
+
+            <div className="top-header-right">
+              <NotificationBell count={0} />
+              <div className="header-icon-btn" onClick={() => setActive('profile')} style={{ cursor: 'pointer' }} title="Profile Settings">⚙️</div>
+
+              <div className="user-profile-badge" onClick={() => setActive('profile')} style={{ cursor: 'pointer' }}>
+                <div className="user-avatar-circle" style={{ width: 36, height: 36, borderRadius: '50%', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#2563eb', color: '#fff', fontWeight: 800 }}>
+                  {myProfile?.avatar_url ? <img src={myProfile.avatar_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : '👑'}
+                </div>
+                <div>
+                  <div className="user-name-title">{user?.fullName || myProfile?.full_name || 'Principal'}</div>
+                  <div className="user-sub-title">DSATM · Institution Head</div>
+                </div>
+                <span className="caret-down">▾</span>
+              </div>
+            </div>
           </header>
 
           <div className="pd-content" style={{ padding: '24px' }}>
@@ -135,6 +156,7 @@ export default function PrincipalDashboard() {
                 departments={departments}
               />
             )}
+            {active === 'notifications' && <Notifications />}
             {active === 'profile' && <ProfileSettings onProfileUpdated={loadMyProfile} />}
           </div>
         </main>

@@ -1,8 +1,9 @@
-import React from 'react'
-import { NavLink, Outlet } from 'react-router-dom'
+import React, { useState, useEffect, useRef } from 'react'
+import { NavLink, Outlet, useNavigate } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext.jsx'
 import NotificationBell from '../../components/NotificationBell.jsx'
 import HeaderBanner from '../../components/HeaderBanner.jsx'
+import '../student/StudentDashboard.css'
 import './FacultyLayout.css'
 
 class FacultyErrorBoundary extends React.Component {
@@ -44,6 +45,7 @@ const NAV_ITEMS = [
   { to: '/faculty', label: 'Dashboard', icon: '🏠', end: true },
   { to: '/faculty/subjects', label: 'My Subjects', icon: '📚' },
   { to: '/faculty/examinations', label: 'Examinations', icon: '📝' },
+  { to: '/faculty/academic-calendar', label: 'Academic Calendar', icon: '📅' },
   { to: '/faculty/evaluation', label: 'AI Evaluation', icon: '🤖' },
   { to: '/faculty/results', label: 'Results', icon: '📊' },
   { to: '/faculty/analytics', label: 'Analytics', icon: '📈' },
@@ -55,24 +57,42 @@ const NAV_ITEMS = [
 
 export default function FacultyLayout() {
   const { user, logout } = useAuth()
-  const facultyName = user?.fullName || user?.full_name || user?.name || user?.email?.split('@')[0] || 'Faculty'
+  const navigate = useNavigate()
+  const [profileMenuOpen, setProfileMenuOpen] = useState(false)
+  const profileRef = useRef(null)
+
+  const facultyName = user?.full_name || user?.fullName || user?.name || user?.email?.split('@')[0] || 'Priya'
+  const facultyRole = (user?.designation || 'Assistant Professor') + ' · ' + (user?.departmentName || user?.department_id || 'MCA')
+  const facultyEmail = user?.email || 'priya@dsatm.edu.in'
+  const avatarUrl = user?.avatarUrl || user?.avatar_url
+
+  useEffect(() => {
+    function handleClickOutside(event) {
+      if (profileRef.current && !profileRef.current.contains(event.target)) {
+        setProfileMenuOpen(false)
+      }
+    }
+    if (profileMenuOpen) {
+      document.addEventListener('mousedown', handleClickOutside)
+    }
+    return () => document.removeEventListener('mousedown', handleClickOutside)
+  }, [profileMenuOpen])
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh', background: 'var(--bg-gradient)', color: 'var(--text-main)' }}>
       <div className="fl-wrap" style={{ flex: 1 }}>
         <aside className="fl-sidebar glass-card" style={{ borderRadius: 0, borderTop: 'none', borderBottom: 'none', borderLeft: 'none' }}>
-          <div className="fl-brand">
-            <div className="fl-logo">🛡️</div>
-            <div className="fl-brand-text">Faculty Portal<br /><span style={{ fontSize: 11, color: 'var(--text-sub)' }}>Academic LMS & AI</span></div>
-          </div>
-
           <NavLink to="/faculty/settings" style={{ textDecoration: 'none' }}>
             <div className="fl-profile" style={{ cursor: 'pointer' }}>
               <div className="fl-avatar" style={{ overflow: 'hidden', padding: 0 }}>
-                {user?.avatarUrl ? <img src={user.avatarUrl} alt="Avatar" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : (facultyName[0] || 'F')}
+                {avatarUrl && !avatarUrl.includes('dsi-logo') && !avatarUrl.includes('logo') ? (
+                  <img src={avatarUrl} alt="Avatar" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                ) : (
+                  facultyName[0]?.toUpperCase() || 'P'
+                )}
               </div>
               <div className="fl-profile-name">{facultyName}</div>
-              <div className="fl-profile-role">Assistant Professor · {user?.departmentName || 'MCA'}</div>
+              <div className="fl-profile-role">{facultyRole}</div>
               <div className="fl-online"><span className="fl-dot" /> Online</div>
             </div>
           </NavLink>
@@ -95,42 +115,116 @@ export default function FacultyLayout() {
         </aside>
 
         <div className="fl-main">
-          <header className="fl-topbar" style={{
-            padding: '12px 28px',
-            background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 100%)',
-            borderBottom: '1.5px solid rgba(245, 158, 11, 0.35)',
-            display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: 'center',
-            boxShadow: '0 4px 20px rgba(0,0,0,0.4)',
-            width: '100%'
-          }}>
-            <div style={{ flex: 1 }} />
-            <div style={{ flex: 3, textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-              <h1 style={{
-                fontSize: 15.5,
-                fontWeight: 900,
-                letterSpacing: '0.9px',
-                textTransform: 'uppercase',
-                color: '#ffffff',
-                background: 'linear-gradient(135deg, #ffffff 0%, #fef08a 45%, #93c5fd 100%)',
-                WebkitBackgroundClip: 'text',
-                WebkitTextFillColor: 'transparent',
-                margin: 0,
-                lineHeight: 1.25,
-                filter: 'drop-shadow(0 2px 6px rgba(0,0,0,0.6))'
-              }}>
-                DAYANANDA SAGAR ACADEMY OF TECHNOLOGY AND MANAGEMENT
-              </h1>
-              <p style={{ fontSize: 13, fontWeight: 800, color: '#38bdf8', margin: '3px 0 0 0', letterSpacing: '0.5px' }}>
-                👨‍🏫 Faculty Portal
-              </p>
+          <header className="eduexam-top-header">
+            <div className="search-bar-wrap">
+              <span className="search-icon">🔍</span>
+              <input type="text" placeholder="Search subjects, materials, students..." />
             </div>
-            <div className="fl-topbar-actions" style={{ flex: 1, justifyContent: 'flex-end', display: 'flex', alignItems: 'center', gap: 14 }}>
+
+            <div className="top-header-center">
+              <h1 className="header-college-title-center">DAYANANDA SAGAR ACADEMY OF TECHNOLOGY AND MANAGEMENT</h1>
+              <p className="header-dashboard-subtitle-center">👨‍🏫 Faculty Dashboard — Academic LMS & AI</p>
+            </div>
+
+            <div className="top-header-right">
               <NotificationBell />
-              <span className="fl-topbar-name" style={{ color: '#ffffff', background: 'rgba(255, 255, 255, 0.1)', border: '1px solid rgba(255, 255, 255, 0.2)', padding: '6px 14px', borderRadius: 20, fontWeight: 700, fontSize: 13 }}>
-                {facultyName}
-              </span>
+              <div className="header-icon-btn" onClick={() => navigate('/faculty/settings')} style={{ cursor: 'pointer' }} title="Settings">⚙️</div>
+
+              <div ref={profileRef} style={{ position: 'relative' }}>
+                <div
+                  className="user-profile-badge"
+                  onClick={() => setProfileMenuOpen(!profileMenuOpen)}
+                  style={{ cursor: 'pointer' }}
+                >
+                  <div className="user-avatar-circle" style={{ width: 36, height: 36, borderRadius: '50%', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#2563eb', color: '#fff', fontWeight: 800 }}>
+                    {avatarUrl ? <img src={avatarUrl} alt="Avatar" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : (facultyName[0]?.toUpperCase() || 'F')}
+                  </div>
+                  <div>
+                    <div className="user-name-title">{facultyName}</div>
+                    <div className="user-sub-title">{facultyRole}</div>
+                  </div>
+                  <span className="caret-down">▾</span>
+                </div>
+
+                {profileMenuOpen && (
+                  <div className="fl-profile-popover glass-card">
+                    <div className="fl-pop-header">
+                      <div className="fl-pop-avatar">
+                        {avatarUrl ? <img src={avatarUrl} alt="Avatar" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : (facultyName[0]?.toUpperCase() || 'F')}
+                      </div>
+                      <div className="fl-pop-user-info">
+                        <h4 className="fl-pop-name">{facultyName}</h4>
+                        <p className="fl-pop-email">{facultyEmail}</p>
+                        <span className="fl-pop-badge">{facultyRole}</span>
+                      </div>
+                    </div>
+
+                    <div className="fl-pop-menu">
+                      <button
+                        type="button"
+                        className="fl-pop-item"
+                        onClick={() => {
+                          setProfileMenuOpen(false)
+                          navigate('/faculty/settings')
+                        }}
+                      >
+                        <span className="fl-pop-icon">👤</span>
+                        <div>
+                          <strong>View Profile & Settings</strong>
+                          <p>Edit name, email & avatar picture</p>
+                        </div>
+                      </button>
+
+                      <button
+                        type="button"
+                        className="fl-pop-item"
+                        onClick={() => {
+                          setProfileMenuOpen(false)
+                          navigate('/faculty/subjects')
+                        }}
+                      >
+                        <span className="fl-pop-icon">📚</span>
+                        <div>
+                          <strong>My Teaching Subjects</strong>
+                          <p>Manage course materials & syllabus</p>
+                        </div>
+                      </button>
+
+                      <button
+                        type="button"
+                        className="fl-pop-item"
+                        onClick={() => {
+                          setProfileMenuOpen(false)
+                          navigate('/faculty/examinations')
+                        }}
+                      >
+                        <span className="fl-pop-icon">📝</span>
+                        <div>
+                          <strong>Examinations</strong>
+                          <p>Generate question papers & view scheme</p>
+                        </div>
+                      </button>
+
+                      <div className="fl-pop-divider" />
+
+                      <button
+                        type="button"
+                        className="fl-pop-item logout"
+                        onClick={() => {
+                          setProfileMenuOpen(false)
+                          logout()
+                        }}
+                      >
+                        <span className="fl-pop-icon">🚪</span>
+                        <div>
+                          <strong>Sign Out</strong>
+                          <p>Log out of Faculty Portal</p>
+                        </div>
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
             </div>
           </header>
 

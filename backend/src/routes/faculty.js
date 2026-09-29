@@ -1,6 +1,8 @@
 const express = require("express");
 const multer = require("multer");
 const axios = require("axios");
+const fs = require("fs");
+const path = require("path");
 const { supabaseAdmin } = require("../../config/Supabase");
 const { requireAuth, requireRole } = require("../middleware/auth.js");
 const { sendEmail } = require("../services/emailService");
@@ -13,27 +15,240 @@ const { getSubjectAttendance, updateSubjectAttendance } = require("../services/a
 const router = express.Router();
 const upload = multer({ storage: multer.memoryStorage() });
 
+const { getStudentParents, getPrimaryParent, saveStudentParent } = require("../services/parentStore.js");
+const { createNotificationLog, isDuplicateAbsenceEmailSent } = require("../services/notificationLogStore.js");
+const { notify } = require("../services/notification.service.js");
+
 // GET /api/faculty/attendance?subjectId=xxx
 router.get("/attendance", async (req, res) => {
   try {
     const { subjectId } = req.query;
     if (!subjectId) return res.status(400).json({ error: "subjectId is required" });
     const records = await getSubjectAttendance(subjectId);
-    res.json(records);
+
+    // Attach primary parent contact status to each student record
+    const recordsWithParents = await Promise.all(
+      records.map(async (st) => {
+        const parent = await getPrimaryParent(st.student_id);
+        return {
+          ...st,
+          parentContact: parent || null,
+          hasParentContact: Boolean(parent && parent.name && parent.email),
+        };
+      })
+    );
+
+    res.json(recordsWithParents);
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
 });
 
-// POST /api/faculty/attendance
+// POST /api/faculty/attendance -> Save attendance & trigger automatic parent absence emails
 router.post("/attendance", async (req, res) => {
   try {
-    const { subjectId, attendanceList } = req.body;
+    const { subjectId, attendanceList, sessionDate } = req.body;
     if (!subjectId || !Array.isArray(attendanceList)) {
       return res.status(400).json({ error: "subjectId and attendanceList are required" });
     }
+
     const updated = await updateSubjectAttendance(subjectId, attendanceList);
-    res.json({ success: true, updatedCount: updated.length, records: updated });
+
+    // Fetch subject details for email notification
+    let subjectName = "Course Subject";
+    let subjectCode = "SUB";
+    try {
+      const { data: sub } = await supabaseAdmin.from("subjects").select("name, code").eq("id", subjectId).maybeSingle();
+      if (sub) {
+        subjectName = sub.name || subjectName;
+        subjectCode = sub.code || subjectCode;
+      }
+    } catch (e) {}
+
+    const todayDateStr = sessionDate || new Date().toISOString().split("T")[0];
+    let presentCount = 0;
+    let absentCount = 0;
+    let sentCount = 0;
+    let failedCount = 0;
+    let notConfiguredCount = 0;
+    const notificationDetails = [];
+
+    for (const item of attendanceList) {
+      const studentId = item.student_id || item.studentId;
+      const isAbsent = item.status === "ABSENT" || Boolean(item.isAbsent);
+
+      if (isAbsent) {
+        absentCount++;
+        const parent = await getPrimaryParent(studentId);
+
+        if (!parent || !parent.name || !parent.email || !parent.email.trim()) {
+          notConfiguredCount++;
+          notificationDetails.push({
+            studentId,
+            studentName: item.full_name || "Student",
+            status: "NOT_CONFIGURED",
+            message: "Parent email not configured",
+          });
+        } else if (parent.email_enabled === false) {
+          notConfiguredCount++;
+          notificationDetails.push({
+            studentId,
+            studentName: item.full_name || "Student",
+            status: "DISABLED",
+            message: "Parent email notifications turned off",
+          });
+        } else {
+          // Prevent duplicate email notification if already sent today
+          const alreadySent = isDuplicateAbsenceEmailSent(studentId, todayDateStr, parent.id);
+          if (alreadySent) {
+            notificationDetails.push({
+              studentId,
+              studentName: item.full_name || "Student",
+              status: "SKIPPED_DUPLICATE",
+              message: "Absence notification already sent today",
+            });
+          } else {
+            const studentName = item.full_name || item.name || "Student";
+            const usn = item.registration_no || item.usn || "1DS23MCA087";
+
+            const emailSubject = `Attendance Alert - ${studentName} - ${subjectName}`;
+            const emailBody = `Dear Parent/Guardian,
+
+This is an academic attendance notification from DSATM.
+
+Your ward:
+Student Name: ${studentName}
+USN: ${usn}
+Subject: ${subjectName} (${subjectCode})
+Date: ${todayDateStr}
+Attendance Status: ABSENT
+
+The student was marked absent for the above class.
+
+Please log in to the college LMS for further academic details.
+
+Regards,
+DSATM College LMS`;
+
+            const attendanceRecId = `att-rec-${subjectId}-${studentId}-${todayDateStr}`;
+
+            try {
+              // Send email to parent
+              await sendEmail(parent.email, emailSubject, emailBody);
+
+              // Log notification as SENT
+              await createNotificationLog({
+                student_id: studentId,
+                parent_id: parent.id,
+                attendance_id: attendanceRecId,
+                channel: "EMAIL",
+                notification_type: "ATTENDANCE_ABSENCE",
+                recipient: parent.email,
+                subject: emailSubject,
+                message: emailBody,
+                status: "SENT",
+              });
+
+              // Create student in-app LMS notification
+              await notify(
+                studentId,
+                "attendance_absence",
+                `Attendance Alert: ${subjectName}`,
+                `You were marked absent for ${subjectName} on ${todayDateStr}.`
+              );
+
+              sentCount++;
+              notificationDetails.push({
+                studentId,
+                studentName,
+                status: "SENT",
+                recipient: parent.email,
+              });
+            } catch (err) {
+              console.error(`Failed to send absence email to parent ${parent.email}:`, err.message);
+              // Log notification as FAILED
+              await createNotificationLog({
+                student_id: studentId,
+                parent_id: parent.id,
+                attendance_id: attendanceRecId,
+                channel: "EMAIL",
+                notification_type: "ATTENDANCE_ABSENCE",
+                recipient: parent.email,
+                subject: emailSubject,
+                message: emailBody,
+                status: "FAILED",
+                failure_reason: err.message,
+              });
+
+              failedCount++;
+              notificationDetails.push({
+                studentId,
+                studentName,
+                status: "FAILED",
+                failureReason: err.message,
+              });
+            }
+          }
+        }
+      } else {
+        presentCount++;
+      }
+    }
+
+    res.json({
+      success: true,
+      message: "Attendance saved successfully.",
+      updatedCount: updated.length,
+      records: updated,
+      presentCount,
+      absentCount,
+      parentNotifications: {
+        sent: sentCount,
+        failed: failedCount,
+        notConfigured: notConfiguredCount,
+        details: notificationDetails,
+      },
+    });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// GET /api/faculty/students/:studentId/parent -> Read primary parent contact for a student
+router.get("/students/:studentId/parent", async (req, res) => {
+  try {
+    const { studentId } = req.params;
+    const parent = await getPrimaryParent(studentId);
+    res.json({ success: true, parent });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// POST /api/faculty/students/:studentId/parent -> Save or update parent contact info
+router.post("/students/:studentId/parent", async (req, res) => {
+  try {
+    const { studentId } = req.params;
+    const { name, relationship, email, mobile, is_primary, email_enabled, sms_enabled } = req.body;
+    if (!name || !name.trim()) {
+      return res.status(400).json({ error: "Parent/Guardian name is required" });
+    }
+
+    const parent = await saveStudentParent(studentId, {
+      name,
+      relationship,
+      email,
+      mobile,
+      is_primary: is_primary !== false,
+      email_enabled: email_enabled !== false,
+      sms_enabled: Boolean(sms_enabled),
+    });
+
+    res.json({
+      success: true,
+      parent,
+      message: "Parent contact information saved successfully.",
+    });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
@@ -241,17 +456,19 @@ router.post("/exams", async (req, res) => {
 
       if (groqApiKey) {
         try {
-          const prompt = `Generate 5 academic exam questions for the course subject: "${subjectName}" (${subjectCode}).
+          const prompt = `Generate 10 official academic internal exam questions for the course subject: "${subjectName}" (${subjectCode}).
 Exam Title: "${title}", Total Marks: ${totalMarks || 50}.
-Instructions / Focus: ${instructions || "Cover core syllabus units, principles, and applications."}
+Instructions / Focus: ${instructions || "Cover core syllabus topics, numerical/problem-solving applications, algorithms, and analytical principles."}
 
-${materialText ? `COURSE MATERIAL CONTEXT:\n${materialText.substring(0, 2000)}\n` : ""}
+${materialText ? `COURSE MATERIAL CONTEXT:\n${materialText.substring(0, 3000)}\n` : ""}
 
-Requirements:
-- Every question must be strictly about ${subjectName}.
-- Do NOT generate questions about unrelated subjects.
-- Each question must carry 10 marks.
-- Return ONLY a JSON array of 5 objects with keys: "question_no" (1 to 5), "unit" (e.g. "Unit 1"), "difficulty" ("hard"), "marks" (10), "question_text" (string).`;
+CRITICAL REQUIREMENTS:
+1. Return 10 questions arranged as 5 OR choice pairs (Q1 OR Q2, Q3 OR Q4, Q5 OR Q6, Q7 OR Q8, Q9 OR Q10).
+2. Every question must carry 10 marks.
+3. Every question must be a REAL, highly specific, authentic academic exam question (include numerical parameters, scenario analysis, design/modeling, protocol workflows, or code syntax where appropriate).
+4. DO NOT generate dummy text or generic phrases (such as "Define core principles of...", "Explain key algorithms...", "Part 1", etc.).
+5. For each question, assign Course Outcome ("co": "CO1", "CO2", "CO3", "CO4", or "CO5") and Bloom's Taxonomy Level ("rbt": "L1", "L2", "L3", "L4", "L5", or "L6").
+6. Return ONLY a valid JSON array of 10 objects with keys: "question_no" (1 to 10), "marks" (10), "co" (string), "rbt" (string), "difficulty" ("easy"/"medium"/"hard"), "question_text" (string).`;
 
           const groqRes = await axios.post(
             "https://api.groq.com/openai/v1/chat/completions",
@@ -262,7 +479,7 @@ Requirements:
             },
             {
               headers: { Authorization: `Bearer ${groqApiKey}`, "Content-Type": "application/json" },
-              timeout: 12000,
+              timeout: 15000,
             }
           );
 
@@ -276,59 +493,72 @@ Requirements:
         }
       }
 
-      // Dynamic fallback if Groq call failed or returned empty
+      // Domain-specific non-dummy generator if Groq call failed or returned empty
       if (!newQuestions || newQuestions.length === 0) {
-        newQuestions = [
-          {
-            question_no: 1,
-            unit: "Unit 1",
-            difficulty: difficulty || "hard",
-            marks: 10,
-            question_text: `Define the core principles, terminology, and foundational architecture of ${subjectName} (${subjectCode}).`,
-          },
-          {
-            question_no: 2,
-            unit: "Unit 2",
-            difficulty: difficulty || "hard",
-            marks: 10,
-            question_text: `Describe the fundamental workflows, methodologies, and operational lifecycle in ${subjectName}.`,
-          },
-          {
-            question_no: 3,
-            unit: "Unit 3",
-            difficulty: difficulty || "hard",
-            marks: 10,
-            question_text: `Explain key algorithms, tools, and technical modeling strategies used in ${subjectName} with real-world examples.`,
-          },
-          {
-            question_no: 4,
-            unit: "Unit 4",
-            difficulty: difficulty || "hard",
-            marks: 10,
-            question_text: `Analyze system optimization, security parameters, and performance scalability in ${subjectName}.`,
-          },
-          {
-            question_no: 5,
-            unit: "Unit 5",
-            difficulty: difficulty || "hard",
-            marks: 10,
-            question_text: `Compare different design paradigms and industry practices in ${subjectName}, highlighting pros and cons.`,
-          },
-        ];
+        const sNameLower = subjectName.toLowerCase();
+        
+        if (sNameLower.includes("network")) {
+          newQuestions = [
+            { question_no: 1, co: "CO3", rbt: "L4", difficulty: "hard", marks: 10, question_text: "A network administrator observes that packets transmitted from a source to a destination are taking different routes based on network conditions. Identify the type of network being used and explain its working along with its advantages and limitations." },
+            { question_no: 2, co: "CO3", rbt: "L4", difficulty: "hard", marks: 10, question_text: "A company requires guaranteed bandwidth for critical communication and efficient bandwidth utilization for data transfer. Recommend suitable switching techniques for both requirements and justify your recommendations." },
+            { question_no: 3, co: "CO2", rbt: "L3", difficulty: "medium", marks: 10, question_text: "A sender uses the generator polynomial 1011 to transmit the data word 100100. Calculate the CRC remainder, the transmitted frame, and find whether the receiver detects an error if the received frame is 100100111." },
+            { question_no: 4, co: "CO2", rbt: "L3", difficulty: "medium", marks: 10, question_text: "Apply the 8-bit Internet Checksum technique, compute the checksum for the following data segments: 10101010, 11001100. Find: I. The checksum generated at the sender. II. The transmitted message. III. The receiver verification process." },
+            { question_no: 5, co: "CO3", rbt: "L4", difficulty: "hard", marks: 10, question_text: "Analyze the differences between random access and controlled access techniques with examples like ALOHA and polling." },
+            { question_no: 6, co: "CO3", rbt: "L4", difficulty: "hard", marks: 10, question_text: "Compare and contrast between FDMA, TDMA, and CDMA. Describe how the Domain Name System (DNS) translates domain names into IP addresses." },
+            { question_no: 7, co: "CO1", rbt: "L2", difficulty: "easy", marks: 10, question_text: "Demonstrate how a firewall filters network traffic based on predefined security rules." },
+            { question_no: 8, co: "CO1", rbt: "L2", difficulty: "easy", marks: 10, question_text: "Illustrate the interaction between a client and a server in a web-based application and explain the request-response process." },
+            { question_no: 9, co: "CO2", rbt: "L3", difficulty: "medium", marks: 10, question_text: "Illustrate the operation of SMTP, POP3, and IMAP protocols in managing email transmission and retrieval." },
+            { question_no: 10, co: "CO2", rbt: "L3", difficulty: "medium", marks: 10, question_text: "Analyze the working mechanism of TCP three-way handshake and contrast TCP header fields with UDP datagram structure." }
+          ];
+        } else if (sNameLower.includes("deep learning") || sNameLower.includes("ai") || sNameLower.includes("intelligence")) {
+          newQuestions = [
+            { question_no: 1, co: "CO3", rbt: "L4", difficulty: "hard", marks: 10, question_text: "Analyze the mathematical formulation of backpropagation in deep neural networks. Derive the weight update equations for a multi-layer perceptron with cross-entropy loss." },
+            { question_no: 2, co: "CO3", rbt: "L4", difficulty: "hard", marks: 10, question_text: "Compare Convolutional Neural Networks (CNNs) and Recurrent Neural Networks (RNNs) in terms of architecture, weight sharing, spatial invariance, and suitable application domains." },
+            { question_no: 3, co: "CO2", rbt: "L3", difficulty: "medium", marks: 10, question_text: "Given an input image matrix of size 7x7 and a 3x3 filter with stride 1 and padding 1, compute the output feature map dimension and total trainable parameters." },
+            { question_no: 4, co: "CO2", rbt: "L3", difficulty: "medium", marks: 10, question_text: "Explain Vanishing and Exploding Gradient problems in deep networks. Demonstrate how ReLU activation functions and Residual Connections (ResNets) mitigate these problems." },
+            { question_no: 5, co: "CO3", rbt: "L4", difficulty: "hard", marks: 10, question_text: "Detail the architecture of LSTM (Long Short-Term Memory) cells. Explain the roles of Forget Gate, Input Gate, and Output Gate with mathematical equations." },
+            { question_no: 6, co: "CO3", rbt: "L4", difficulty: "hard", marks: 10, question_text: "Describe the Self-Attention mechanism in Transformer networks. Differentiate Multi-Head Attention from Scaled Dot-Product Attention." },
+            { question_no: 7, co: "CO1", rbt: "L2", difficulty: "easy", marks: 10, question_text: "Explain the concept of Overfitting in deep learning models and evaluate techniques like Dropout, L2 Regularization, and Early Stopping." },
+            { question_no: 8, co: "CO1", rbt: "L2", difficulty: "easy", marks: 10, question_text: "Illustrate the working of Batch Normalization during training and inference phases, highlighting its effect on internal covariate shift." },
+            { question_no: 9, co: "CO2", rbt: "L3", difficulty: "medium", marks: 10, question_text: "Apply Transfer Learning using pretrained architectures (e.g. ResNet50/VGG16) for custom image classification. Discuss feature extraction vs fine-tuning." },
+            { question_no: 10, co: "CO2", rbt: "L3", difficulty: "medium", marks: 10, question_text: "Compare optimization algorithms: SGD with Momentum, RMSprop, and Adam optimizer, focusing on adaptive learning rates and convergence rates." }
+          ];
+        } else {
+          // General high-quality technical questions tailored to the subject name
+          newQuestions = [
+            { question_no: 1, co: "CO3", rbt: "L4", difficulty: "hard", marks: 10, question_text: `Analyze the foundational architecture and key design patterns in ${subjectName} (${subjectCode}). Discuss how modern scalable systems implement these core principles.` },
+            { question_no: 2, co: "CO3", rbt: "L4", difficulty: "hard", marks: 10, question_text: `Critically evaluate the performance trade-offs, security considerations, and system constraints in ${subjectName} deployment environments.` },
+            { question_no: 3, co: "CO2", rbt: "L3", difficulty: "medium", marks: 10, question_text: `Apply key algorithmic protocols and data transformation techniques used in ${subjectName} to solve industrial workload challenges.` },
+            { question_no: 4, co: "CO2", rbt: "L3", difficulty: "medium", marks: 10, question_text: `Solve a real-world engineering problem using the primary methodologies of ${subjectName}, providing step-by-step mathematical or logical formulations.` },
+            { question_no: 5, co: "CO3", rbt: "L4", difficulty: "hard", marks: 10, question_text: `Compare and contrast classical approaches versus state-of-the-art framework models in ${subjectName} with concrete examples.` },
+            { question_no: 6, co: "CO3", rbt: "L4", difficulty: "hard", marks: 10, question_text: `Demonstrate the integration of fault tolerance, concurrency management, and error recovery techniques in ${subjectName} systems.` },
+            { question_no: 7, co: "CO1", rbt: "L2", difficulty: "easy", marks: 10, question_text: `Illustrate the lifecycle, state transitions, and operational pipeline in ${subjectName} with a neat block diagram.` },
+            { question_no: 8, co: "CO1", rbt: "L2", difficulty: "easy", marks: 10, question_text: `Describe the standard protocol formats, interface contracts, and specifications governing ${subjectName}.` },
+            { question_no: 9, co: "CO2", rbt: "L3", difficulty: "medium", marks: 10, question_text: `Explain how testing, verification, and automated validation are carried out in ${subjectName} applications.` },
+            { question_no: 10, co: "CO2", rbt: "L3", difficulty: "medium", marks: 10, question_text: `Analyze emerging trends, future directions, and optimization strategies in ${subjectName} implementations.` }
+          ];
+        }
       }
 
       // Insert generated questions into DB questions table
-      const questionRows = newQuestions.map((q, idx) => ({
-        exam_id: exam.id,
-        question_no: q.question_no || idx + 1,
-        unit: q.unit || `Unit ${(idx % 5) + 1}`,
-        difficulty: q.difficulty || "medium",
-        marks: q.marks || 10,
-        question_text: q.question_text || q.text,
-        rubric: {
-          key_points: ["Accurate definition & concepts", "Technical diagrams / code syntax", "Clear analytical explanation"],
-        },
-      }));
+      const questionRows = newQuestions.map((q, idx) => {
+        const coVal = q.co || `CO${((Math.floor(idx / 2) % 4) + 1)}`;
+        const rbtVal = q.rbt || `L${((Math.floor(idx / 2) % 4) + 1)}`;
+        return {
+          exam_id: exam.id,
+          question_no: q.question_no || idx + 1,
+          unit: null,
+          co_po: coVal,
+          difficulty: q.difficulty || "medium",
+          marks: q.marks || 10,
+          question_text: q.question_text || q.text,
+          rubric: {
+            co: coVal,
+            rbt: rbtVal,
+            key_points: ["Accurate technical explanation", "Relevant diagrams / equations / syntax", "Analytical clarity"],
+          },
+        };
+      });
 
       await supabaseAdmin.from("questions").insert(questionRows);
     }
@@ -345,24 +575,56 @@ Requirements:
 router.get("/exams/:examId/questions", async (req, res) => {
   const { data, error } = await supabaseAdmin
     .from("questions")
-    .select("id, question_no, question_text, marks, unit, difficulty")
+    .select("id, question_no, question_text, marks, difficulty, co_po, rubric")
     .eq("exam_id", req.params.examId)
     .order("question_no", { ascending: true });
   if (error) return res.status(500).json({ error: error.message });
-  res.json(data);
+
+  const mapped = (data || []).map((q, idx) => ({
+    ...q,
+    co: q.co_po || q.rubric?.co || `CO${((Math.floor(idx / 2) % 4) + 1)}`,
+    rbt: q.rubric?.rbt || `L${((Math.floor(idx / 2) % 4) + 1)}`
+  }));
+
+  res.json(mapped);
 });
 
 // PATCH /api/faculty/questions/:id -> edit question
 router.patch("/questions/:id", async (req, res) => {
-  const { questionText, marks } = req.body;
-  const { data, error } = await supabaseAdmin
-    .from("questions")
-    .update({ question_text: questionText, marks })
-    .eq("id", req.params.id)
-    .select()
-    .single();
-  if (error) return res.status(400).json({ error: error.message });
-  res.json(data);
+  const { questionText, marks, co, rbt } = req.body;
+  const updateData = {};
+  if (questionText !== undefined) updateData.question_text = questionText;
+  if (marks !== undefined) updateData.marks = Number(marks);
+  if (co !== undefined) updateData.co_po = co;
+
+  try {
+    const { data: existing } = await supabaseAdmin
+      .from("questions")
+      .select("rubric")
+      .eq("id", req.params.id)
+      .single();
+
+    const currentRubric = existing?.rubric || {};
+    if (co !== undefined || rbt !== undefined) {
+      updateData.rubric = {
+        ...currentRubric,
+        ...(co ? { co } : {}),
+        ...(rbt ? { rbt } : {})
+      };
+    }
+
+    const { data, error } = await supabaseAdmin
+      .from("questions")
+      .update(updateData)
+      .eq("id", req.params.id)
+      .select()
+      .single();
+
+    if (error) return res.status(400).json({ error: error.message });
+    res.json(data);
+  } catch (err) {
+    res.status(400).json({ error: err.message });
+  }
 });
 
 // DELETE /api/faculty/questions/:id -> reject question
@@ -373,6 +635,33 @@ router.delete("/questions/:id", async (req, res) => {
 });
 
 // POST /api/faculty/exams/:examId/export-pdf -> Official DSATM Question Paper PDF export
+function getLogoHtml() {
+  try {
+    const candidatePaths = [
+      path.resolve(__dirname, "../../../frontend/public/dsi-logo.png"),
+      path.resolve(__dirname, "../../public/dsi-logo.png"),
+      path.resolve(process.cwd(), "frontend/public/dsi-logo.png"),
+      path.resolve(process.cwd(), "public/dsi-logo.png")
+    ];
+    for (const p of candidatePaths) {
+      if (fs.existsSync(p)) {
+        const fileBuffer = fs.readFileSync(p);
+        return `<img src="data:image/png;base64,${fileBuffer.toString("base64")}" alt="DSATM Logo" class="logo-img" />`;
+      }
+    }
+  } catch (err) {
+    console.error("Error embedding logo:", err);
+  }
+  return `<svg width="70" height="70" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg" class="logo-img">
+    <circle cx="50" cy="50" r="46" fill="#1e3a8a" stroke="#d97706" stroke-width="3"/>
+    <circle cx="50" cy="50" r="38" fill="#ffffff"/>
+    <path d="M50 18 L72 32 L72 64 L50 78 L28 64 L28 32 Z" fill="#1e3a8a" stroke="#d97706" stroke-width="2"/>
+    <text x="50" y="47" text-anchor="middle" fill="#f59e0b" font-weight="bold" font-size="12" font-family="Arial">DSATM</text>
+    <text x="50" y="58" text-anchor="middle" fill="#ffffff" font-weight="bold" font-size="8" font-family="Arial">VTU</text>
+  </svg>`;
+}
+
+// POST /api/faculty/exams/:examId/export-pdf -> Generate DSATM Question Paper PDF
 router.post("/exams/:examId/export-pdf", async (req, res) => {
   try {
     const { examId } = req.params;
@@ -390,8 +679,8 @@ router.post("/exams/:examId/export-pdf", async (req, res) => {
     // Build DSATM Question Grid Rows with OR dividers
     let qRowsHtml = "";
     sortedQuestions.forEach((q, idx) => {
-      const co = `CO${((idx % 4) + 1)}`;
-      const rbt = `L${((idx % 4) + 1)}`;
+      const co = q.co_po || q.rubric?.co || `CO${((Math.floor(idx / 2) % 4) + 1)}`;
+      const rbt = q.rubric?.rbt || `L${((Math.floor(idx / 2) % 4) + 1)}`;
 
       qRowsHtml += `
         <tr>
@@ -403,11 +692,11 @@ router.post("/exams/:examId/export-pdf", async (req, res) => {
         </tr>
       `;
 
-      // Insert OR divider after odd-indexed questions for choice pairs
+      // Insert OR divider after odd-indexed questions (e.g. Q1, Q3, Q5, Q7, Q9) for choice pairs
       if (idx % 2 === 0 && idx < sortedQuestions.length - 1) {
         qRowsHtml += `
           <tr class="or-row">
-            <td colspan="5" style="text-align:center; font-weight:bold; background:#f8fafc; padding:3px; font-size:11px; letter-spacing:1px;">OR</td>
+            <td colspan="5">OR</td>
           </tr>
         `;
       }
@@ -420,56 +709,71 @@ router.post("/exams/:examId/export-pdf", async (req, res) => {
         <meta charset="utf-8">
         <title>DSATM Question Paper - ${exam.title}</title>
         <style>
-          @page { size: A4; margin: 15mm; }
-          body { font-family: "Times New Roman", Times, serif; color: #000; margin: 0; padding: 20px; font-size: 13px; line-height: 1.4; background: #fff; }
-          .paper-border { border: 2px solid #000; padding: 18px; }
+          @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+          @page { size: A4 portrait; margin: 10mm; }
+          * { box-sizing: border-box; }
+          body { font-family: 'Inter', sans-serif; color: #0f172a; margin: 0; padding: 15px; font-size: 11.5px; line-height: 1.4; background: #f8fafc; }
+          
+          .paper-border { border: 2px solid #0f172a; border-top: 5px solid #1e3a8a; padding: 20px; background: #ffffff; border-radius: 6px; box-shadow: 0 4px 20px rgba(0,0,0,0.06); }
           
           .header-table { width: 100%; border-collapse: collapse; margin-bottom: 12px; }
-          .header-table td { text-align: center; vertical-align: middle; }
-          .inst-title { font-size: 16px; font-weight: bold; text-transform: uppercase; letter-spacing: 0.5px; margin: 0; }
-          .inst-sub { font-size: 11px; font-style: italic; margin-top: 2px; }
-          .dept-title { font-size: 13px; font-weight: bold; text-transform: uppercase; margin-top: 5px; }
-          .exam-title { font-size: 14px; font-weight: bold; text-decoration: underline; margin-top: 6px; text-transform: uppercase; }
+          .header-table td { vertical-align: middle; }
+          .logo-td { width: 85px; text-align: center; padding-right: 10px; }
+          .logo-img { max-width: 78px; max-height: 78px; object-fit: contain; }
+          .title-td { text-align: center; }
+          
+          .inst-title { font-size: 16px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px; margin: 0; color: #0f172a; }
+          .inst-sub { font-size: 10px; font-style: italic; color: #475569; margin-top: 1px; }
+          .inst-accred { font-size: 10px; font-weight: 600; color: #1e40af; margin-top: 2px; }
+          .dept-title { font-size: 12px; font-weight: 800; text-transform: uppercase; margin-top: 4px; color: #1e3a8a; letter-spacing: 0.5px; }
+          .exam-title { font-size: 12px; font-weight: 700; margin-top: 6px; text-transform: uppercase; letter-spacing: 0.8px; background: #f1f5f9; color: #0f172a; padding: 5px 12px; border-radius: 4px; display: inline-block; border: 1px solid #cbd5e1; }
 
-          .meta-table { width: 100%; border-collapse: collapse; margin-bottom: 14px; border: 1px solid #000; }
-          .meta-table td { border: 1px solid #000; padding: 5px 8px; font-size: 12px; }
-          .meta-label { font-weight: bold; width: 18%; background: #f8fafc; }
-          .meta-val { width: 32%; }
+          .meta-table { width: 100%; border-collapse: collapse; margin-bottom: 12px; border: 1px solid #cbd5e1; border-radius: 4px; overflow: hidden; }
+          .meta-table td { border: 1px solid #e2e8f0; padding: 5px 8px; font-size: 11px; }
+          .meta-label { font-weight: 700; width: 18%; background: #f8fafc; color: #334155; text-transform: uppercase; font-size: 10px; }
+          .meta-val { width: 32%; color: #0f172a; font-weight: 600; }
 
-          .instructions-box { border: 1px solid #000; padding: 6px 10px; font-size: 11px; font-weight: bold; margin-bottom: 14px; background: #fafafa; }
+          .instructions-box { border: 1px solid #3b82f6; padding: 8px 12px; font-size: 11px; font-weight: 700; margin-bottom: 12px; background: #eff6ff; color: #1e40af; border-radius: 4px; }
 
-          .q-table { width: 100%; border-collapse: collapse; border: 1px solid #000; }
-          .q-table th { border: 1px solid #000; padding: 6px; font-size: 12px; text-align: center; background: #f1f5f9; font-weight: bold; }
-          .q-table td { border: 1px solid #000; padding: 8px; font-size: 12px; vertical-align: top; }
-          .col-qno { width: 45px; text-align: center; font-weight: bold; }
-          .col-text { text-align: left; }
-          .col-marks { width: 50px; text-align: center; font-weight: bold; }
-          .col-co { width: 55px; text-align: center; font-weight: bold; }
-          .col-rbt { width: 55px; text-align: center; font-weight: bold; }
+          .q-table { width: 100%; border-collapse: collapse; border: 1px solid #cbd5e1; border-radius: 4px; overflow: hidden; }
+          .q-table th { border: 1px solid #334155; padding: 7px 6px; font-size: 10.5px; text-align: center; background: #0f172a; color: #ffffff; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; }
+          .q-table td { border: 1px solid #e2e8f0; padding: 8px 6px; font-size: 11px; vertical-align: top; }
+          .col-qno { width: 45px; text-align: center; font-weight: 800; color: #1e3a8a; }
+          .col-text { text-align: left; line-height: 1.45; color: #0f172a; font-weight: 500; }
+          .col-marks { width: 50px; text-align: center; font-weight: 700; }
+          .col-co { width: 50px; text-align: center; font-weight: 700; color: #0284c7; }
+          .col-rbt { width: 50px; text-align: center; font-weight: 700; color: #059669; }
 
-          .print-btn-bar { margin-bottom: 16px; text-align: right; }
-          .print-btn { background: #4f46e5; color: #fff; border: none; padding: 8px 18px; border-radius: 6px; font-weight: bold; cursor: pointer; }
+          .or-row td { text-align: center; font-weight: 800; background: #f8fafc; color: #d97706; padding: 6px; font-size: 11px; letter-spacing: 3px; border-top: 1px dashed #cbd5e1; border-bottom: 1px dashed #cbd5e1; }
+
+          .print-btn-bar { margin-bottom: 14px; text-align: right; }
+          .print-btn { background: #2563eb; color: #fff; border: none; padding: 9px 20px; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 13px; }
 
           @media print {
-            body { padding: 0; }
+            body { padding: 0; background: #fff; }
             .print-btn-bar { display: none; }
+            .paper-border { box-shadow: none; border-width: 1px; }
           }
         </style>
       </head>
       <body>
         <div class="print-btn-bar">
-          <button className="print-btn" onclick="window.print()">🖨️ Print / Save as PDF</button>
+          <button class="print-btn" onclick="window.print()">🖨️ Print / Save as PDF</button>
         </div>
 
         <div class="paper-border">
           <!-- Institutional Header -->
           <table class="header-table">
             <tr>
-              <td>
+              <td class="logo-td">
+                ${getLogoHtml()}
+              </td>
+              <td class="title-td">
                 <div class="inst-title">Dayananda Sagar Academy of Technology & Management</div>
-                <div class="inst-sub">(Autonomous Institute under VTU, Accredited by NAAC with A+ Grade, AICTE Approved)</div>
+                <div class="inst-sub">(An Autonomous Institute Affiliated to VTU, Belagavi | Approved by AICTE, New Delhi)</div>
+                <div class="inst-accred">Accredited by NAAC with A+ Grade | 4 Programs Accredited by NBA (CSE, ISE, ECE, ME)</div>
                 <div class="dept-title">Department of Master of Computer Applications</div>
-                <div class="exam-title">${exam.title || "Second Internal Assessment Test (IAT-2)"}</div>
+                <div><div class="exam-title">${exam.title || "Second Internal Assessment Test (IAT-2)"}</div></div>
               </td>
             </tr>
           </table>
@@ -478,30 +782,30 @@ router.post("/exams/:examId/export-pdf", async (req, res) => {
           <table class="meta-table">
             <tr>
               <td class="meta-label">Subject:</td>
-              <td class="meta-val"><strong>${exam.subjects?.name || "Database Management Systems"}</strong></td>
+              <td class="meta-val">${exam.subjects?.name || "Computer Networks"}</td>
               <td class="meta-label">Subject Code:</td>
-              <td class="meta-val"><strong>${exam.subjects?.code || "MMC204"}</strong></td>
+              <td class="meta-val">${exam.subjects?.code || "MMC204"}</td>
             </tr>
             <tr>
               <td class="meta-label">Semester:</td>
-              <td class="meta-val">02 / 03</td>
+              <td class="meta-val">02</td>
               <td class="meta-label">Max. Marks:</td>
-              <td class="meta-val"><strong>${exam.total_marks || 50}</strong></td>
+              <td class="meta-val">${exam.total_marks || 50} Marks</td>
+            </tr>
+            <tr>
+              <td class="meta-label">Batch:</td>
+              <td class="meta-val">2025-2027</td>
+              <td class="meta-label">Duration:</td>
+              <td class="meta-val">90 Minutes</td>
             </tr>
             <tr>
               <td class="meta-label">Date of IAT:</td>
               <td class="meta-val">${new Date().toLocaleDateString('en-GB')}</td>
-              <td class="meta-label">Duration:</td>
-              <td class="meta-val">90 Min / 2 Hours</td>
-            </tr>
-            <tr>
-              <td class="meta-label">Batch:</td>
-              <td class="meta-val">2025 - 2027</td>
               <td class="meta-label">Teaching Dept:</td>
               <td class="meta-val">MCA</td>
             </tr>
             <tr>
-              <td colspan="4" style="font-size: 11px; padding: 4px 8px; background: #f8fafc;">
+              <td colspan="4" style="font-size: 10px; padding: 5px 8px; background: #f8fafc; color: #475569;">
                 <strong>RBT Levels:</strong> L1-Remember, L2-Understand, L3-Apply, L4-Analyze, L5-Evaluate, L6-Create
               </td>
             </tr>
@@ -509,7 +813,7 @@ router.post("/exams/:examId/export-pdf", async (req, res) => {
 
           <!-- Instructions Box -->
           <div class="instructions-box">
-            Instruction: Answer the following questions choosing one from each option (e.g., Q1 OR Q2).
+            📌 Instruction: Answer five full questions selecting ONE full question from each choice pair option.
           </div>
 
           <!-- Main Questions Table Grid -->
@@ -1425,6 +1729,495 @@ router.get("/exams/:examId/results", async (req, res) => {
   }
 });
 
+// POST /api/faculty/exams/:examId/export-results-pdf -> Official DSATM Result Sheet PDF export
+router.post("/exams/:examId/export-results-pdf", async (req, res) => {
+  try {
+    const { examId } = req.params;
+
+    const { data: exam } = await supabaseAdmin
+      .from("exams")
+      .select("*, subjects(name, code, department_id)")
+      .eq("id", examId)
+      .single();
+
+    if (!exam) return res.status(404).json({ error: "Exam not found" });
+
+    let facultyInChargeName = "Faculty In-Charge";
+    if (req.user?.id) {
+      const { data: fProf } = await supabaseAdmin
+        .from("profiles")
+        .select("full_name")
+        .eq("id", req.user.id)
+        .maybeSingle();
+      if (fProf?.full_name) {
+        facultyInChargeName = fProf.full_name;
+      }
+    }
+
+    // 1. Fetch submissions for this exam
+    const { data: submissions } = await supabaseAdmin
+      .from("answer_submissions")
+      .select("id, student_id, status")
+      .eq("exam_id", examId);
+
+    const submissionIds = (submissions || []).map((s) => s.id);
+
+    // 2. Fetch answers
+    const { data: answers } = submissionIds.length
+      ? await supabaseAdmin
+          .from("answers")
+          .select("id, submission_id")
+          .in("submission_id", submissionIds)
+      : { data: [] };
+
+    const answerIds = (answers || []).map((a) => a.id);
+
+    // 3. Fetch evaluations
+    const { data: evaluations } = answerIds.length
+      ? await supabaseAdmin
+          .from("evaluations")
+          .select("id, answer_id, final_marks, ai_suggested_marks, published")
+          .in("answer_id", answerIds)
+      : { data: [] };
+
+    // 4. Fetch profiles
+    const studentIds = (submissions || []).map((s) => s.student_id);
+    const { data: studentProfiles } = studentIds.length
+      ? await supabaseAdmin
+          .from("profiles")
+          .select("id, full_name, registration_no")
+          .in("id", studentIds)
+      : { data: [] };
+
+    const rows = (submissions || []).map((s) => {
+      const prof = (studentProfiles || []).find((p) => p.id === s.student_id);
+      const studentAnsIds = (answers || []).filter((a) => a.submission_id === s.id).map((a) => a.id);
+      const studentEvals = (evaluations || []).filter((e) => studentAnsIds.includes(e.answer_id));
+
+      const total = studentEvals.reduce((sum, e) => {
+        return sum + (e.final_marks !== null ? Number(e.final_marks) : Number(e.ai_suggested_marks || 0));
+      }, 0);
+
+      const allVerified = studentEvals.length > 0 && studentEvals.every((e) => e.final_marks !== null);
+      const allPublished = studentEvals.length > 0 && studentEvals.every((e) => e.published);
+
+      return {
+        submissionId: s.id,
+        studentId: s.student_id,
+        fullName: prof?.full_name || "Student",
+        registrationNo: prof?.registration_no || "—",
+        totalMarks: Math.round(total * 10) / 10,
+        maxMarks: exam.total_marks || 50,
+        status: allPublished ? "Published" : allVerified ? "Verified" : "Pending",
+      };
+    });
+
+    const sortedRows = [...rows].sort((a, b) => b.totalMarks - a.totalMarks);
+
+    // Summary Stats
+    const totalStudents = sortedRows.length;
+    const highestScore = sortedRows.length > 0 ? sortedRows[0].totalMarks : 0;
+    const totalSum = sortedRows.reduce((acc, r) => acc + r.totalMarks, 0);
+    const avgScore = totalStudents > 0 ? (totalSum / totalStudents).toFixed(1) : 0;
+    const passCount = sortedRows.filter((r) => (r.totalMarks / r.maxMarks) >= 0.4).length;
+    const passPct = totalStudents > 0 ? Math.round((passCount / totalStudents) * 100) : 0;
+
+    let tableRowsHtml = "";
+    sortedRows.forEach((r, idx) => {
+      const rank = idx + 1;
+      const pct = r.maxMarks > 0 ? Math.round((r.totalMarks / r.maxMarks) * 100) : 0;
+      let gradePill = '<span class="grade-pill grade-f">Fail (F)</span>';
+      if (pct >= 85) gradePill = '<span class="grade-pill grade-fcd">⭐ FCD (Distinction)</span>';
+      else if (pct >= 70) gradePill = '<span class="grade-pill grade-fc">FC (First Class)</span>';
+      else if (pct >= 50) gradePill = '<span class="grade-pill grade-sc">SC (Second Class)</span>';
+      else if (pct >= 40) gradePill = '<span class="grade-pill grade-p">P (Pass)</span>';
+
+      let rankBadge = `<span class="rank-badge rank-other">${rank}</span>`;
+      if (rank === 1) rankBadge = `<span class="rank-badge rank-1">🥇 1</span>`;
+      else if (rank === 2) rankBadge = `<span class="rank-badge rank-2">🥈 2</span>`;
+      else if (rank === 3) rankBadge = `<span class="rank-badge rank-3">🥉 3</span>`;
+
+      const statusBadge = r.status === "Published" 
+        ? '<span class="status-pill status-pub">✓ Published</span>' 
+        : '<span class="status-pill status-pen">⏳ Pending</span>';
+
+      tableRowsHtml += `
+        <tr>
+          <td style="text-align:center;">${rankBadge}</td>
+          <td style="text-align:center;"><span class="usn-code">${r.registrationNo}</span></td>
+          <td style="text-align:left; font-weight:600; color: #0f172a;">${r.fullName}</td>
+          <td style="text-align:center; font-weight:800; font-size:12px; color: #1e3a8a;">${r.totalMarks}</td>
+          <td style="text-align:center; color: #64748b;">${r.maxMarks}</td>
+          <td style="text-align:center;"><span class="pct-pill">${pct}%</span></td>
+          <td style="text-align:center;">${gradePill}</td>
+          <td style="text-align:center;">${statusBadge}</td>
+        </tr>
+      `;
+    });
+
+    const html = `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <meta charset="utf-8">
+        <title>DSATM Official Results Sheet - ${exam.title}</title>
+        <style>
+          @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+          @page { size: A4 portrait; margin: 10mm; }
+          
+          * { box-sizing: border-box; }
+          body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            color: #0f172a;
+            margin: 0;
+            padding: 16px;
+            font-size: 11.5px;
+            line-height: 1.4;
+            background: #f1f5f9;
+          }
+
+          .print-btn-bar {
+            margin-bottom: 16px;
+            text-align: right;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: #ffffff;
+            padding: 10px 18px;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+          }
+          .doc-info-tag { font-size: 13px; font-weight: 700; color: #1e3a8a; }
+          .print-btn {
+            background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+            color: #ffffff;
+            border: none;
+            padding: 10px 22px;
+            border-radius: 6px;
+            font-weight: 700;
+            font-size: 13px;
+            cursor: pointer;
+            box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
+            transition: transform 0.15s ease;
+          }
+          .print-btn:hover { transform: translateY(-1px); }
+
+          .sheet-card {
+            background: #ffffff;
+            border: 2px solid #1e3a8a;
+            border-top: 6px solid #d97706;
+            border-radius: 8px;
+            padding: 24px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+            position: relative;
+          }
+
+          /* Header Section */
+          .header-table { width: 100%; border-collapse: collapse; margin-bottom: 16px; }
+          .header-table td { vertical-align: middle; }
+          .logo-td { width: 90px; text-align: center; padding-right: 12px; }
+          .logo-img { max-width: 80px; max-height: 80px; object-fit: contain; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.12)); }
+          .title-td { text-align: center; }
+
+          .inst-title {
+            font-size: 17px;
+            font-weight: 800;
+            color: #0f172a;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+            margin: 0 0 2px 0;
+          }
+          .inst-sub { font-size: 10px; color: #475569; font-style: italic; margin-top: 1px; }
+          .inst-accreditation { font-size: 10px; font-weight: 600; color: #1e40af; margin-top: 2px; }
+          .dept-title { font-size: 12.5px; font-weight: 800; color: #1e3a8a; text-transform: uppercase; margin-top: 5px; letter-spacing: 0.6px; }
+          
+          .exam-title-banner {
+            background: linear-gradient(135deg, #0f172a 0%, #1e3a8a 100%);
+            color: #ffffff;
+            font-size: 12.5px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            padding: 7px 16px;
+            border-radius: 4px;
+            margin-top: 8px;
+            display: inline-block;
+            border-bottom: 2px solid #f59e0b;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+          }
+
+          /* Metadata Table */
+          .meta-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 16px;
+            border: 1px solid #cbd5e1;
+            border-radius: 6px;
+            overflow: hidden;
+          }
+          .meta-table td { border: 1px solid #e2e8f0; padding: 6px 10px; font-size: 11px; }
+          .meta-label { font-weight: 700; width: 17%; background: #f8fafc; color: #334155; text-transform: uppercase; font-size: 10px; letter-spacing: 0.3px; }
+          .meta-val { width: 33%; color: #0f172a; font-weight: 600; }
+
+          /* Performance Stats Grid */
+          .kpi-table { width: 100%; border-collapse: separate; border-spacing: 10px; margin-bottom: 20px; }
+          .kpi-card {
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-top: 3px solid #3b82f6;
+            border-radius: 6px;
+            padding: 10px 12px;
+            text-align: center;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+          }
+          .kpi-card.kpi-gold { background: #fffbeb; border-top-color: #f59e0b; border-color: #fef3c7; }
+          .kpi-card.kpi-blue { background: #eff6ff; border-top-color: #2563eb; border-color: #dbeafe; }
+          .kpi-card.kpi-green { background: #f0fdf4; border-top-color: #10b981; border-color: #dcfce7; }
+          
+          .kpi-num { font-size: 16px; font-weight: 800; color: #0f172a; margin-bottom: 2px; }
+          .kpi-gold .kpi-num { color: #b45309; }
+          .kpi-blue .kpi-num { color: #1d4ed8; }
+          .kpi-green .kpi-num { color: #15803d; }
+          .kpi-lbl { font-size: 9.5px; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px; }
+
+          /* Results Table */
+          .res-table { width: 100%; border-collapse: collapse; border: 1px solid #cbd5e1; margin-bottom: 28px; border-radius: 6px; overflow: hidden; }
+          .res-table th {
+            background: linear-gradient(135deg, #0f172a 0%, #1e3a8a 100%);
+            color: #ffffff;
+            padding: 9px 8px;
+            font-size: 10px;
+            text-align: center;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            border: 1px solid #334155;
+          }
+          .res-table td { border: 1px solid #e2e8f0; padding: 8px 6px; font-size: 11px; vertical-align: middle; }
+          .res-table tr:nth-child(even) { background: #f8fafc; }
+
+          /* Badges & Formatters */
+          .rank-badge {
+            display: inline-block;
+            padding: 3px 8px;
+            border-radius: 12px;
+            font-weight: 800;
+            font-size: 10.5px;
+            text-align: center;
+            min-width: 32px;
+          }
+          .rank-1 { background: #fef3c7; color: #92400e; border: 1px solid #fde68a; }
+          .rank-2 { background: #f1f5f9; color: #334155; border: 1px solid #cbd5e1; }
+          .rank-3 { background: #ffedd5; color: #9a3412; border: 1px solid #fed7aa; }
+          .rank-other { background: #f8fafc; color: #475569; }
+
+          .usn-code {
+            font-family: 'Courier New', Courier, monospace;
+            font-weight: 700;
+            color: #1e40af;
+            background: #eff6ff;
+            padding: 2px 7px;
+            border-radius: 4px;
+            border: 1px solid #bfdbfe;
+            display: inline-block;
+            font-size: 11px;
+          }
+
+          .pct-pill {
+            font-weight: 700;
+            background: #f1f5f9;
+            padding: 2px 6px;
+            border-radius: 4px;
+            color: #0f172a;
+          }
+
+          .grade-pill {
+            display: inline-block;
+            padding: 3px 9px;
+            border-radius: 12px;
+            font-weight: 700;
+            font-size: 10px;
+            text-transform: uppercase;
+          }
+          .grade-fcd { background: #dcfce7; color: #166534; border: 1px solid #86efac; }
+          .grade-fc { background: #dbeafe; color: #1e40af; border: 1px solid #93c5fd; }
+          .grade-sc { background: #f3e8ff; color: #6b21a8; border: 1px solid #d8b4fe; }
+          .grade-p { background: #e0f2fe; color: #075985; border: 1px solid #7dd3fc; }
+          .grade-f { background: #fee2e2; color: #991b1b; border: 1px solid #fca5a5; }
+
+          .status-pill {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 10px;
+            font-weight: 600;
+            font-size: 10px;
+          }
+          .status-pub { background: #dcfce7; color: #15803d; }
+          .status-pen { background: #fef3c7; color: #b45309; }
+
+          /* Signatures Section */
+          .sig-container { width: 100%; margin-top: 36px; padding-top: 10px; }
+          .sig-table { width: 100%; border-collapse: collapse; border: none; }
+          .sig-table td { text-align: center; font-size: 10.5px; font-weight: 700; color: #1e293b; border: none; padding: 0 10px; vertical-align: bottom; }
+          .sig-space { height: 45px; }
+          .sig-line { border-top: 1.5px dashed #475569; width: 80%; margin: 0 auto 6px auto; }
+          .sig-title { font-weight: 800; color: #0f172a; font-size: 11px; }
+          .sig-sub { font-size: 9.5px; color: #64748b; font-weight: 500; }
+
+          .footer-stamp {
+            margin-top: 24px;
+            border-top: 1px solid #e2e8f0;
+            padding-top: 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 9px;
+            color: #64748b;
+          }
+
+          @media print {
+            body { background: #ffffff; padding: 0; }
+            .print-btn-bar { display: none; }
+            .sheet-card { box-shadow: none; border-width: 1px; padding: 15px; }
+          }
+        </style>
+      </head>
+      <body>
+        <div class="print-btn-bar">
+          <span class="doc-info-tag">📄 DSATM Official Grade Record — Verified Assessment</span>
+          <button class="print-btn" onclick="window.print()">🖨️ Print / Save Official PDF</button>
+        </div>
+
+        <div class="sheet-card">
+          <!-- Institutional Header with Base64 Embedded Logo -->
+          <table class="header-table">
+            <tr>
+              <td class="logo-td">
+                ${getLogoHtml()}
+              </td>
+              <td class="title-td">
+                <div class="inst-title">Dayananda Sagar Academy of Technology & Management</div>
+                <div class="inst-sub">(An Autonomous Institute Affiliated to VTU, Belagavi | Approved by AICTE, New Delhi)</div>
+                <div class="inst-accreditation">Accredited by NAAC with A+ Grade | 4 Programs Accredited by NBA (CSE, ISE, ECE, ME)</div>
+                <div class="dept-title">Department of Master of Computer Applications</div>
+                <div>
+                  <div class="exam-title-banner">OFFICIAL ASSESSMENT RESULT SHEET — ${exam.title || "INTERNAL EXAMINATION"}</div>
+                </div>
+              </td>
+            </tr>
+          </table>
+
+          <!-- Official Metadata Box -->
+          <table class="meta-table">
+            <tr>
+              <td class="meta-label">Subject Name:</td>
+              <td class="meta-val">${exam.subjects?.name || "Computer Networks"}</td>
+              <td class="meta-label">Subject Code:</td>
+              <td class="meta-val">${exam.subjects?.code || "MMC204"}</td>
+            </tr>
+            <tr>
+              <td class="meta-label">Examination:</td>
+              <td class="meta-val">${exam.title || "IAT-2"}</td>
+              <td class="meta-label">Maximum Marks:</td>
+              <td class="meta-val">${exam.total_marks || 50} Marks</td>
+            </tr>
+            <tr>
+              <td class="meta-label">Semester / Batch:</td>
+              <td class="meta-val">02 / 2025 - 2027</td>
+              <td class="meta-label">Date of Result:</td>
+              <td class="meta-val">${new Date().toLocaleDateString('en-GB')}</td>
+            </tr>
+            <tr>
+              <td class="meta-label">Faculty In-charge:</td>
+              <td class="meta-val">${facultyInChargeName}</td>
+              <td class="meta-label">Teaching Dept:</td>
+              <td class="meta-val">MCA</td>
+            </tr>
+          </table>
+
+          <!-- Performance Summary Cards -->
+          <table class="kpi-table">
+            <tr>
+              <td class="kpi-card" style="width: 25%;">
+                <div class="kpi-num">${totalStudents}</div>
+                <div class="kpi-lbl">Total Students Assessed</div>
+              </td>
+              <td class="kpi-card kpi-gold" style="width: 25%;">
+                <div class="kpi-num">${highestScore} / ${exam.total_marks || 50}</div>
+                <div class="kpi-lbl">Highest Score</div>
+              </td>
+              <td class="kpi-card kpi-blue" style="width: 25%;">
+                <div class="kpi-num">${avgScore} Marks</div>
+                <div class="kpi-lbl">Class Average Score</div>
+              </td>
+              <td class="kpi-card kpi-green" style="width: 25%;">
+                <div class="kpi-num">${passPct}%</div>
+                <div class="kpi-lbl">Overall Pass Rate</div>
+              </td>
+            </tr>
+          </table>
+
+          <!-- Structured Results Grid Table -->
+          <table class="res-table">
+            <thead>
+              <tr>
+                <th style="width: 50px;">Rank</th>
+                <th style="width: 120px;">Register No (USN)</th>
+                <th>Student Full Name</th>
+                <th style="width: 70px;">Marks</th>
+                <th style="width: 55px;">Max</th>
+                <th style="width: 80px;">Percentage</th>
+                <th style="width: 135px;">Class Grade</th>
+                <th style="width: 85px;">Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${tableRowsHtml || '<tr><td colspan="8" style="text-align:center; padding: 20px; color: #64748b;">No student results evaluated yet.</td></tr>'}
+            </tbody>
+          </table>
+
+          <!-- Official Signatures Block -->
+          <div class="sig-container">
+            <table class="sig-table">
+              <tr>
+                <td style="width: 33%;">
+                  <div class="sig-space"></div>
+                  <div class="sig-line"></div>
+                  <div class="sig-title">Faculty In-Charge</div>
+                  <div class="sig-sub">(${facultyInChargeName})</div>
+                </td>
+                <td style="width: 34%;">
+                  <div class="sig-space"></div>
+                  <div class="sig-line"></div>
+                  <div class="sig-title">Head of Department</div>
+                  <div class="sig-sub">(Dept. of MCA)</div>
+                </td>
+                <td style="width: 33%;">
+                  <div class="sig-space"></div>
+                  <div class="sig-line"></div>
+                  <div class="sig-title">Controller of Examinations</div>
+                  <div class="sig-sub">(DSATM Authority)</div>
+                </td>
+              </tr>
+            </table>
+          </div>
+
+          <div class="footer-stamp">
+            <span>Official Computer-Generated Document — Dayananda Sagar Academy of Technology & Management</span>
+            <span>Ref ID: DSATM/MCA/${new Date().getFullYear()}/${exam.id ? exam.id.substring(0,8).toUpperCase() : 'OFFICIAL'}</span>
+          </div>
+        </div>
+      </body>
+      </html>
+    `;
+
+    const base64Html = Buffer.from(html).toString("base64");
+    res.json({ download_url: `data:text/html;base64,${base64Html}` });
+  } catch (err) {
+    res.status(400).json({ error: err.message });
+  }
+});
+
 // GET /api/faculty/exams/:examId/analytics
 router.get("/exams/:examId/analytics", async (req, res) => {
   try {
@@ -1643,6 +2436,29 @@ router.delete("/students/:studentId", async (req, res) => {
     res.json({ status: "success", removedStudentId: studentId });
   } catch (err) {
     res.status(400).json({ error: err.message });
+  }
+});
+
+// GET /api/faculty/calendar -> Academic calendar events for faculty dashboard
+router.get("/calendar", async (req, res) => {
+  try {
+    const facultyId = req.user.id;
+    const { data: profile } = await supabaseAdmin
+      .from("profiles")
+      .select("department_id")
+      .eq("id", facultyId)
+      .maybeSingle();
+
+    const { getAcademicCalendarEvents } = require("../services/calendarService");
+    const events = await getAcademicCalendarEvents({
+      departmentId: profile?.department_id || "dept-mca",
+      role: "faculty",
+      userId: facultyId,
+    });
+
+    res.json(events);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
   }
 });
 

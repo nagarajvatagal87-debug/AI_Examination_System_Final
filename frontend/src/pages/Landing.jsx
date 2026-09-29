@@ -1,6 +1,9 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import HeaderBanner from '../components/HeaderBanner.jsx'
+import Footer from '../components/Footer.jsx'
+import LocationMapModal from '../components/LocationMapModal.jsx'
+import PgsModal from '../components/PgsModal.jsx'
 import api from '../api/client.js'
 import './Landing.css'
 
@@ -83,15 +86,20 @@ export default function Landing() {
     satisfaction: '100%',
   })
   const [departments, setDepartments] = useState([])
+  const [allPublicInfo, setAllPublicInfo] = useState([])
   const [loading, setLoading] = useState(true)
   const [activeTab, setActiveTab] = useState('all')
+
+  // Modal State: null | 'fees' | 'achievements' | 'departments'
+  const [activeModal, setActiveModal] = useState(null)
 
   useEffect(() => {
     async function loadRealData() {
       try {
-        const [statsRes, deptsRes] = await Promise.allSettled([
+        const [statsRes, deptsRes, allInfoRes] = await Promise.allSettled([
           api.get('/public/stats'),
           api.get('/public/departments'),
+          api.get('/public/all-info'),
         ])
 
         if (statsRes.status === 'fulfilled' && statsRes.value?.data) {
@@ -99,6 +107,9 @@ export default function Landing() {
         }
         if (deptsRes.status === 'fulfilled' && Array.isArray(deptsRes.value?.data)) {
           setDepartments(deptsRes.value.data)
+        }
+        if (allInfoRes.status === 'fulfilled' && Array.isArray(allInfoRes.value?.data)) {
+          setAllPublicInfo(allInfoRes.value.data)
         }
       } catch (err) {
         console.warn('Failed to load live landing stats:', err)
@@ -252,8 +263,6 @@ export default function Landing() {
                 ))}
               </div>
 
-              <div className="portal-footer-flow">{r.details}</div>
-
               <Link to={r.route} className={`portal-btn portal-btn-${r.color}`}>
                 <span>{r.btnLabel}</span>
               </Link>
@@ -261,21 +270,26 @@ export default function Landing() {
           ))}
         </div>
 
-        {/* Approved Public College Information */}
+        {/* Approved Public College Information (Centered as requested) */}
         <section className="public-info-section glass-card">
-          <div className="public-info-header">
-            <div>
+          <div className="public-info-header centered-pub-header">
+            <div className="pub-header-center-wrap">
               <div className="public-info-tag">OFFICIAL PUBLIC DISCLOSURE</div>
               <h2 className="public-info-title">🏛️ Public College Information</h2>
               <p className="public-info-sub">Approved public data — Department details, fee structures & academic achievements</p>
+              <div style={{ marginTop: 12 }}>
+                <Link to="/college-info" className="public-view-btn">
+                  View Approved Info →
+                </Link>
+              </div>
             </div>
-            <Link to="/college-info" className="public-view-btn">
-              View Approved Info →
-            </Link>
           </div>
 
           <div className="public-cards-grid">
-            <div className="public-subcard card-glow-blue">
+            <div
+              className="public-subcard card-glow-blue clickable-pub-card"
+              onClick={() => setActiveModal('departments')}
+            >
               <div className="pub-card-header">
                 <div className="pub-card-icon">📚</div>
                 <span className="pub-badge-count">{departments.length > 0 ? `${departments.length} Active` : 'Active Branches'}</span>
@@ -291,28 +305,195 @@ export default function Landing() {
                   {departments.length > 4 && <span className="dept-pill count-pill">+{departments.length - 4} more</span>}
                 </div>
               )}
+              <div className="card-click-hint">Click to open branch details →</div>
             </div>
 
-            <div className="public-subcard card-glow-emerald">
+            <div
+              className="public-subcard card-glow-emerald clickable-pub-card"
+              onClick={() => setActiveModal('fees')}
+            >
               <div className="pub-card-header">
                 <div className="pub-card-icon">💳</div>
                 <span className="pub-badge-count">Transparent</span>
               </div>
               <h4>Department-wise Fees</h4>
               <p>View structured fee schedules, lab quotas, and course details for each branch.</p>
+              <div className="card-click-hint">Click to open fee breakdown →</div>
             </div>
 
-            <div className="public-subcard card-glow-amber">
+            <div
+              className="public-subcard card-glow-amber clickable-pub-card"
+              onClick={() => setActiveModal('achievements')}
+            >
               <div className="pub-card-header">
                 <div className="pub-card-icon">🏆</div>
                 <span className="pub-badge-count">Rank Holders</span>
               </div>
-              <h4>Achievements</h4>
-              <p>Discover student rank holders, VTU gold medalists, research grants, and college accolades.</p>
+              <h4>Achievements & Toppers</h4>
+              <p>Discover student rank holders with photos, VTU gold medalists, and research grants.</p>
+              <div className="card-click-hint">Click to open rank holders & photos →</div>
+            </div>
+
+            <div
+              className="public-subcard card-glow-cyan clickable-pub-card"
+              onClick={() => setActiveModal('location')}
+            >
+              <div className="pub-card-header">
+                <div className="pub-card-icon">📍</div>
+                <span className="pub-badge-count">GPS Navigation</span>
+              </div>
+              <h4>Live Campus Location</h4>
+              <p>View interactive Google Maps location of DSATM, transit bus routes, and metro guide.</p>
+              <div className="card-click-hint">Click to open live Google Map →</div>
+            </div>
+
+            <div
+              className="public-subcard card-glow-purple clickable-pub-card"
+              onClick={() => setActiveModal('pgs')}
+            >
+              <div className="pub-card-header">
+                <div className="pub-card-icon">🏡</div>
+                <span className="pub-badge-count">Student Housing</span>
+              </div>
+              <h4>Nearby PGs & Hostels</h4>
+              <p>Browse verified paying guest accommodations near DSATM with rent, food & phone contacts.</p>
+              <div className="card-click-hint">Click to view PGs list & contacts →</div>
             </div>
           </div>
         </section>
       </main>
+
+      {/* Interactive Modal dialogs for Public Information */}
+      {activeModal && (
+        <div className="modal-overlay-bg" onClick={() => setActiveModal(null)}>
+          <div className="modal-dialog-content" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header-row">
+              <h3>
+                {activeModal === 'fees' && '💳 Official Department-wise Fees Structure'}
+                {activeModal === 'achievements' && '🏆 Department Rank Holders & Student Toppers'}
+                {activeModal === 'departments' && '🏢 Academic Departments Directory'}
+              </h3>
+              <button className="modal-close-x" onClick={() => setActiveModal(null)}>✕</button>
+            </div>
+
+            <div className="modal-body-scroll">
+              {/* Fees Structure Modal Content */}
+              {activeModal === 'fees' && (
+                <div className="fee-modal-grid">
+                  {allPublicInfo.length === 0 ? (
+                    <div className="modal-empty-note">
+                      <p>Loading published department fee structures...</p>
+                    </div>
+                  ) : (
+                    allPublicInfo.map((info) => (
+                      <div key={info.id} className="dept-fee-card">
+                        <div className="dept-fee-head">
+                          <span className="dept-fee-name">🏢 {info.name} Department</span>
+                          <span className="dept-fee-badge">Published</span>
+                        </div>
+                        <div className="fee-rows-table">
+                          <div className="fee-line-item">
+                            <span>Tuition Fee / Year:</span>
+                            <strong>₹{info.fees?.tuition_fee || '1,25,000'}</strong>
+                          </div>
+                          <div className="fee-line-item">
+                            <span>Lab & Development Fee:</span>
+                            <strong>₹{info.fees?.lab_fee || '25,000'}</strong>
+                          </div>
+                          <div className="fee-line-item">
+                            <span>University / Exam Fee:</span>
+                            <strong>₹{info.fees?.exam_fee || '8,500'}</strong>
+                          </div>
+                          <div className="fee-line-total">
+                            <span>Total Annual Fee:</span>
+                            <strong className="fee-total-amt">₹{info.fees?.total_fee || '1,58,500'}</strong>
+                          </div>
+                        </div>
+                        <div className="fee-quota-note">
+                          <strong>Quota Details:</strong> {info.fees?.quota || 'Govt. PGCET / KEA & Management Quota'}
+                        </div>
+                        {info.fees?.notes && (
+                          <div className="fee-scholarship-note">
+                            💡 {info.fees.notes}
+                          </div>
+                        )}
+                      </div>
+                    ))
+                  )}
+                </div>
+              )}
+
+              {/* Achievements & Toppers Modal Content */}
+              {activeModal === 'achievements' && (
+                <div className="toppers-modal-wrap">
+                  {allPublicInfo.map((info) => (
+                    <div key={info.id} className="dept-toppers-block">
+                      <h4 className="dept-toppers-title">👑 {info.name} Department Rank Holders & Toppers</h4>
+
+                      {Array.isArray(info.toppers) && info.toppers.length > 0 ? (
+                        <div className="toppers-cards-row">
+                          {info.toppers.map((t, idx) => (
+                            <div key={t.id || idx} className="topper-profile-card">
+                              <img src={t.photo_url || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=300'} alt={t.name} className="topper-passport-img" />
+                              <div className="topper-details">
+                                <div className="topper-name">{t.name}</div>
+                                <div className="topper-usn">USN: {t.usn}</div>
+                                <div className="topper-sem">{t.class_sem}</div>
+                                <div className="topper-cgpa">CGPA: {t.cgpa}</div>
+                                <div className="topper-rank-tag">{t.rank_title}</div>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      ) : (
+                        <p style={{ fontSize: 13, color: '#64748b' }}>No toppers published yet for this department.</p>
+                      )}
+
+                      {Array.isArray(info.achievements) && info.achievements.length > 0 && (
+                        <div className="dept-ach-list">
+                          <strong style={{ fontSize: 12, color: '#0f172a' }}>Key Department Accolades:</strong>
+                          <ul>
+                            {info.achievements.map((ach, i) => (
+                              <li key={i}>★ {ach}</li>
+                            ))}
+                          </ul>
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {/* Departments Directory Modal Content */}
+              {activeModal === 'departments' && (
+                <div className="depts-modal-wrap">
+                  {allPublicInfo.map((info) => (
+                    <div key={info.id} className="dept-directory-card">
+                      <div className="dept-dir-header">
+                        <h4>🎓 {info.name} Department</h4>
+                        <span className="student-count-pill">👥 {info.student_count || 120} Students Enrolled</span>
+                      </div>
+                      <p className="dept-dir-about">{info.about}</p>
+                      <div className="dept-metrics-inline">
+                        <span>Placement Rate: <strong>{info.placement_percentage}%</strong></span>
+                        <span>Highest Pkg: <strong>₹{(info.highest_package / 100000).toFixed(1)} LPA</strong></span>
+                        <span>Avg Pkg: <strong>₹{(info.average_package / 100000).toFixed(1)} LPA</strong></span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Location Map & Nearby PGs Modals */}
+      <LocationMapModal isOpen={activeModal === 'location'} onClose={() => setActiveModal(null)} />
+      <PgsModal isOpen={activeModal === 'pgs'} onClose={() => setActiveModal(null)} />
+
+      {/* Modern Footer Component */}
+      <Footer />
     </div>
   )
 }

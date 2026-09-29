@@ -5,39 +5,34 @@ import './Sidebar.css'
 
 export default function Sidebar({ title, subtitle, items }) {
   const { user, logout } = useAuth()
-  const [avatar, setAvatar] = useState(
+  const [rawAvatar, setRawAvatar] = useState(
     user?.avatarUrl || user?.avatar_url || localStorage.getItem('user_avatar') || ''
   )
 
   useEffect(() => {
     function updateAvatar() {
-      setAvatar(user?.avatarUrl || user?.avatar_url || localStorage.getItem('user_avatar') || '')
+      setRawAvatar(user?.avatarUrl || user?.avatar_url || localStorage.getItem('user_avatar') || '')
     }
     updateAvatar()
     window.addEventListener('user_avatar_updated', updateAvatar)
     return () => window.removeEventListener('user_avatar_updated', updateAvatar)
   }, [user])
 
+  const isValidUserAvatar = rawAvatar && !rawAvatar.includes('dsi-logo') && !rawAvatar.includes('logo')
+  const userInitial = user?.fullName?.[0]?.toUpperCase() || user?.full_name?.[0]?.toUpperCase() || 'U'
+
   return (
     <aside className="sidebar">
-      <div className="sidebar-brand">
-        <div className="sidebar-logo">🎓</div>
-        <div>
-          <div className="sidebar-brand-title">{title}</div>
-          <div className="sidebar-brand-sub">{subtitle}</div>
-        </div>
-      </div>
-
       <div className="sidebar-user" style={{ cursor: 'pointer' }}>
         <div className="sidebar-avatar" style={{ overflow: 'hidden', padding: 0 }}>
-          {avatar ? (
-            <img src={avatar} alt="Avatar" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+          {isValidUserAvatar ? (
+            <img src={rawAvatar} alt="User Avatar" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
           ) : (
-            user?.fullName?.[0]?.toUpperCase() || '?'
+            userInitial
           )}
         </div>
         <div>
-          <div className="sidebar-user-name">{user?.fullName || 'User Profile'}</div>
+          <div className="sidebar-user-name">{user?.fullName || user?.full_name || 'HOD User'}</div>
           <div className="sidebar-user-status"><span className="dot" /> Online</div>
         </div>
       </div>

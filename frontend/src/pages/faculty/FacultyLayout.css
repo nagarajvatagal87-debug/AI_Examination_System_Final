@@ -7,14 +7,14 @@
 
 .fl-sidebar {
   width: 260px;
-  background: #0f172a !important;
-  border-right: 1px solid rgba(255, 255, 255, 0.08);
-  color: #cbd5e1;
+  background: #ffffff !important;
+  border-right: 2px solid #1e293b !important;
+  color: #1e293b;
   display: flex;
   flex-direction: column;
   padding: 24px 18px;
   flex-shrink: 0;
-  box-shadow: 4px 0 24px rgba(0, 0, 0, 0.3);
+  box-shadow: 2px 0 12px rgba(0, 0, 0, 0.04);
 }
 
 .fl-brand {
@@ -25,9 +25,30 @@
   padding: 0 4px;
 }
 
-.fl-logo {
-  font-size: 32px;
-  filter: drop-shadow(0 0 10px rgba(99, 102, 241, 0.5));
+.fl-logo-box {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  padding: 2.5px;
+  background: linear-gradient(135deg, #f59e0b 0%, #3b82f6 100%);
+  box-shadow: 0 0 16px rgba(245, 158, 11, 0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: transform 0.3s ease;
+}
+
+.fl-logo-box:hover {
+  transform: scale(1.08) rotate(3deg);
+}
+
+.fl-college-logo {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  object-fit: cover;
+  background: #ffffff;
 }
 
 .fl-brand-text {
@@ -35,17 +56,15 @@
   font-size: 14px;
   font-weight: 800;
   line-height: 1.25;
-  background: linear-gradient(135deg, #ffffff 0%, #a5b4fc 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
+  color: #0f172a;
   letter-spacing: -0.01em;
 }
 
 .fl-profile {
   text-align: center;
   padding: 18px 12px;
-  background: rgba(30, 41, 59, 0.4);
-  border: 1px solid rgba(255, 255, 255, 0.06);
+  background: #f8fafc !important;
+  border: 1.5px solid #1e293b !important;
   border-radius: var(--radius-lg);
   margin-bottom: 20px;
 }
@@ -63,8 +82,8 @@
   font-weight: 700;
   margin: 0 auto 12px;
   overflow: hidden;
-  box-shadow: 0 4px 16px rgba(99, 102, 241, 0.4);
-  border: 2px solid rgba(255, 255, 255, 0.2);
+  box-shadow: 0 4px 16px rgba(79, 70, 229, 0.25);
+  border: 2px solid #1e293b;
 }
 
 .fl-avatar img {
@@ -75,28 +94,29 @@
 
 .fl-profile-name {
   font-family: var(--font-heading);
-  font-weight: 700;
+  font-weight: 800;
   font-size: 15px;
-  color: var(--text-bright);
+  color: #0f172a !important;
 }
 
 .fl-profile-role {
   font-size: 12px;
-  color: var(--text-sub);
+  color: #64748b !important;
   margin-top: 2px;
+  font-weight: 500;
 }
 
 .fl-online {
   font-size: 11px;
-  color: #34d399;
+  color: #059669 !important;
   margin-top: 8px;
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  background: rgba(16, 185, 129, 0.12);
+  background: #ecfdf5 !important;
   padding: 3px 10px;
   border-radius: 12px;
-  border: 1px solid rgba(16, 185, 129, 0.25);
+  border: 1px solid #059669 !important;
   font-weight: 600;
 }
 
@@ -104,8 +124,8 @@
   width: 6px;
   height: 6px;
   border-radius: 50%;
-  background: #34d399;
-  box-shadow: 0 0 8px #34d399;
+  background: #10b981;
+  box-shadow: 0 0 8px #10b981;
 }
 
 .fl-nav {
@@ -123,26 +143,26 @@
   gap: 12px;
   padding: 12px 14px;
   border-radius: var(--radius-md);
-  color: var(--text-sub);
+  color: #334155 !important;
   text-decoration: none;
   font-size: 14px;
-  font-weight: 500;
+  font-weight: 600;
   transition: var(--transition-fast);
-  border: 1px solid transparent;
+  border: 1.5px solid transparent !important;
 }
 
 .fl-nav-item:hover {
-  background: rgba(30, 41, 59, 0.6);
-  color: var(--text-bright);
-  border-color: rgba(255, 255, 255, 0.08);
+  background: #f1f5f9 !important;
+  color: #0f172a !important;
+  border-color: #1e293b !important;
 }
 
 .fl-nav-item.active {
-  background: var(--primary-gradient);
-  color: #ffffff;
-  font-weight: 600;
-  box-shadow: 0 4px 16px rgba(99, 102, 241, 0.35);
-  border-color: rgba(255, 255, 255, 0.2);
+  background: #eff6ff !important;
+  color: #1e40af !important;
+  font-weight: 800;
+  box-shadow: 0 2px 8px rgba(30, 41, 59, 0.1) !important;
+  border-color: #1e293b !important;
 }
 
 .fl-nav-icon {
@@ -153,14 +173,14 @@
 
 .fl-logout {
   margin-top: 16px;
-  background: rgba(239, 68, 68, 0.1);
-  border: 1px solid rgba(239, 68, 68, 0.25);
-  color: #f87171;
+  background: #fef2f2 !important;
+  border: 1.5px solid #dc2626 !important;
+  color: #dc2626 !important;
   padding: 11px;
   border-radius: var(--radius-md);
   cursor: pointer;
   font-size: 13px;
-  font-weight: 600;
+  font-weight: 800;
   transition: var(--transition-fast);
   display: flex;
   align-items: center;
@@ -169,8 +189,8 @@
 }
 
 .fl-logout:hover {
-  background: rgba(239, 68, 68, 0.25);
-  color: #ffffff;
+  background: #fee2e2 !important;
+  color: #b91c1c !important;
 }
 
 .fl-main {
@@ -228,4 +248,155 @@
   background: #ffffff !important;
   color: #0f172a !important;
   border: 1px solid #cbd5e1 !important;
+}
+
+/* TOPBAR PROFILE MENU POPOVER CARD */
+
+.fl-topbar-profile-btn:hover {
+  background: rgba(255, 255, 255, 0.2) !important;
+  border-color: rgba(255, 255, 255, 0.4) !important;
+  transform: translateY(-1px);
+}
+
+.fl-profile-popover {
+  position: absolute;
+  right: 0;
+  top: 48px;
+  width: 320px;
+  background: #0f172a !important;
+  border: 1.5px solid rgba(255, 255, 255, 0.15) !important;
+  border-radius: 16px;
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.6);
+  z-index: 1000;
+  overflow: hidden;
+  animation: profilePopIn 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes profilePopIn {
+  from {
+    opacity: 0;
+    transform: translateY(-8px) scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.fl-pop-header {
+  padding: 18px;
+  background: rgba(30, 41, 59, 0.6);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.fl-pop-avatar {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #ffffff;
+  font-weight: 800;
+  font-size: 20px;
+  overflow: hidden;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  flex-shrink: 0;
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4);
+}
+
+.fl-pop-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.fl-pop-user-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.fl-pop-name {
+  font-size: 15px;
+  font-weight: 800;
+  color: #ffffff !important;
+  margin: 0 0 2px 0;
+}
+
+.fl-pop-email {
+  font-size: 12px;
+  color: #94a3b8 !important;
+  margin: 0 0 6px 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.fl-pop-badge {
+  display: inline-block;
+  font-size: 11px;
+  font-weight: 700;
+  color: #38bdf8;
+  background: rgba(56, 189, 248, 0.12);
+  border: 1px solid rgba(56, 189, 248, 0.25);
+  padding: 2px 8px;
+  border-radius: 10px;
+}
+
+.fl-pop-menu {
+  padding: 8px;
+}
+
+.fl-pop-item {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 12px;
+  border: none;
+  background: transparent;
+  color: #cbd5e1;
+  text-align: left;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.fl-pop-item:hover {
+  background: rgba(30, 41, 59, 0.7);
+  color: #ffffff;
+}
+
+.fl-pop-item.logout:hover {
+  background: rgba(239, 68, 68, 0.15);
+  color: #f87171;
+}
+
+.fl-pop-icon {
+  font-size: 18px;
+  width: 24px;
+  text-align: center;
+}
+
+.fl-pop-item strong {
+  display: block;
+  font-size: 13px;
+  font-weight: 700;
+  color: #f8fafc;
+}
+
+.fl-pop-item p {
+  font-size: 11px;
+  color: #94a3b8 !important;
+  margin: 2px 0 0 0;
+}
+
+.fl-pop-divider {
+  height: 1px;
+  background: rgba(255, 255, 255, 0.08);
+  margin: 6px 0;
 }

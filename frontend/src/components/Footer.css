@@ -1,0 +1,199 @@
+.main-footer {
+  background: #0f172a;
+  color: #f8fafc;
+  border-top: 2px solid #0f172a;
+  padding: 56px 0 28px;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  position: relative;
+  z-index: 10;
+  margin-top: auto;
+}
+
+.footer-container {
+  max-width: 100%;
+  padding: 0 36px;
+  margin: 0 auto;
+}
+
+.footer-grid {
+  display: grid;
+  grid-template-columns: 2.2fr 1fr 1fr 1.3fr;
+  gap: 36px;
+  margin-bottom: 44px;
+}
+
+@media (max-width: 1024px) {
+  .footer-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+@media (max-width: 640px) {
+  .footer-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.footer-col-brand {
+  padding-right: 20px;
+}
+
+.footer-logo-row {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 16px;
+}
+
+.footer-logo-box {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #f59e0b 0%, #3b82f6 100%);
+  padding: 2.5px;
+  flex-shrink: 0;
+}
+
+.footer-dsi-logo {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  object-fit: cover;
+  background: #ffffff;
+}
+
+.footer-brand-title {
+  font-size: 16px;
+  font-weight: 900;
+  letter-spacing: 1px;
+  color: #ffffff;
+  margin: 0;
+  line-height: 1.2;
+}
+
+.footer-brand-sub {
+  font-size: 12px;
+  color: #38bdf8;
+  font-weight: 700;
+  margin: 2px 0 0 0;
+}
+
+.footer-desc {
+  font-size: 13.5px;
+  color: #94a3b8;
+  line-height: 1.6;
+  margin-bottom: 20px;
+  font-weight: 500;
+}
+
+.footer-badges {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.vtu-badge, .aicte-badge, .naac-badge {
+  font-size: 11px;
+  font-weight: 800;
+  padding: 4px 10px;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: #fbbf24;
+}
+
+.footer-col-title {
+  font-size: 15px;
+  font-weight: 900;
+  color: #ffffff;
+  margin-bottom: 18px;
+  letter-spacing: 0.5px;
+  position: relative;
+  padding-bottom: 8px;
+}
+
+.footer-col-title::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 32px;
+  height: 2.5px;
+  background: #3b82f6;
+  border-radius: 2px;
+}
+
+.footer-links {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.footer-links a, .footer-link-btn {
+  color: #cbd5e1;
+  text-decoration: none;
+  font-size: 13.5px;
+  font-weight: 600;
+  transition: all 0.2s ease;
+  background: transparent;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  text-align: left;
+  font-family: inherit;
+}
+
+.footer-links a:hover, .footer-link-btn:hover {
+  color: #38bdf8;
+  padding-left: 4px;
+}
+
+.footer-contact-item {
+  font-size: 13px;
+  color: #cbd5e1;
+  line-height: 1.55;
+  margin-bottom: 12px;
+  font-weight: 500;
+}
+
+.footer-map-btn {
+  background: linear-gradient(135deg, #1d4ed8 0%, #2563eb 100%);
+  color: #ffffff;
+  border: 1.5px solid #60a5fa;
+  padding: 8px 16px;
+  border-radius: 10px;
+  font-size: 12.5px;
+  font-weight: 800;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 4px 12px rgba(29, 78, 216, 0.25);
+  margin-top: 6px;
+}
+
+.footer-map-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 18px rgba(29, 78, 216, 0.4);
+}
+
+.footer-bottom {
+  border-top: 1px solid rgba(255, 255, 255, 0.12);
+  padding-top: 24px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 14px;
+  font-size: 12.5px;
+  color: #94a3b8;
+  font-weight: 500;
+}
+
+.footer-bottom-links {
+  display: flex;
+  gap: 12px;
+  color: #38bdf8;
+  font-weight: 700;
+}

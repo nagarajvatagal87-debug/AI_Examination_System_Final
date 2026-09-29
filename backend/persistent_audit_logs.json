@@ -1,0 +1,80 @@
+[
+  {
+    "id": "audit-1790674365122-4x1i3o",
+    "user_id": "9e9f16a4-a622-4121-b6e1-b7075f947b25",
+    "user_role": "hod",
+    "action": "CALENDAR_EVENT_DELETED",
+    "entity_type": "calendar_event",
+    "entity_id": "cal-1790673819162-y1ssf",
+    "old_value": null,
+    "new_value": null,
+    "reason": "",
+    "department_id": "37909cba-a75d-428e-9181-fddf9920fb0b",
+    "created_at": "2026-09-29T09:32:45.122Z"
+  },
+  {
+    "id": "audit-1790674355680-59mt48",
+    "user_id": "9e9f16a4-a622-4121-b6e1-b7075f947b25",
+    "user_role": "hod",
+    "action": "CALENDAR_EVENT_DELETED",
+    "entity_type": "calendar_event",
+    "entity_id": "cal-1790673819162-y1ssf",
+    "old_value": null,
+    "new_value": null,
+    "reason": "",
+    "department_id": "37909cba-a75d-428e-9181-fddf9920fb0b",
+    "created_at": "2026-09-29T09:32:35.680Z"
+  },
+  {
+    "id": "audit-1790674165843-0cmgfw",
+    "user_id": "9e9f16a4-a622-4121-b6e1-b7075f947b25",
+    "user_role": "hod",
+    "action": "CALENDAR_EVENT_CREATED",
+    "entity_type": "calendar_event",
+    "entity_id": "cal-1790674165685-aqx9b",
+    "old_value": null,
+    "new_value": "Internal 1",
+    "reason": "",
+    "department_id": "37909cba-a75d-428e-9181-fddf9920fb0b",
+    "created_at": "2026-09-29T09:29:25.843Z"
+  },
+  {
+    "id": "audit-1790674070209-82x5th",
+    "user_id": "9e9f16a4-a622-4121-b6e1-b7075f947b25",
+    "user_role": "hod",
+    "action": "CALENDAR_EVENT_DELETED",
+    "entity_type": "calendar_event",
+    "entity_id": "cal-1790673797230-h0szl",
+    "old_value": null,
+    "new_value": null,
+    "reason": "",
+    "department_id": "37909cba-a75d-428e-9181-fddf9920fb0b",
+    "created_at": "2026-09-29T09:27:50.209Z"
+  },
+  {
+    "id": "audit-1790673819568-viygzh",
+    "user_id": "9e9f16a4-a622-4121-b6e1-b7075f947b25",
+    "user_role": "hod",
+    "action": "CALENDAR_EVENT_CREATED",
+    "entity_type": "calendar_event",
+    "entity_id": "cal-1790673819162-y1ssf",
+    "old_value": null,
+    "new_value": "Internal 1",
+    "reason": "",
+    "department_id": "37909cba-a75d-428e-9181-fddf9920fb0b",
+    "created_at": "2026-09-29T09:23:39.568Z"
+  },
+  {
+    "id": "audit-1790673797323-tyyyi8",
+    "user_id": "9e9f16a4-a622-4121-b6e1-b7075f947b25",
+    "user_role": "hod",
+    "action": "CALENDAR_EVENT_CREATED",
+    "entity_type": "calendar_event",
+    "entity_id": "cal-1790673797230-h0szl",
+    "old_value": null,
+    "new_value": "Internal 1",
+    "reason": "",
+    "department_id": "37909cba-a75d-428e-9181-fddf9920fb0b",
+    "created_at": "2026-09-29T09:23:17.323Z"
+  }
+]

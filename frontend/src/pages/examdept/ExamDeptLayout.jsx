@@ -2,6 +2,7 @@ import { NavLink, Outlet } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext.jsx'
 import NotificationBell from '../../components/NotificationBell.jsx'
 import HeaderBanner from '../../components/HeaderBanner.jsx'
+import '../student/StudentDashboard.css'
 import './ExamDeptLayout.css'
 
 const NAV_ITEMS = [
@@ -10,6 +11,7 @@ const NAV_ITEMS = [
   { to: '/examdept/evaluation', label: 'Evaluation', icon: '🤖' },
   { to: '/examdept/results', label: 'Results', icon: '📊' },
   { to: '/examdept/notifications', label: 'Notifications', icon: '🔔' },
+  { to: '/examdept/settings', label: 'Settings', icon: '⚙️' },
 ]
 
 export default function ExamDeptLayout() {
@@ -17,15 +19,8 @@ export default function ExamDeptLayout() {
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh', background: 'var(--bg-gradient)', color: 'var(--text-main)' }}>
-      <HeaderBanner />
-
       <div className="ed-wrap" style={{ flex: 1 }}>
         <aside className="ed-sidebar glass-card" style={{ borderRadius: 0, borderTop: 'none', borderBottom: 'none', borderLeft: 'none' }}>
-          <div className="ed-brand">
-            <div className="ed-logo">⚖️</div>
-            <div className="ed-brand-text">Exam Department<br /><span style={{ fontSize: 11, color: 'var(--text-sub)' }}>Main Exam Authority</span></div>
-          </div>
-
           <div className="ed-profile">
             <div className="ed-avatar" style={{ overflow: 'hidden', padding: 0 }}>
               {user?.avatarUrl ? <img src={user.avatarUrl} alt="Avatar" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : (user?.fullName?.[0] || 'E')}
@@ -53,11 +48,31 @@ export default function ExamDeptLayout() {
         </aside>
 
         <div className="ed-main">
-          <header className="ed-topbar glass-card" style={{ margin: '20px 24px 0', padding: '14px 24px', borderRadius: 14 }}>
-            <div className="ed-topbar-title">Main Examination Control Centre</div>
-            <div className="ed-topbar-actions">
+          <header className="eduexam-top-header">
+            <div className="search-bar-wrap">
+              <span className="search-icon">🔍</span>
+              <input type="text" placeholder="Search exams, results, evaluations..." />
+            </div>
+
+            <div className="top-header-center">
+              <h1 className="header-college-title-center">DAYANANDA SAGAR ACADEMY OF TECHNOLOGY AND MANAGEMENT</h1>
+              <p className="header-dashboard-subtitle-center">🏛️ Main Examination Control Centre</p>
+            </div>
+
+            <div className="top-header-right">
               <NotificationBell />
-              <span className="ed-topbar-name">{user?.fullName || 'Mr. Suresh Rao'}</span>
+              <div className="header-icon-btn" style={{ cursor: 'pointer' }} title="Settings">⚙️</div>
+
+              <div className="user-profile-badge" style={{ cursor: 'pointer' }}>
+                <div className="user-avatar-circle" style={{ width: 36, height: 36, borderRadius: '50%', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#2563eb', color: '#fff', fontWeight: 800 }}>
+                  {user?.avatarUrl ? <img src={user.avatarUrl} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : (user?.fullName?.[0] || 'E')}
+                </div>
+                <div>
+                  <div className="user-name-title">{user?.fullName || 'Mr. Suresh Rao'}</div>
+                  <div className="user-sub-title">DSATM · Exam Authority</div>
+                </div>
+                <span className="caret-down">▾</span>
+              </div>
             </div>
           </header>
           <main className="ed-content">

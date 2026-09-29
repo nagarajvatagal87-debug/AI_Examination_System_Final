@@ -7,82 +7,82 @@ import './Auth.css'
 const ROLE_CONFIG = {
   student: {
     key: 'student',
-    label: 'Student Portal Login',
+    label: 'Student Login',
     tabLabel: '🎓 Student',
     icon: '🎓',
-    badge: 'Student Account',
+    badge: 'Student Portal',
     color: 'blue',
-    placeholder: 'e.g. 1dt25mc036@dsatm.edu.in or USN',
-    previewTitle: 'What Students Can See & Access:',
+    placeholder: 'Enter USN or Email',
+    previewTitle: 'Student Features',
     features: [
-      '📚 Course Materials, Lecture Slides & Reference PDFs',
-      '🤖 AI Study Assistant & Practice Test Quizzes',
-      '📊 Published Exam Results, Marks & Transcripts',
-      '🏛️ Approved Public College Information & Fees',
+      'Course Materials & Lecture Notes',
+      'AI Study Assistant & Practice Quizzes',
+      'Published Results & Transcripts',
+      'College Notices & Timetables',
     ],
   },
   faculty: {
     key: 'faculty',
-    label: 'Faculty Portal Login',
+    label: 'Faculty Login',
     tabLabel: '🛡️ Faculty',
     icon: '🛡️',
-    badge: 'Faculty Account',
+    badge: 'Faculty Portal',
     color: 'emerald',
-    placeholder: 'e.g. faculty@dsatm.edu.in',
-    previewTitle: 'What Faculty Can See & Access:',
+    placeholder: 'Enter Faculty Email',
+    previewTitle: 'Faculty Features',
     features: [
-      '📤 Upload Course Materials & Syllabus PDFs',
-      '📑 Generate AI RAG Question Papers & Schemes',
-      '🤖 Review & Finalize AI Answer Sheet Evaluations',
-      '📈 View Class & Subject Performance Analytics',
+      'Upload Course Materials & Syllabus PDFs',
+      'Generate AI Question Papers & Schemes',
+      'Review AI Answer Sheet Evaluation',
+      'Class Performance Analytics',
     ],
   },
   hod: {
     key: 'hod',
-    label: 'HOD Portal Login',
+    label: 'HOD Login',
     tabLabel: '🏛️ HOD',
     icon: '🏛️',
-    badge: 'HOD Account',
+    badge: 'HOD Portal',
     color: 'purple',
-    placeholder: 'e.g. hod.mca@dsatm.edu.in',
-    previewTitle: 'What HODs Can See & Access:',
+    placeholder: 'Enter HOD Email',
+    previewTitle: 'HOD Features',
     features: [
-      '📊 Department Pass/Fail Performance Graphs & Backlogs',
-      '🏆 Nominate & Transfer Top 10 Performers to Principal',
-      '💬 Faculty Direct Messaging & Department Notices',
-      '📢 Manage & Publish Department Public Profiles',
+      'Department Pass/Fail Analytics',
+      'Transfer Top Performers to Principal',
+      'Faculty Messaging & Notices',
+      'Manage Department Info',
     ],
   },
   principal: {
     key: 'principal',
-    label: 'Principal Portal Login',
+    label: 'Principal Login',
     tabLabel: '👑 Principal',
     icon: '👑',
-    badge: 'Principal Oversight',
+    badge: 'Principal Portal',
     color: 'amber',
-    placeholder: 'e.g. principal@dsatm.edu.in',
-    previewTitle: 'What Principal Can See & Access:',
+    placeholder: 'Enter Principal Email',
+    previewTitle: 'Principal Features',
     features: [
-      '🏛️ Institution-Wide Academic Performance Oversight',
-      '📊 Inter-Department Comparative Analytics & Graphs',
-      '🏆 College-Wide Top 10 Meritorious Students',
-      '📢 Publish Official College Announcements',
+      'Institution Performance Oversight',
+      'Department Comparative Analytics',
+      'College Merit Student Ranking',
+      'Publish Official Announcements',
     ],
   },
   examdept: {
     key: 'examdept',
-    label: 'Exam Dept Portal Login',
+    label: 'Exam Dept Login',
     tabLabel: '⚖️ Exam Dept',
     icon: '⚖️',
-    badge: 'Exam Administration',
+    badge: 'Exam Dept Portal',
     color: 'rose',
-    placeholder: 'e.g. examdept@dsatm.edu.in',
-    previewTitle: 'What Exam Dept Can See & Access:',
+    placeholder: 'Enter Exam Dept Email',
+    previewTitle: 'Exam Dept Features',
     features: [
-      '📅 Schedule Main Examinations & Semester Timetables',
-      '📝 Assign Answer Sheets for AI RAG Evaluation',
-      '✅ Verify & Audit AI Evaluation Marks',
-      '🚀 Official Result Publication System',
+      'Schedule Exams & Timetables',
+      'Assign Answer Sheets for AI Evaluation',
+      'Verify & Audit AI Marks',
+      'Publish Official Results',
     ],
   },
 }
@@ -118,7 +118,7 @@ export default function Login() {
       login(data.user)
       navigate(`/${data.user.role}`)
     } catch (err) {
-      setError(err.response?.data?.error || 'Login failed. Please check your credentials.')
+      setError(err.response?.data?.error || 'Login failed. Please check credentials.')
     } finally {
       setLoading(false)
     }
@@ -127,15 +127,21 @@ export default function Login() {
   return (
     <div className="auth-page">
       <div className="auth-container">
-        {/* Navigation Bar */}
-        <div className="auth-top-nav">
+        {/* Header with College Name & Logo */}
+        <header className="auth-header-bar">
+          <div className="auth-header-brand">
+            <div className="auth-logo-box">
+              <img src="/dsi-logo.png" alt="DSI Logo" className="auth-dsi-logo" />
+            </div>
+            <div>
+              <h2 className="auth-college-name">DAYANANDA SAGAR ACADEMY OF TECHNOLOGY AND MANAGEMENT</h2>
+              <p className="auth-college-sub">Autonomous Institute Affiliated to VTU • AI Examination Portal</p>
+            </div>
+          </div>
           <Link to="/" className="auth-back-link">
-            ← Back to Main Portal
+            ← Main Portal
           </Link>
-          <span className="auth-top-tag">
-            DSATM • AI Examination System
-          </span>
-        </div>
+        </header>
 
         {/* Quick Role Switcher Tabs */}
         <div className="login-role-tabs">
@@ -153,16 +159,11 @@ export default function Login() {
 
         <div className="auth-content-grid">
           {/* Main Clean Login Card */}
-          <div className="auth-card glass-card">
+          <div className="auth-card">
             <div className="auth-brand-header">
-              <div className="auth-logo-frame">
-                <img src="/dsi-logo.png" alt="DSI Logo" className="auth-logo-img" />
-              </div>
-              <div>
-                <span className="auth-role-tag">{config.icon} {config.badge}</span>
-                <h1 className="auth-title">{config.label}</h1>
-                <p className="auth-subtitle">Sign in to access your portal dashboard</p>
-              </div>
+              <span className="auth-role-tag">{config.icon} {config.badge}</span>
+              <h1 className="auth-title">{config.label}</h1>
+              <p className="auth-subtitle">Sign in to access your portal</p>
             </div>
 
             <form onSubmit={handleSubmit}>
@@ -191,7 +192,7 @@ export default function Login() {
               {error && <div className="auth-error-banner">{error}</div>}
 
               <button type="submit" className={`auth-submit-btn btn-${config.color}`} disabled={loading}>
-                {loading ? 'Authenticating...' : `Sign In to ${config.badge} →`}
+                {loading ? 'Authenticating...' : `Sign In →`}
               </button>
             </form>
 
@@ -199,18 +200,17 @@ export default function Login() {
               <p>
                 Don't have an account?{' '}
                 <Link to={activeRole ? `/register?role=${activeRole}` : '/register'}>
-                  Register Here
+                  Register
                 </Link>
               </p>
             </div>
           </div>
 
           {/* Role Access Info & Feature Panel */}
-          <div className="auth-info-panel glass-card">
+          <div className="auth-info-panel">
             <div className="info-panel-header">
               <span className="info-badge">{config.icon} {config.badge} GUIDE</span>
               <h3>{config.previewTitle}</h3>
-              <p>Features and tools unlocked for you upon logging in with your account.</p>
             </div>
 
             <div className="info-features-list">
@@ -224,7 +224,7 @@ export default function Login() {
 
             <div className="info-panel-footer">
               <div className="footer-shield-tag">
-                🔒 Secure Role-Based Permission System • DSATM Autonomous
+                🔒 Secure Permission System • DSATM Autonomous
               </div>
             </div>
           </div>

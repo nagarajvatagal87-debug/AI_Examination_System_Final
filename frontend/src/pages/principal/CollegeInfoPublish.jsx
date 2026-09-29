@@ -24,64 +24,64 @@ export default function CollegeInfoPublish() {
   }
 
   return (
-    <div className="pd-panel glass-card" style={{ padding: 24 }}>
-      <h2 style={{ fontSize: 20, margin: '0 0 8px 0', color: 'var(--text-bright)' }}>📢 Publish Approved College Information</h2>
-      <p style={{ fontSize: 13, color: 'var(--text-sub)', margin: '0 0 20px 0' }}>
+    <div className="pd-panel glass-card" style={{ padding: 24, border: '1.5px solid #1e293b', background: '#ffffff' }}>
+      <h2 style={{ fontSize: 20, margin: '0 0 8px 0', color: '#0f172a', fontWeight: 800 }}>📢 Publish Approved College Information</h2>
+      <p style={{ fontSize: 13, color: '#475569', margin: '0 0 20px 0', fontWeight: 600 }}>
         Per PDF Specification Section 17: Public info is strictly restricted to department-wise fees & achievements.
       </p>
 
       {publishStatus.text && (
-        <div style={{ padding: '10px 14px', borderRadius: 8, marginBottom: 16, background: publishStatus.error ? 'rgba(239,68,68,0.15)' : 'rgba(52,211,153,0.15)', color: publishStatus.error ? '#fca5a5' : '#34d399', border: '1px solid rgba(255,255,255,0.1)' }}>
+        <div style={{ padding: '10px 14px', borderRadius: 8, marginBottom: 16, background: publishStatus.error ? '#fef2f2' : '#ecfdf5', color: publishStatus.error ? '#b91c1c' : '#047857', border: publishStatus.error ? '1.5px solid #dc2626' : '1.5px solid #059669', fontWeight: 800 }}>
           {publishStatus.text}
         </div>
       )}
 
       <form onSubmit={handlePublishInfo} style={{ display: 'flex', flexDirection: 'column', gap: 16, maxWidth: 650 }}>
         <div>
-          <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: 'var(--text-sub)', marginBottom: 4 }}>Institution Name:</label>
+          <label style={{ display: 'block', fontSize: 12, fontWeight: 700, color: '#0f172a', marginBottom: 4 }}>Institution Name:</label>
           <input
             type="text"
             value={collegeName}
             onChange={(e) => setCollegeName(e.target.value)}
-            style={{ width: '100%' }}
+            style={{ width: '100%', background: '#ffffff', color: '#0f172a', border: '1.5px solid #334155' }}
             required
           />
         </div>
 
         <div>
-          <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: 'var(--text-sub)', marginBottom: 4 }}>Tagline & Institutional Overview:</label>
+          <label style={{ display: 'block', fontSize: 12, fontWeight: 700, color: '#0f172a', marginBottom: 4 }}>Tagline & Institutional Overview:</label>
           <textarea
             rows={3}
             value={collegeDesc}
             onChange={(e) => setCollegeDesc(e.target.value)}
-            style={{ width: '100%', fontFamily: 'inherit' }}
+            style={{ width: '100%', fontFamily: 'inherit', background: '#ffffff', color: '#0f172a', border: '1.5px solid #334155' }}
             required
           />
         </div>
 
         <div>
-          <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: 'var(--text-sub)', marginBottom: 4 }}>Department-wise Fees Structure:</label>
+          <label style={{ display: 'block', fontSize: 12, fontWeight: 700, color: '#0f172a', marginBottom: 4 }}>Department-wise Fees Structure:</label>
           <input
             type="text"
             value={feesDetails}
             onChange={(e) => setFeesDetails(e.target.value)}
-            style={{ width: '100%' }}
+            style={{ width: '100%', background: '#ffffff', color: '#0f172a', border: '1.5px solid #334155' }}
             required
           />
         </div>
 
         <div>
-          <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: 'var(--text-sub)', marginBottom: 4 }}>Approved Academic Achievements:</label>
+          <label style={{ display: 'block', fontSize: 12, fontWeight: 700, color: '#0f172a', marginBottom: 4 }}>Approved Academic Achievements:</label>
           <input
             type="text"
             value={achievements}
             onChange={(e) => setAchievements(e.target.value)}
-            style={{ width: '100%' }}
+            style={{ width: '100%', background: '#ffffff', color: '#0f172a', border: '1.5px solid #334155' }}
             required
           />
         </div>
 
-        <button type="submit" className="fd-btn" style={{ alignSelf: 'flex-start' }}>
+        <button type="submit" className="fd-btn" style={{ alignSelf: 'flex-start', background: 'linear-gradient(135deg, #4f46e5 0%, #3b82f6 100%)', border: '1.5px solid #1e293b', fontWeight: 800 }}>
           Publish to Public Page →
         </button>
       </form>

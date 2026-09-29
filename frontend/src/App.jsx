@@ -24,6 +24,7 @@ import ExamPreview from './pages/faculty/ExamPreview.jsx'
 import FacultyComplaints from './pages/faculty/FacultyComplaints.jsx'
 import HODMessages from './pages/faculty/HODMessages.jsx'
 import Notifications from './pages/faculty/Notifications.jsx'
+import FacultyAcademicCalendar from './pages/faculty/FacultyAcademicCalendar.jsx'
 import ProfileSettings from './components/ProfileSettings.jsx'
 
 import ExamDeptLayout from './pages/examdept/ExamDeptLayout.jsx'
@@ -80,6 +81,7 @@ export default function App() {
             <Route path="analytics" element={<Analytics />} />
             <Route path="complaints" element={<FacultyComplaints />} />
             <Route path="messages" element={<HODMessages />} />
+            <Route path="academic-calendar" element={<FacultyAcademicCalendar />} />
             <Route path="notifications" element={<Notifications />} />
             <Route path="settings" element={<ProfileSettings />} />
           </Route>
@@ -97,6 +99,8 @@ export default function App() {
             <Route path="evaluation" element={<ExamDeptEvaluation />} />
             <Route path="evaluation/:examId/:studentId" element={<ExamDeptEvaluationDetail />} />
             <Route path="results" element={<ExamDeptResults />} />
+            <Route path="notifications" element={<Notifications />} />
+            <Route path="settings" element={<ProfileSettings />} />
           </Route>
 
           {/* HOD keeps its existing section-switching dashboard (Sidebar.jsx + internal sections) */}

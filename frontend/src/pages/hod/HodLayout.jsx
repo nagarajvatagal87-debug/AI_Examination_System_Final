@@ -21,11 +21,6 @@ export default function HodLayout() {
   return (
     <div className="hl-wrap">
       <aside className="hl-sidebar">
-        <div className="hl-brand">
-          <div className="hl-logo">👩‍💼</div>
-          <div className="hl-brand-text">AI Examination<br />System</div>
-        </div>
-
         <div className="hl-profile">
           <div className="hl-avatar">{user?.fullName?.[0] || 'H'}</div>
           <div className="hl-profile-name">{user?.fullName || 'HOD'}</div>
@@ -84,9 +79,6 @@ export default function HodLayout() {
           </div>
           <div className="hl-topbar-actions" style={{ flex: 1, justifyContent: 'flex-end', display: 'flex', alignItems: 'center', gap: 14 }}>
             <NotificationBell />
-            <span className="hl-topbar-name" style={{ color: '#ffffff', background: 'rgba(255, 255, 255, 0.1)', border: '1px solid rgba(255, 255, 255, 0.2)', padding: '6px 14px', borderRadius: 20, fontWeight: 700, fontSize: 13 }}>
-              {user?.fullName}
-            </span>
           </div>
         </header>
         <main className="hl-content">

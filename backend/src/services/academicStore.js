@@ -344,10 +344,17 @@ async function getHodAttendanceOverview(deptId = "dept-mca") {
 
   const avgDepartmentAttendance = studentsWithAttendance > 0 ? Math.round(totalPctSum / studentsWithAttendance) : null;
 
+  const { getLogsAnalytics } = require("./notificationLogStore");
+  const { getConfiguredParentsCount } = require("./parentStore");
+  const notifAnalytics = getLogsAnalytics();
+
   return {
     totalStudents: students.length,
     lowAttendanceCount,
     avgDepartmentAttendance,
+    parentNotificationsSent: notifAnalytics.totalSent,
+    parentNotificationsFailed: notifAnalytics.totalFailed,
+    configuredParentsCount: getConfiguredParentsCount(),
     students: studentSummaries
   };
 }

@@ -51,6 +51,16 @@ async function retrieveDocumentChunks(subjectId, documentId, query, pageNumber =
     } catch (e) {}
   }
 
+  const subLower = (subjectName || '').toLowerCase();
+  let curriculumTopics = `Syllabus concepts, core principles, architectural design, step-by-step derivations, practice questions, and end-semester exam review topics for ${subjectName} (${subjectCode}).`;
+  if (subLower.includes("devops")) {
+    curriculumTopics = `Docker containers vs Virtual Machines, Kubernetes Cluster Pods & Deployments, CI/CD Pipeline Automation (Jenkins / GitHub Actions), Infrastructure as Code (Terraform / Ansible), Microservices Architecture, Git Branching & Version Control, Monitoring & Metrics (Prometheus / Grafana), and Cloud Deployment Best Practices.`;
+  } else if (subLower.includes("deep") || subLower.includes("neural")) {
+    curriculumTopics = `Artificial Neural Networks (ANN), Perceptron, Activation Functions (ReLU, Sigmoid, Softmax), Backpropagation Calculus, Convolutional Neural Networks (CNN), Recurrent Neural Networks (RNN), Long Short-Term Memory (LSTM), Transfer Learning, Optimization Algorithms (Adam, SGD), and Loss Functions.`;
+  } else if (subLower.includes("dbms") || subLower.includes("database")) {
+    curriculumTopics = `Relational Algebra, SQL Queries, Normalization Forms (1NF, 2NF, 3NF, BCNF), ACID Properties, B+ Tree Indexing, Concurrency Control Protocols (2PL), Query Optimization Execution Plans, and Database Transaction Processing.`;
+  }
+
   // Foundational Metadata Chunk for RAG grounding
   const metadataChunk = {
     documentId: documentId || subjectId,
@@ -63,7 +73,7 @@ async function retrieveDocumentChunks(subjectId, documentId, query, pageNumber =
 - Course / Subject Code: ${subjectCode}
 - Institution / Department: Dayananda Sagar Academy of Technology & Management (DSATM) - Master of Computer Applications (MCA)
 - Document Title: ${docTitle}
-- Course Curriculum Topics: Introduction to Deep Learning, Artificial Neural Networks (ANN), Perceptron, Activation Functions (ReLU, Sigmoid, Softmax), Backpropagation Algorithm, Convolutional Neural Networks (CNN), Recurrent Neural Networks (RNN), Long Short-Term Memory (LSTM), Transfer Learning, Optimization Algorithms (Adam, SGD), Loss Functions, Model Evaluation Metrics, and Applications of Deep Learning.`
+- Course Curriculum Topics: ${curriculumTopics}`
   };
 
   // 1. Query Supabase course_chunks table

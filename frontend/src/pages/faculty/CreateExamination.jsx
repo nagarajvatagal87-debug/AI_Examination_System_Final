@@ -3,8 +3,6 @@ import { useNavigate, useSearchParams } from 'react-router-dom'
 import api from '../../api/client.js'
 import './CreateExamination.css'
 
-const ALL_UNITS = ['Unit 1', 'Unit 2', 'Unit 3', 'Unit 4', 'Unit 5']
-
 export default function CreateExamination() {
   const [subjects, setSubjects] = useState([])
   const [subjectId, setSubjectId] = useState('')
@@ -12,9 +10,8 @@ export default function CreateExamination() {
   const [courseMaterialId, setCourseMaterialId] = useState('')
   const [examType, setExamType] = useState('internal-1')
   const [totalMarks, setTotalMarks] = useState(50)
-  const [pattern, setPattern] = useState([{ marks: 2, count: 5 }, { marks: 5, count: 4 }])
+  const [pattern, setPattern] = useState([{ marks: 10, count: 5 }])
   const [difficulty, setDifficulty] = useState('medium')
-  const [units, setUnits] = useState(['Unit 1', 'Unit 2'])
   const [instructions, setInstructions] = useState('')
   const [msg, setMsg] = useState('')
   const [loading, setLoading] = useState(false)
@@ -52,10 +49,6 @@ export default function CreateExamination() {
     setPattern(pattern.filter((_, i) => i !== index))
   }
 
-  function toggleUnit(unit) {
-    setUnits(units.includes(unit) ? units.filter((u) => u !== unit) : [...units, unit])
-  }
-
   const patternTotal = pattern.reduce((sum, p) => sum + p.marks * p.count, 0)
 
   async function handleGenerate() {
@@ -65,20 +58,23 @@ export default function CreateExamination() {
     }
 
     setLoading(true)
-    setMsg('Generating questions with AI — this may take a moment...')
+    setMsg('Generating question paper with AI — this may take a moment...')
     try {
+      const examTitleName = examType === 'internal-1' ? 'First Internal Assessment Test (IAT-1)'
+        : examType === 'internal-2' ? 'Second Internal Assessment Test (IAT-2)'
+        : 'Third Internal Assessment Test (IAT-3)'
+
       const { data } = await api.post('/faculty/exams', {
         subjectId,
         courseMaterialId,
         type: examType,
-        title: `${examType.replace('-', ' ')} Examination`,
+        title: examTitleName,
         totalMarks: Number(totalMarks),
         questionPattern: pattern,
         difficulty,
-        units,
         instructions,
       })
-      setMsg('Question paper generated!')
+      setMsg('Question paper generated successfully!')
       navigate(`/faculty/examinations/${data.exam.id}/preview`)
     } catch (err) {
       setMsg(err.response?.data?.error || 'Generation failed')
@@ -94,7 +90,7 @@ export default function CreateExamination() {
       <div className="ce-field">
         <label>Subject</label>
         <select value={subjectId} onChange={(e) => setSubjectId(e.target.value)}>
-          {subjects.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}
+          {subjects.map((s) => <option key={s.id} value={s.id}>{s.name} ({s.code || 'MCA'})</option>)}
         </select>
       </div>
 
@@ -109,9 +105,9 @@ export default function CreateExamination() {
       <div className="ce-field">
         <label>Examination Type</label>
         <select value={examType} onChange={(e) => setExamType(e.target.value)}>
-          <option value="internal-1">Internal-1</option>
-          <option value="internal-2">Internal-2</option>
-          <option value="internal-3">Internal-3</option>
+          <option value="internal-1">Internal-1 (IAT-1)</option>
+          <option value="internal-2">Internal-2 (IAT-2)</option>
+          <option value="internal-3">Internal-3 (IAT-3)</option>
         </select>
       </div>
 
@@ -144,17 +140,6 @@ export default function CreateExamination() {
       </div>
 
       <div className="ce-field">
-        <label>Units</label>
-        <div className="ce-units">
-          {ALL_UNITS.map((u) => (
-            <label key={u} className="ce-unit-checkbox">
-              <input type="checkbox" checked={units.includes(u)} onChange={() => toggleUnit(u)} /> {u}
-            </label>
-          ))}
-        </div>
-      </div>
-
-      <div className="ce-field">
         <label>Additional Instruction for AI</label>
         <textarea
           rows={3}
@@ -171,4 +156,4 @@ export default function CreateExamination() {
       {msg && <p className="fd-status">{msg}</p>}
     </div>
   )
-}
+}

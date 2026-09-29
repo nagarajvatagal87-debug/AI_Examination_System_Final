@@ -6,19 +6,22 @@ const publicApi = axios.create({ baseURL: import.meta.env.VITE_API_BASE_URL || '
 
 const SUGGESTED_QUESTIONS = [
   'What departments are available at DSATM?',
-  'Tell me about the MCA department placement rate.',
-  'What are the course fee details for CSE?',
+  'Tell me about the MCA department placement & fee rate.',
+  'Where is DSATM located and how to reach?',
+  'Show me nearby student PGs & hostels.',
 ]
 
 export default function PublicChatbot() {
   const [messages, setMessages] = useState([])
   const [input, setInput] = useState('')
   const [loading, setLoading] = useState(false)
-  const scrollRef = useRef(null)
+  const chatAreaRef = useRef(null)
 
   useEffect(() => {
-    scrollRef.current?.scrollIntoView({ behavior: 'smooth' })
-  }, [messages])
+    if (chatAreaRef.current) {
+      chatAreaRef.current.scrollTop = chatAreaRef.current.scrollHeight
+    }
+  }, [messages, loading])
 
   async function sendMessage(questionText) {
     if (!questionText.trim() || loading) return
@@ -53,15 +56,15 @@ export default function PublicChatbot() {
         <div className="chatbot-avatar">🤖</div>
         <div className="chatbot-title-wrap">
           <h3>College AI Assistant</h3>
-          <span className="chatbot-status">● Live Information AI</span>
+          <span className="chatbot-status">● Live RAG Information AI</span>
         </div>
       </div>
 
-      <div className="chatbot-messages-area">
+      <div className="chatbot-messages-area" ref={chatAreaRef}>
         {messages.length === 0 && (
           <div className="chatbot-empty-state">
             <div className="empty-icon">💬</div>
-            <p>Ask anything about departments, fees, placements, or facilities.</p>
+            <p>Ask anything about departments, fees, placements, location, or nearby PGs.</p>
 
             <div className="quick-prompts-label">Suggested Questions:</div>
             <div className="quick-prompts-wrap">
@@ -86,14 +89,13 @@ export default function PublicChatbot() {
         ))}
 
         {loading && <div className="chat-typing-indicator">⚡ AI Assistant is typing...</div>}
-        <div ref={scrollRef} />
       </div>
 
       <form onSubmit={handleFormSubmit} className="chatbot-input-form">
         <input
           value={input}
           onChange={(e) => setInput(e.target.value)}
-          placeholder="Ask about fees, courses..."
+          placeholder="Ask about fees, location, PGs..."
           className="chatbot-input"
         />
         <button type="submit" disabled={loading || !input.trim()} className="chatbot-send-btn">
