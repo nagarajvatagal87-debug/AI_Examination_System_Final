@@ -402,21 +402,22 @@ router.get("/academic-profile", async (req, res) => {
 
       const intTot = intRec ? (intRec.total_internal_marks ?? ((intRec.internal1_marks || 0) + (intRec.internal2_marks || 0) + (intRec.assignment_marks || 0) + (intRec.project_marks || 0))) : (42 + (idx % 6));
 
-      const attPct = attRec?.hasAttendance ? attRec.percentage : (88 + (idx * 2) % 10);
+      const attDisplay = attRec?.hasAttendance ? `${attRec.percentage}%` : "Not Marked";
+      const attPctVal = attRec?.hasAttendance ? attRec.percentage : 100;
 
       return {
         subjectId: sub.id,
         subjectName: sub.name,
         subjectCode: sub.code || `MMC30${idx + 1}`,
         facultyName: sub.profiles?.full_name || (idx % 2 === 0 ? "Dr. Ameer Nagarasi" : "Prof. Prajwal Kumar"),
-        attendancePercentage: `${attPct}%`,
+        attendancePercentage: attDisplay,
         internalMarks: `${intTot} / 50`,
         mainExamStatus: mainRec ? (mainRec.passed ? `PASSED (${mainRec.total_marks}/${mainRec.max_marks})` : `FAILED (${mainRec.total_marks}/${mainRec.max_marks})`) : "PASSED (86/100)",
-        academicStatus: intTot < 25 ? "DETAINED (<25 Marks)" : attPct < 75 ? "SHORTAGE (<75%)" : "REGULAR / ELIGIBLE",
+        academicStatus: intTot < 25 ? "DETAINED (<25 Marks)" : (attRec?.hasAttendance && attPctVal < 75) ? "SHORTAGE (<75%)" : "REGULAR / ELIGIBLE",
       };
     });
 
-    const overallAttPct = attSummary.hasAnyAttendance ? attSummary.overallPercentage : 90;
+    const overallAttPct = attSummary.hasAnyAttendance ? `${attSummary.overallPercentage}%` : "Not Marked";
 
     res.json({
       studentName: profile?.full_name || req.user.full_name || "Nagaraj",
@@ -431,8 +432,8 @@ router.get("/academic-profile", async (req, res) => {
       avatarUrl: profile?.avatar_url,
       summary: {
         enrolledSubjectsCount: subjects.length,
-        overallAttendance: `${overallAttPct}%`,
-        attendanceEligible: overallAttPct >= 75,
+        overallAttendance: overallAttPct,
+        attendanceEligible: attSummary.hasAnyAttendance ? attSummary.overallPercentage >= 75 : true,
         internalEvaluationsCount: Math.max(subjects.length, (internalMarks || []).length),
         mainExamPublishedCount: Math.max(subjects.length, (mainResults || []).length),
         backlogsCount: (mainResults || []).filter((m) => !m.passed).length,

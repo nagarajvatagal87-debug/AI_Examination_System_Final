@@ -232,7 +232,7 @@ export default function DashboardHome() {
 
         <div className="glass-card dh-section-box">
           <h3>Quick Actions</h3>
-          <div className="quick-actions-flex">
+          <div className="quick-actions-flex" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: 12 }}>
             <Link to="/faculty/subjects" className="qa-button qa-upload">
               <span className="qa-icon">📤</span>
               <div>
@@ -254,6 +254,22 @@ export default function DashboardHome() {
               <div>
                 <div className="qa-title">Evaluate Answer Sheets</div>
                 <div className="qa-sub">OCR + Rubric AI review</div>
+              </div>
+            </Link>
+
+            <Link to="/faculty/subjects" className="qa-button qa-att" style={{ borderLeft: '4px solid #10b981' }}>
+              <span className="qa-icon">📋</span>
+              <div>
+                <div className="qa-title">Mark Attendance</div>
+                <div className="qa-sub">Daily sessions & parent alerts</div>
+              </div>
+            </Link>
+
+            <Link to="/faculty/results" className="qa-button qa-res" style={{ borderLeft: '4px solid #8b5cf6' }}>
+              <span className="qa-icon">📊</span>
+              <div>
+                <div className="qa-title">View Results</div>
+                <div className="qa-sub">Verified internal performance</div>
               </div>
             </Link>
           </div>

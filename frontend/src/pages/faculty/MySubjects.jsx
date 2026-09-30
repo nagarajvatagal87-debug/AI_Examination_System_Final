@@ -15,6 +15,8 @@ export default function MySubjects() {
   const [internalInput, setInternalInput] = useState({})
 
   const [uploadFile, setUploadFile] = useState(null)
+  const [uploadUnit, setUploadUnit] = useState('Unit 1')
+  const [uploadTitle, setUploadTitle] = useState('')
   const [msg, setMsg] = useState('')
   const [studentMsg, setStudentMsg] = useState('')
   const [internalMsg, setInternalMsg] = useState('')
@@ -56,13 +58,12 @@ export default function MySubjects() {
     }
   }
 
-
   function openMaterials(subject) {
     setStudentsFor(null)
     setInternalsFor(null)
     setMaterialsFor(subject)
     setMsg('')
-    api.get(`/course-materials?subjectId=${subject.id}&kind=course_pdf`)
+    api.get(`/course-materials?subjectId=${subject.id}`)
       .then((res) => setMaterials(res.data))
       .catch(() => {})
   }
@@ -72,21 +73,35 @@ export default function MySubjects() {
       setMsg('❌ Please select a PDF file to upload.')
       return
     }
-    setMsg('Uploading syllabus PDF & indexing for RAG AI generation...')
+    setMsg('Uploading course material, running RAG indexing & sending notifications...')
     try {
       const formData = new FormData()
       formData.append('file', uploadFile)
       formData.append('subjectId', materialsFor.id)
       formData.append('kind', 'course_pdf')
+      formData.append('unit', uploadUnit || 'Unit 1')
+      if (uploadTitle) formData.append('title', uploadTitle)
 
       await api.post('/faculty/course-materials', formData, {
         headers: { 'Content-Type': 'multipart/form-data' },
       })
-      setMsg('✅ Syllabus PDF uploaded successfully! Indexed for Question Paper Generation.')
+      setMsg('✅ Course material uploaded & published! Enrolled students notified.')
       setUploadFile(null)
+      setUploadTitle('')
       openMaterials(materialsFor)
     } catch (err) {
       setMsg(`❌ ${err.response?.data?.error || 'Upload failed'}`)
+    }
+  }
+
+  async function handleTogglePublish(materialId, currentPublished) {
+    try {
+      const nextStatus = !currentPublished
+      await api.patch(`/faculty/course-materials/${materialId}/publish`, { published: nextStatus })
+      setMaterials((prev) => prev.map((m) => m.id === materialId ? { ...m, published: nextStatus } : m))
+      setMsg(`✅ Material ${nextStatus ? 'published & student notifications dispatched' : 'unpublished'}.`)
+    } catch (err) {
+      setMsg(`❌ ${err.response?.data?.error || 'Failed to update status'}`)
     }
   }
 
@@ -256,6 +271,8 @@ export default function MySubjects() {
             attendedClasses: newAtt,
             percentage: pct,
             hasAttendance: true,
+            isAbsent: false,
+            lastAction: 'PRESENT',
             isEligible: pct >= 75,
             status: pct >= 75 ? 'ELIGIBLE' : 'NOT_ELIGIBLE_ATTENDANCE_SHORTAGE'
           }
@@ -278,6 +295,8 @@ export default function MySubjects() {
             attendedClasses: newAtt,
             percentage: pct,
             hasAttendance: true,
+            isAbsent: true,
+            lastAction: 'ABSENT',
             isEligible: pct >= 75,
             status: pct >= 75 ? 'ELIGIBLE' : 'NOT_ELIGIBLE_ATTENDANCE_SHORTAGE'
           }
@@ -318,6 +337,7 @@ export default function MySubjects() {
     relationship: 'Father',
     email: '',
     mobile: '',
+    preferred_language: 'TRILINGUAL',
     is_primary: true,
     email_enabled: true,
     sms_enabled: false,
@@ -332,6 +352,7 @@ export default function MySubjects() {
       relationship: 'Father',
       email: '',
       mobile: '',
+      preferred_language: 'TRILINGUAL',
       is_primary: true,
       email_enabled: true,
       sms_enabled: false,
@@ -348,6 +369,7 @@ export default function MySubjects() {
           relationship: p.relationship || 'Father',
           email: p.email || '',
           mobile: p.mobile || '',
+          preferred_language: p.preferred_language || 'TRILINGUAL',
           is_primary: p.is_primary !== false,
           email_enabled: p.email_enabled !== false,
           sms_enabled: Boolean(p.sms_enabled),
@@ -568,32 +590,113 @@ export default function MySubjects() {
       {materialsFor && (
         <div className="ms-materials-panel">
           <div className="ms-materials-header">
-            <h3>{materialsFor.name} — Syllabus & Course Notes PDF</h3>
+            <h3>📚 {materialsFor.name} — Course Material Management (Unit-wise)</h3>
             <button className="ms-close" onClick={() => setMaterialsFor(null)}>✕</button>
           </div>
-          <ul className="ms-materials-list">
-            {materials.map((m) => (
-              <li key={m.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px 16px', background: '#ffffff', borderRadius: 10, marginBottom: 8, border: '1px solid #cbd5e1' }}>
-                <div>
-                  📄 <strong style={{ color: '#0f172a' }}>{m.title || m.file_name}</strong>
-                  <span className="ms-date" style={{ marginLeft: 12, color: '#64748b', fontSize: 12 }}>{new Date(m.created_at).toLocaleDateString()}</span>
-                </div>
-                <button
-                  onClick={() => handleDeleteMaterial(m.id, m.title || m.file_name)}
-                  style={{ padding: '6px 14px', background: '#ef4444', color: '#fff', border: 'none', borderRadius: 6, fontWeight: 700, fontSize: 12, cursor: 'pointer' }}
-                  title="Delete syllabus PDF"
+
+          {/* Unit-Wise Grouping */}
+          {['Unit 1', 'Unit 2', 'Unit 3', 'Unit 4', 'Unit 5'].map((unitName) => {
+            const unitItems = materials.filter((m) => (m.unit || 'Unit 1') === unitName)
+            if (unitItems.length === 0 && materials.length > 0 && unitName !== 'Unit 1') return null
+
+            return (
+              <div key={unitName} style={{ marginBottom: 16, background: '#f8fafc', padding: 14, borderRadius: 12, border: '1px solid #cbd5e1' }}>
+                <h4 style={{ margin: '0 0 10px 0', fontSize: 14, color: '#1e3a8a', fontWeight: 800, display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <span>📂 {unitName}</span>
+                  <span style={{ fontSize: 11, background: '#e2e8f0', color: '#475569', padding: '2px 8px', borderRadius: 10 }}>{unitItems.length} document{unitItems.length !== 1 ? 's' : ''}</span>
+                </h4>
+
+                <ul className="ms-materials-list" style={{ margin: 0, padding: 0, listStyle: 'none' }}>
+                  {unitItems.map((m) => (
+                    <li key={m.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 14px', background: '#ffffff', borderRadius: 8, marginBottom: 6, border: '1px solid #e2e8f0', flexWrap: 'wrap', gap: 10 }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                        <span style={{ fontSize: 18 }}>📄</span>
+                        <div>
+                          <strong style={{ color: '#0f172a', fontSize: 13 }}>{m.title || m.file_name}</strong>
+                          <div style={{ fontSize: 11, color: '#64748b' }}>
+                            {m.kind?.toUpperCase() || 'PDF'} • Uploaded {new Date(m.created_at).toLocaleDateString()}
+                          </div>
+                        </div>
+                      </div>
+
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                        <button
+                          onClick={() => handleTogglePublish(m.id, m.published !== false)}
+                          style={{
+                            padding: '5px 12px',
+                            borderRadius: 6,
+                            border: 'none',
+                            fontWeight: 700,
+                            fontSize: 11,
+                            cursor: 'pointer',
+                            background: m.published !== false ? '#dcfce7' : '#fef3c7',
+                            color: m.published !== false ? '#15803d' : '#b45309',
+                          }}
+                          title={m.published !== false ? "Published to Student LMS & AI Assistant" : "Draft (Unpublished)"}
+                        >
+                          {m.published !== false ? "✓ Published" : "⏳ Unpublish (Draft)"}
+                        </button>
+
+                        <button
+                          onClick={() => handleDeleteMaterial(m.id, m.title || m.file_name)}
+                          style={{ padding: '5px 12px', background: '#ef4444', color: '#fff', border: 'none', borderRadius: 6, fontWeight: 700, fontSize: 11, cursor: 'pointer' }}
+                          title="Delete material"
+                        >
+                          🗑️ Delete
+                        </button>
+                      </div>
+                    </li>
+                  ))}
+                  {unitItems.length === 0 && unitName === 'Unit 1' && materials.length === 0 && (
+                    <li className="hint" style={{ padding: 10 }}>No course materials uploaded yet. Upload below to organize unit-wise and Ground AI Q&A.</li>
+                  )}
+                </ul>
+              </div>
+            )
+          })}
+
+          {/* Upload Form */}
+          <div style={{ background: '#ffffff', padding: 16, borderRadius: 12, border: '1.5px solid #3b82f6', marginTop: 14 }}>
+            <h4 style={{ margin: '0 0 10px 0', fontSize: 13, color: '#2563eb', fontWeight: 800 }}>+ Upload New Course Material / Syllabus</h4>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 10, marginBottom: 10 }}>
+              <div>
+                <label style={{ fontSize: 11, fontWeight: 700, color: '#475569', display: 'block', marginBottom: 4 }}>Select Unit</label>
+                <select
+                  value={uploadUnit}
+                  onChange={(e) => setUploadUnit(e.target.value)}
+                  style={{ width: '100%', padding: '8px 10px', borderRadius: 6, border: '1px solid #cbd5e1', fontSize: 13, background: '#fff', color: '#0f172a' }}
                 >
-                  🗑️ Delete PDF
-                </button>
-              </li>
-            ))}
-            {materials.length === 0 && <li className="hint">No syllabus PDF uploaded yet. Upload below to enable RAG Question Generation.</li>}
-          </ul>
-          <div className="fd-form-row">
-            <input type="file" accept=".pdf" onChange={(e) => setUploadFile(e.target.files[0])} />
-            <button className="fd-btn" onClick={handleUpload}>+ Upload Syllabus / Notes PDF</button>
+                  <option value="Unit 1">Unit 1</option>
+                  <option value="Unit 2">Unit 2</option>
+                  <option value="Unit 3">Unit 3</option>
+                  <option value="Unit 4">Unit 4</option>
+                  <option value="Unit 5">Unit 5</option>
+                </select>
+              </div>
+
+              <div>
+                <label style={{ fontSize: 11, fontWeight: 700, color: '#475569', display: 'block', marginBottom: 4 }}>Material Title (Optional)</label>
+                <input
+                  type="text"
+                  placeholder="e.g. Unit 1 Core Notes & PPT"
+                  value={uploadTitle}
+                  onChange={(e) => setUploadTitle(e.target.value)}
+                  style={{ width: '100%', padding: '8px 10px', borderRadius: 6, border: '1px solid #cbd5e1', fontSize: 13, background: '#fff', color: '#0f172a' }}
+                />
+              </div>
+
+              <div>
+                <label style={{ fontSize: 11, fontWeight: 700, color: '#475569', display: 'block', marginBottom: 4 }}>Select PDF Document</label>
+                <input type="file" accept=".pdf,.ppt,.pptx,.doc,.docx" onChange={(e) => setUploadFile(e.target.files[0])} style={{ fontSize: 12 }} />
+              </div>
+            </div>
+
+            <button className="fd-btn" onClick={handleUpload} style={{ width: '100%', padding: '10px' }}>
+              🚀 Upload & Publish Material to LMS
+            </button>
           </div>
-          {msg && <p className="fd-status" style={{ color: '#10b981', marginTop: 10 }}>{msg}</p>}
+
+          {msg && <p className="fd-status" style={{ color: msg.includes('❌') ? '#ef4444' : '#10b981', marginTop: 10, fontWeight: 700 }}>{msg}</p>}
         </div>
       )}
 
@@ -661,19 +764,21 @@ export default function MySubjects() {
                           {st.percentage}%
                         </td>
                         <td style={{ padding: 8 }}>
-                          <div style={{ display: 'flex', gap: 6 }}>
+                          <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
                             <button
                               onClick={() => handleMarkPresent(st.student_id)}
-                              style={{ padding: '5px 10px', borderRadius: 6, background: '#10b981', color: '#fff', border: 'none', fontWeight: 700, fontSize: 11, cursor: 'pointer' }}
+                              style={{ padding: '5px 10px', borderRadius: 6, background: st.lastAction === 'PRESENT' ? '#059669' : '#10b981', color: '#fff', border: st.lastAction === 'PRESENT' ? '1px solid #047857' : 'none', fontWeight: 700, fontSize: 11, cursor: 'pointer' }}
                             >
                               + Present
                             </button>
                             <button
                               onClick={() => handleMarkAbsent(st.student_id)}
-                              style={{ padding: '5px 10px', borderRadius: 6, background: '#ef4444', color: '#fff', border: 'none', fontWeight: 700, fontSize: 11, cursor: 'pointer' }}
+                              style={{ padding: '5px 10px', borderRadius: 6, background: st.lastAction === 'ABSENT' ? '#b91c1c' : '#ef4444', color: '#fff', border: st.lastAction === 'ABSENT' ? '1px solid #991b1b' : 'none', fontWeight: 700, fontSize: 11, cursor: 'pointer' }}
                             >
                               + Absent
                             </button>
+                            {st.lastAction === 'ABSENT' && <span style={{ fontSize: 10, color: '#dc2626', fontWeight: 800 }}>📩 Absent Marked</span>}
+                            {st.lastAction === 'PRESENT' && <span style={{ fontSize: 10, color: '#16a34a', fontWeight: 800 }}>✓ Present</span>}
                           </div>
                         </td>
                         <td style={{ padding: 12 }}>
@@ -1056,6 +1161,25 @@ export default function MySubjects() {
                   onChange={(e) => setParentForm({ ...parentForm, email: e.target.value })}
                   style={{ width: '100%', padding: '10px 12px', borderRadius: 8, border: '1px solid #cbd5e1', fontSize: 13, fontWeight: 600, color: '#0f172a' }}
                 />
+              </div>
+
+              <div>
+                <label style={{ fontSize: 12, fontWeight: 700, color: '#475569', display: 'block', marginBottom: 4 }}>
+                  🌐 Preferred Alert Language (ಭಾಷೆ ಆಯ್ಕೆ / भाषा का चयन)
+                </label>
+                <select
+                  value={parentForm.preferred_language || 'TRILINGUAL'}
+                  onChange={(e) => setParentForm({ ...parentForm, preferred_language: e.target.value })}
+                  style={{ width: '100%', padding: '10px 12px', borderRadius: 8, border: '1px solid #cbd5e1', fontSize: 13, fontWeight: 700, color: '#0f172a', background: '#f8fafc' }}
+                >
+                  <option value="TRILINGUAL">🌐 Trilingual (English + ಕನ್ನಡ + हिंदी - Recommended)</option>
+                  <option value="KN">🇮🇳 ಕನ್ನಡ (Kannada Only)</option>
+                  <option value="HI">🇮🇳 हिंदी (Hindi Only)</option>
+                  <option value="EN">🇬🇧 English Only</option>
+                </select>
+                <span style={{ fontSize: 11, color: '#0284c7', display: 'block', marginTop: 4, fontWeight: 600 }}>
+                  ✨ Sends the absence alert email in parent's native language.
+                </span>
               </div>
 
               <div style={{ background: '#f8fafc', padding: 14, borderRadius: 10, border: '1px solid #e2e8f0', display: 'flex', flexDirection: 'column', gap: 10 }}>

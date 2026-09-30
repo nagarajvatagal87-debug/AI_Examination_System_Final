@@ -170,8 +170,8 @@ export default function AcademicProfileTab() {
 
           <div style={{ background: summary?.attendanceEligible !== false ? '#f0fdf4' : '#fef2f2', padding: 18, borderRadius: 12, border: summary?.attendanceEligible !== false ? '1px solid #bbf7d0' : '1px solid #fca5a5' }}>
             <div style={{ fontSize: 11, color: summary?.attendanceEligible !== false ? '#166534' : '#991b1b', fontWeight: 700, textTransform: 'uppercase' }}>Overall Attendance</div>
-            <div style={{ fontSize: 26, fontWeight: 900, color: summary?.attendanceEligible !== false ? '#16a34a' : '#dc2626', marginTop: 4 }}>
-              {summary?.overallAttendance || '90%'}
+            <div style={{ fontSize: 26, fontWeight: 900, color: summary?.overallAttendance === 'Not Marked' ? '#64748b' : summary?.attendanceEligible !== false ? '#16a34a' : '#dc2626', marginTop: 4 }}>
+              {summary?.overallAttendance || 'Not Marked'}
             </div>
           </div>
 
@@ -219,8 +219,8 @@ export default function AcademicProfileTab() {
                     <div style={{ fontSize: 11, color: '#64748b' }}>{sub.subjectCode}</div>
                   </td>
                   <td>{sub.facultyName}</td>
-                  <td style={{ fontWeight: 700, color: sub.attendancePercentage?.includes('<') ? '#ef4444' : '#0f172a' }}>
-                    {sub.attendancePercentage}
+                  <td style={{ fontWeight: 700, color: sub.attendancePercentage?.includes('<') || sub.attendancePercentage?.includes('Shortage') ? '#ef4444' : sub.attendancePercentage === 'Not Marked' ? '#64748b' : '#0f172a' }}>
+                    {sub.attendancePercentage || 'Not Marked'}
                   </td>
                   <td style={{ fontWeight: 800, color: '#2563eb' }}>
                     {sub.internalMarks}

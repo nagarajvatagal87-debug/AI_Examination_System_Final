@@ -1,0 +1,34 @@
+[
+  {
+    "id": "cal-1790760580928-ifkes",
+    "title": "Internal 1",
+    "description": "",
+    "event_type": "Internal Examination",
+    "department_id": "37909cba-a75d-428e-9181-fddf9920fb0b",
+    "subject_id": null,
+    "semester": null,
+    "section": null,
+    "start_datetime": "2026-10-27T00:00:00.000Z",
+    "end_datetime": "2026-10-27T00:00:00.000Z",
+    "created_by": "9e9f16a4-a622-4121-b6e1-b7075f947b25",
+    "visibility": "department",
+    "created_at": "2026-09-30T09:29:40.928Z",
+    "updated_at": "2026-09-30T09:29:40.928Z"
+  },
+  {
+    "id": "cal-1790789767923-7o20t",
+    "title": "Main Exam: Main Examination",
+    "description": "Main Examination for Deep Learning",
+    "event_type": "Main Examination",
+    "department_id": "37909cba-a75d-428e-9181-fddf9920fb0b",
+    "subject_id": "050ba71c-1308-415a-bbd4-d294de0eefe3",
+    "semester": "3rd Sem",
+    "section": null,
+    "start_datetime": "2026-09-30T17:36:07.923Z",
+    "end_datetime": "2026-09-30T17:36:07.923Z",
+    "created_by": null,
+    "visibility": "all",
+    "created_at": "2026-09-30T17:36:07.923Z",
+    "updated_at": "2026-09-30T17:36:07.923Z"
+  }
+]

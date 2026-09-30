@@ -1,7 +1,11 @@
 const fs = require("fs");
 const path = require("path");
 
-const MARKS_FILE = path.join(__dirname, "../../persistent_internal_marks.json");
+const DATA_DIR = path.join(__dirname, "../../data");
+if (!fs.existsSync(DATA_DIR)) {
+  try { fs.mkdirSync(DATA_DIR, { recursive: true }); } catch (e) {}
+}
+const MARKS_FILE = path.join(DATA_DIR, "persistent_internal_marks.json");
 
 // In-memory fallback store when internal_marks table isn't present in database schema
 const memoryStore = new Map();

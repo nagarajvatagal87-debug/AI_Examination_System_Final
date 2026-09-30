@@ -7,17 +7,15 @@ const { supabaseAdmin } = require("../../config/Supabase");
 const { requireAuth, requireRole } = require("../middleware/auth.js");
 const { sendEmail } = require("../services/emailService");
 const { computeRankings } = require("../services/ranking.service.js");
-const { notifyResultsPublished } = require("../services/notification.service.js");
+const { notify, notifyResultsPublished, sendTrilingualAbsenceEmail } = require("../services/notification.service.js");
 const { storePdf, getPdfBuffer } = require("../services/pdfStore.js");
 const { evaluateWithRag } = require("../services/ragEvaluator.js");
 const { getSubjectAttendance, updateSubjectAttendance } = require("../services/academicStore.js");
+const { getStudentParents, getPrimaryParent, saveStudentParent } = require("../services/parentStore.js");
+const { createNotificationLog, isDuplicateAbsenceEmailSent } = require("../services/notificationLogStore.js");
 
 const router = express.Router();
 const upload = multer({ storage: multer.memoryStorage() });
-
-const { getStudentParents, getPrimaryParent, saveStudentParent } = require("../services/parentStore.js");
-const { createNotificationLog, isDuplicateAbsenceEmailSent } = require("../services/notificationLogStore.js");
-const { notify } = require("../services/notification.service.js");
 
 // GET /api/faculty/attendance?subjectId=xxx
 router.get("/attendance", async (req, res) => {
@@ -54,7 +52,6 @@ router.post("/attendance", async (req, res) => {
 
     const updated = await updateSubjectAttendance(subjectId, attendanceList);
 
-    // Fetch subject details for email notification
     let subjectName = "Course Subject";
     let subjectCode = "SUB";
     try {
@@ -75,11 +72,16 @@ router.post("/attendance", async (req, res) => {
 
     for (const item of attendanceList) {
       const studentId = item.student_id || item.studentId;
-      const isAbsent = item.status === "ABSENT" || Boolean(item.isAbsent);
+      const isAbsent = Boolean(item.isAbsent) || item.lastAction === "ABSENT" || item.status === "ABSENT" || item.sessionStatus === "ABSENT";
 
       if (isAbsent) {
         absentCount++;
-        const parent = await getPrimaryParent(studentId);
+        let parent = null;
+        try {
+          parent = await getPrimaryParent(studentId);
+        } catch (pErr) {
+          console.error("Error fetching getPrimaryParent:", pErr.message);
+        }
 
         if (!parent || !parent.name || !parent.email || !parent.email.trim()) {
           notConfiguredCount++;
@@ -98,8 +100,11 @@ router.post("/attendance", async (req, res) => {
             message: "Parent email notifications turned off",
           });
         } else {
-          // Prevent duplicate email notification if already sent today
-          const alreadySent = isDuplicateAbsenceEmailSent(studentId, todayDateStr, parent.id);
+          let alreadySent = false;
+          try {
+            alreadySent = isDuplicateAbsenceEmailSent(studentId, todayDateStr, parent.id);
+          } catch (dErr) {}
+
           if (alreadySent) {
             notificationDetails.push({
               studentId,
@@ -110,33 +115,21 @@ router.post("/attendance", async (req, res) => {
           } else {
             const studentName = item.full_name || item.name || "Student";
             const usn = item.registration_no || item.usn || "1DS23MCA087";
-
-            const emailSubject = `Attendance Alert - ${studentName} - ${subjectName}`;
-            const emailBody = `Dear Parent/Guardian,
-
-This is an academic attendance notification from DSATM.
-
-Your ward:
-Student Name: ${studentName}
-USN: ${usn}
-Subject: ${subjectName} (${subjectCode})
-Date: ${todayDateStr}
-Attendance Status: ABSENT
-
-The student was marked absent for the above class.
-
-Please log in to the college LMS for further academic details.
-
-Regards,
-DSATM College LMS`;
+            const emailSubject = `⚠️ Attendance Alert: ${studentName} was ABSENT for ${subjectName} / ಹಾಜರಾತಿ ಸೂಚನೆ`;
 
             const attendanceRecId = `att-rec-${subjectId}-${studentId}-${todayDateStr}`;
 
             try {
-              // Send email to parent
-              await sendEmail(parent.email, emailSubject, emailBody);
+              await sendTrilingualAbsenceEmail({
+                toEmail: parent.email,
+                studentName,
+                usn,
+                subjectName,
+                subjectCode,
+                dateStr: todayDateStr,
+                preferredLanguage: parent.preferred_language || "TRILINGUAL"
+              });
 
-              // Log notification as SENT
               await createNotificationLog({
                 student_id: studentId,
                 parent_id: parent.id,
@@ -145,17 +138,18 @@ DSATM College LMS`;
                 notification_type: "ATTENDANCE_ABSENCE",
                 recipient: parent.email,
                 subject: emailSubject,
-                message: emailBody,
+                message: `Multilingual alert dispatched in English, Kannada (ಕನ್ನಡ) & Hindi (हिंदी) to ${parent.email}`,
                 status: "SENT",
               });
 
-              // Create student in-app LMS notification
-              await notify(
-                studentId,
-                "attendance_absence",
-                `Attendance Alert: ${subjectName}`,
-                `You were marked absent for ${subjectName} on ${todayDateStr}.`
-              );
+              try {
+                await notify(
+                  studentId,
+                  "attendance_absence",
+                  `Attendance Alert: ${subjectName}`,
+                  `You were marked absent for ${subjectName} on ${todayDateStr}.`
+                );
+              } catch (nErr) {}
 
               sentCount++;
               notificationDetails.push({
@@ -165,21 +159,7 @@ DSATM College LMS`;
                 recipient: parent.email,
               });
             } catch (err) {
-              console.error(`Failed to send absence email to parent ${parent.email}:`, err.message);
-              // Log notification as FAILED
-              await createNotificationLog({
-                student_id: studentId,
-                parent_id: parent.id,
-                attendance_id: attendanceRecId,
-                channel: "EMAIL",
-                notification_type: "ATTENDANCE_ABSENCE",
-                recipient: parent.email,
-                subject: emailSubject,
-                message: emailBody,
-                status: "FAILED",
-                failure_reason: err.message,
-              });
-
+              console.error("Exception sending email to parent:", err.message);
               failedCount++;
               notificationDetails.push({
                 studentId,
@@ -295,18 +275,18 @@ router.get("/submissions/:submissionId/file", async (req, res) => {
 router.use(requireAuth, requireRole("faculty", "hod"));
 
 // ── Course Material Upload ──
-// POST /api/faculty/course-materials (multipart form: file, subjectId, kind)
+// POST /api/faculty/course-materials (multipart form: file, subjectId, kind, unit, title)
 router.post("/course-materials", upload.single("file"), async (req, res) => {
   try {
-    const { subjectId, kind } = req.body;
+    const { subjectId, kind, unit, title } = req.body;
     const file = req.file;
     if (!file || !subjectId) return res.status(400).json({ error: "file and subjectId are required" });
 
-    const path = `${subjectId}/${Date.now()}-${file.originalname}`;
+    const filePath = `${subjectId}/${Date.now()}-${file.originalname}`;
 
     const { error: uploadError } = await supabaseAdmin.storage
       .from(process.env.SUPABASE_STORAGE_BUCKET || "exam-files")
-      .upload(path, file.buffer, { contentType: file.mimetype, upsert: true });
+      .upload(filePath, file.buffer, { contentType: file.mimetype, upsert: true });
 
     if (uploadError) {
       console.warn("Storage upload warning:", uploadError.message);
@@ -316,11 +296,14 @@ router.post("/course-materials", upload.single("file"), async (req, res) => {
       .from("course_materials")
       .insert({
         subject_id: subjectId,
+        title: title || file.originalname,
         file_name: file.originalname,
-        file_path: path,
+        file_path: filePath,
+        unit: unit || "Unit 1",
         uploaded_by: req.user.id,
         kind: kind === "previous_paper" ? "previous_paper" : "course_pdf",
         processed: true,
+        published: true,
       })
       .select()
       .single();
@@ -357,12 +340,89 @@ router.post("/course-materials", upload.single("file"), async (req, res) => {
     if (kind !== "previous_paper") {
       axios.post(
         `${process.env.GENAI_SERVICE_URL}/agents/ingest-course-material`,
-        { course_material_id: data.id, subject_id: subjectId, file_path: path },
+        { course_material_id: data.id, subject_id: subjectId, file_path: filePath },
         { headers: { Authorization: `Bearer ${process.env.GENAI_SERVICE_API_KEY}` } }
       ).catch((err) => console.log("Ingestion trigger skipped:", err.message));
     }
 
+    // Notify enrolled students via LMS & Email
+    try {
+      const enrolledStudentIds = getEnrolledStudentIds(subjectId);
+      const { data: sub } = await supabaseAdmin.from("subjects").select("name, code").eq("id", subjectId).maybeSingle();
+      const subjectLabel = sub ? `${sub.name} (${sub.code || ''})` : 'Course Subject';
+
+      if (enrolledStudentIds && enrolledStudentIds.length > 0) {
+        const { data: enrolledStudents } = await supabaseAdmin
+          .from("profiles")
+          .select("id, full_name, email")
+          .in("id", enrolledStudentIds);
+
+        const { sendMaterialPublishedEmail } = require("../services/emailService");
+        for (const st of enrolledStudents || []) {
+          await notify(
+            st.id,
+            "new_course_material",
+            `📚 New Course Material Published: ${subjectLabel}`,
+            `New study material "${title || file.originalname}" (${unit || 'Unit 1'}) is now available for ${subjectLabel}.`
+          );
+          if (st.email) {
+            sendMaterialPublishedEmail(st.email, st.full_name || "Student", subjectLabel, title || file.originalname).catch(() => {});
+          }
+        }
+      }
+    } catch (e) {
+      console.warn("Course material publication notification note:", e.message);
+    }
+
     res.status(201).json(data);
+  } catch (err) {
+    res.status(400).json({ error: err.message });
+  }
+});
+
+// PATCH /api/faculty/course-materials/:id/publish -> Toggle publish/unpublish status
+router.patch("/course-materials/:id/publish", async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { published } = req.body;
+
+    const { data: updated, error } = await supabaseAdmin
+      .from("course_materials")
+      .update({ published: Boolean(published) })
+      .eq("id", id)
+      .select("*, subjects(name, code)")
+      .single();
+
+    if (error) throw error;
+
+    if (Boolean(published)) {
+      try {
+        const enrolledStudentIds = getEnrolledStudentIds(updated.subject_id);
+        const subjectLabel = updated.subjects ? `${updated.subjects.name} (${updated.subjects.code || ''})` : 'Course Subject';
+
+        if (enrolledStudentIds && enrolledStudentIds.length > 0) {
+          const { data: enrolledStudents } = await supabaseAdmin
+            .from("profiles")
+            .select("id, full_name, email")
+            .in("id", enrolledStudentIds);
+
+          const { sendMaterialPublishedEmail } = require("../services/emailService");
+          for (const st of enrolledStudents || []) {
+            await notify(
+              st.id,
+              "new_course_material",
+              `📚 Course Material Published: ${subjectLabel}`,
+              `Study material "${updated.title || updated.file_name}" is now published.`
+            );
+            if (st.email) {
+              sendMaterialPublishedEmail(st.email, st.full_name || "Student", subjectLabel, updated.title || updated.file_name).catch(() => {});
+            }
+          }
+        }
+      } catch (e) {}
+    }
+
+    res.json(updated);
   } catch (err) {
     res.status(400).json({ error: err.message });
   }

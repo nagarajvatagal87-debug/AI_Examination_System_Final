@@ -22,7 +22,13 @@ export default function HodLayout() {
     <div className="hl-wrap">
       <aside className="hl-sidebar">
         <div className="hl-profile">
-          <div className="hl-avatar">{user?.fullName?.[0] || 'H'}</div>
+          <div className="hl-avatar" style={{ overflow: 'hidden', padding: 0 }}>
+            {user?.avatarUrl || user?.avatar_url || localStorage.getItem('user_avatar') ? (
+              <img src={user?.avatarUrl || user?.avatar_url || localStorage.getItem('user_avatar')} alt="Avatar" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+            ) : (
+              user?.fullName?.[0] || 'H'
+            )}
+          </div>
           <div className="hl-profile-name">{user?.fullName || 'HOD'}</div>
           <div className="hl-profile-role">Head of Department</div>
           <div className="hl-online"><span className="hl-dot" /> Online</div>

@@ -71,7 +71,7 @@ export default function HodDashboard() {
 
               <div className="user-profile-badge" onClick={() => setActiveSection('settings')} style={{ cursor: 'pointer' }}>
                 <div className="user-avatar-circle" style={{ width: 36, height: 36, borderRadius: '50%', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#2563eb', color: '#fff', fontWeight: 800 }}>
-                  {user?.avatarUrl ? <img src={user.avatarUrl} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : (user?.fullName?.[0] || 'H')}
+                  {user?.avatarUrl || user?.avatar_url || localStorage.getItem('user_avatar') ? <img src={user.avatarUrl || user.avatar_url || localStorage.getItem('user_avatar')} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : (user?.fullName?.[0] || 'H')}
                 </div>
                 <div>
                   <div className="user-name-title">{user?.fullName || 'HOD User'}</div>

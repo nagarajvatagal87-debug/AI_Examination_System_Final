@@ -3,7 +3,15 @@ const { supabaseAdmin } = require("../../config/Supabase");
 const fs = require("fs");
 const path = require("path");
 
-const ATTENDANCE_FILE = path.join(__dirname, "../../persistent_attendance.json");
+const DATA_DIR = path.join(__dirname, "../../data");
+if (!fs.existsSync(DATA_DIR)) {
+  try { fs.mkdirSync(DATA_DIR, { recursive: true }); } catch (e) {}
+}
+const ATTENDANCE_FILE = path.join(DATA_DIR, "persistent_attendance.json");
+const OLD_ATTENDANCE_FILE = path.join(__dirname, "../../persistent_attendance.json");
+if (!fs.existsSync(ATTENDANCE_FILE) && fs.existsSync(OLD_ATTENDANCE_FILE)) {
+  try { fs.copyFileSync(OLD_ATTENDANCE_FILE, ATTENDANCE_FILE); } catch (e) {}
+}
 
 // In-memory persistent stores for Attendance & Internal Timetables
 const attendanceStore = new Map();

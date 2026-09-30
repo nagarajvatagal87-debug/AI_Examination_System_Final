@@ -73,13 +73,9 @@ export default function Notifications() {
   function load() {
     api.get('/notifications')
       .then((res) => {
-        if (Array.isArray(res.data) && res.data.length > 0) {
-          setNotifications(res.data)
-        } else {
-          setNotifications(DEFAULT_NOTIFICATIONS)
-        }
+        setNotifications(Array.isArray(res.data) ? res.data : [])
       })
-      .catch(() => setNotifications(DEFAULT_NOTIFICATIONS))
+      .catch(() => setNotifications([]))
   }
 
   async function markRead(n) {

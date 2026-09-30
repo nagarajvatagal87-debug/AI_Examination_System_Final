@@ -495,8 +495,8 @@ export default function StudentDashboard() {
 
               <div className="user-profile-badge" onClick={() => setActiveTab('profile')} style={{ cursor: 'pointer' }}>
                 <div className="user-avatar-circle" style={{ width: 36, height: 36, borderRadius: '50%', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#2563eb', color: '#fff', fontWeight: 800 }}>
-                  {userProfile?.avatar_url || user?.avatarUrl ? (
-                    <img src={userProfile?.avatar_url || user?.avatarUrl} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                  {userProfile?.avatar_url || user?.avatarUrl || user?.avatar_url || localStorage.getItem('user_avatar') ? (
+                    <img src={userProfile?.avatar_url || user?.avatarUrl || user?.avatar_url || localStorage.getItem('user_avatar')} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                   ) : (
                     (userProfile?.full_name?.[0] || user?.fullName?.[0] || 'S')
                   )}

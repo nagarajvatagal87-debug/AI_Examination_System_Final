@@ -30,9 +30,14 @@ import ProfileSettings from './components/ProfileSettings.jsx'
 import ExamDeptLayout from './pages/examdept/ExamDeptLayout.jsx'
 import ExamDeptDashboard from './pages/examdept/ExamDeptDashboard.jsx'
 import ExamDeptExaminations from './pages/examdept/ExamDeptExaminations.jsx'
+import ExamDeptQuestionPapers from './pages/examdept/ExamDeptQuestionPapers.jsx'
+import ExamDeptScripts from './pages/examdept/ExamDeptScripts.jsx'
 import ExamDeptEvaluation from './pages/examdept/ExamDeptEvaluation.jsx'
 import ExamDeptEvaluationDetail from './pages/examdept/ExamDeptEvaluationDetail.jsx'
 import ExamDeptResults from './pages/examdept/ExamDeptResults.jsx'
+import ExamDeptRevaluation from './pages/examdept/ExamDeptRevaluation.jsx'
+import ExamDeptReports from './pages/examdept/ExamDeptReports.jsx'
+import ExamDeptAuditLog from './pages/examdept/ExamDeptAuditLog.jsx'
 
 // ExamPreview.jsx expects an examId PROP, but this route gives us a URL param —
 // this wrapper bridges the two so ExamPreview itself doesn't need to change.
@@ -96,10 +101,15 @@ export default function App() {
           >
             <Route index element={<ExamDeptDashboard />} />
             <Route path="examinations" element={<ExamDeptExaminations />} />
+            <Route path="question-papers" element={<ExamDeptQuestionPapers />} />
+            <Route path="scripts" element={<ExamDeptScripts />} />
             <Route path="evaluation" element={<ExamDeptEvaluation />} />
             <Route path="evaluation/:examId/:studentId" element={<ExamDeptEvaluationDetail />} />
             <Route path="results" element={<ExamDeptResults />} />
+            <Route path="revaluation" element={<ExamDeptRevaluation />} />
+            <Route path="reports" element={<ExamDeptReports />} />
             <Route path="notifications" element={<Notifications />} />
+            <Route path="audit-log" element={<ExamDeptAuditLog />} />
             <Route path="settings" element={<ProfileSettings />} />
           </Route>
 

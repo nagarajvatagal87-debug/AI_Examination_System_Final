@@ -64,7 +64,7 @@ export default function FacultyLayout() {
   const facultyName = user?.full_name || user?.fullName || user?.name || user?.email?.split('@')[0] || 'Priya'
   const facultyRole = (user?.designation || 'Assistant Professor') + ' · ' + (user?.departmentName || user?.department_id || 'MCA')
   const facultyEmail = user?.email || 'priya@dsatm.edu.in'
-  const avatarUrl = user?.avatarUrl || user?.avatar_url
+  const avatarUrl = user?.avatarUrl || user?.avatar_url || localStorage.getItem('user_avatar')
 
   useEffect(() => {
     function handleClickOutside(event) {

@@ -37,7 +37,7 @@
     "percentage": 0,
     "isEligible": false,
     "status": "NOT_ELIGIBLE_ATTENDANCE_SHORTAGE",
-    "updatedAt": "2026-09-25T13:35:32.602Z"
+    "updatedAt": "2026-09-30T06:57:23.831Z"
   },
   "050ba71c-1308-415a-bbd4-d294de0eefe3:5b768ee2-41cf-417a-922d-0a1229ee6cc9": {
     "subjectId": "050ba71c-1308-415a-bbd4-d294de0eefe3",
@@ -47,7 +47,7 @@
     "percentage": 0,
     "isEligible": false,
     "status": "NOT_ELIGIBLE_ATTENDANCE_SHORTAGE",
-    "updatedAt": "2026-09-25T13:35:32.602Z"
+    "updatedAt": "2026-09-30T06:57:23.831Z"
   },
   "050ba71c-1308-415a-bbd4-d294de0eefe3:47764147-519c-4cd5-98d2-5a34a56f5d6d": {
     "subjectId": "050ba71c-1308-415a-bbd4-d294de0eefe3",
@@ -57,7 +57,7 @@
     "percentage": 0,
     "isEligible": false,
     "status": "NOT_ELIGIBLE_ATTENDANCE_SHORTAGE",
-    "updatedAt": "2026-09-25T13:35:32.602Z"
+    "updatedAt": "2026-09-30T06:57:23.831Z"
   },
   "050ba71c-1308-415a-bbd4-d294de0eefe3:1e7d1628-44a5-4479-877b-5491cca1c32d": {
     "subjectId": "050ba71c-1308-415a-bbd4-d294de0eefe3",
@@ -67,17 +67,17 @@
     "percentage": 0,
     "isEligible": false,
     "status": "NOT_ELIGIBLE_ATTENDANCE_SHORTAGE",
-    "updatedAt": "2026-09-25T13:35:32.602Z"
+    "updatedAt": "2026-09-30T06:57:23.831Z"
   },
   "050ba71c-1308-415a-bbd4-d294de0eefe3:ccb4fa03-15f0-4d86-a1d9-bbe698ea1fc5": {
     "subjectId": "050ba71c-1308-415a-bbd4-d294de0eefe3",
     "studentId": "ccb4fa03-15f0-4d86-a1d9-bbe698ea1fc5",
-    "totalClasses": 4,
-    "attendedClasses": 3,
-    "percentage": 75,
-    "isEligible": true,
-    "status": "ELIGIBLE",
-    "updatedAt": "2026-09-25T13:35:32.602Z"
+    "totalClasses": 21,
+    "attendedClasses": 12,
+    "percentage": 57,
+    "isEligible": false,
+    "status": "NOT_ELIGIBLE_ATTENDANCE_SHORTAGE",
+    "updatedAt": "2026-09-30T06:57:23.831Z"
   },
   "050ba71c-1308-415a-bbd4-d294de0eefe3:d300d6e5-ce15-4a7f-9ce5-ae2947b36346": {
     "subjectId": "050ba71c-1308-415a-bbd4-d294de0eefe3",
@@ -87,6 +87,6 @@
     "percentage": 0,
     "isEligible": false,
     "status": "NOT_ELIGIBLE_ATTENDANCE_SHORTAGE",
-    "updatedAt": "2026-09-25T13:35:32.602Z"
+    "updatedAt": "2026-09-30T06:57:23.831Z"
   }
 }

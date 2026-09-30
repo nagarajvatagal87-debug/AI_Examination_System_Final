@@ -1,0 +1,14 @@
+{
+  "050ba71c-1308-415a-bbd4-d294de0eefe3:ccb4fa03-15f0-4d86-a1d9-bbe698ea1fc5": {
+    "subject_id": "050ba71c-1308-415a-bbd4-d294de0eefe3",
+    "student_id": "ccb4fa03-15f0-4d86-a1d9-bbe698ea1fc5",
+    "internal1_marks": 45,
+    "internal2_marks": 0,
+    "internal3_marks": 10,
+    "assignment_marks": 10,
+    "total_internal_marks": 65,
+    "is_eligible": true,
+    "status": "draft",
+    "updated_at": "2026-09-30T07:29:03.871Z"
+  }
+}

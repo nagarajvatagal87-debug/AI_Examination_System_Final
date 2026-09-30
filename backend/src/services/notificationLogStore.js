@@ -2,7 +2,11 @@ const fs = require("fs");
 const path = require("path");
 const { supabaseAdmin } = require("../../config/Supabase");
 
-const LOGS_FILE = path.join(__dirname, "../../persistent_notification_logs.json");
+const DATA_DIR = path.join(__dirname, "../../data");
+if (!fs.existsSync(DATA_DIR)) {
+  try { fs.mkdirSync(DATA_DIR, { recursive: true }); } catch (e) {}
+}
+const LOGS_FILE = path.join(DATA_DIR, "persistent_notification_logs.json");
 const logsStore = []; // Array of notification log records
 
 // Load persisted notification logs from disk on startup

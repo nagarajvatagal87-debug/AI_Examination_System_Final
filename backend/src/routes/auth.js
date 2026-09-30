@@ -118,6 +118,8 @@ router.post("/register", async (req, res) => {
   }
 });
 
+const { getUserAvatar, setUserAvatar } = require("../services/avatarStore");
+
 // POST /api/auth/login -> Real Account Login
 router.post("/login", async (req, res) => {
   try {
@@ -131,7 +133,7 @@ router.post("/login", async (req, res) => {
     // 1. Query profile by email directly in DB (using ilike and explicit FK relation)
     let { data: profiles, error: pError } = await supabaseAdmin
       .from("profiles")
-      .select("id, role, full_name, email, registration_no, department_id, departments!profiles_department_fk(name)")
+      .select("id, role, full_name, email, registration_no, department_id, avatar_url, departments!profiles_department_fk(name)")
       .ilike("email", cleanInput)
       .limit(1);
 
@@ -145,7 +147,7 @@ router.post("/login", async (req, res) => {
     if (!userProfile) {
       const { data: regProfiles } = await supabaseAdmin
         .from("profiles")
-        .select("id, role, full_name, email, registration_no, department_id, departments!profiles_department_fk(name)")
+        .select("id, role, full_name, email, registration_no, department_id, avatar_url, departments!profiles_department_fk(name)")
         .ilike("registration_no", cleanInput)
         .limit(1);
       userProfile = (regProfiles && regProfiles.length > 0) ? regProfiles[0] : null;
@@ -159,6 +161,11 @@ router.post("/login", async (req, res) => {
         });
       }
 
+      if (userProfile.avatar_url) {
+        setUserAvatar(userProfile.id, userProfile.avatar_url);
+      }
+      const avatarUrl = userProfile.avatar_url || getUserAvatar(userProfile.id) || null;
+
       return res.json({
         token: `token-${userProfile.id}`,
         user: {
@@ -168,6 +175,8 @@ router.post("/login", async (req, res) => {
           email: userProfile.email || cleanInput,
           registrationNo: userProfile.registration_no,
           departmentName: userProfile.departments?.name || "Computer Applications",
+          avatarUrl: avatarUrl,
+          avatar_url: avatarUrl,
         },
       });
     }

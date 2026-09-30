@@ -2,7 +2,15 @@ const fs = require("fs");
 const path = require("path");
 const { supabaseAdmin } = require("../../config/Supabase");
 
-const PARENTS_FILE = path.join(__dirname, "../../persistent_parent_guardians.json");
+const DATA_DIR = path.join(__dirname, "../../data");
+if (!fs.existsSync(DATA_DIR)) {
+  try { fs.mkdirSync(DATA_DIR, { recursive: true }); } catch (e) {}
+}
+const PARENTS_FILE = path.join(DATA_DIR, "persistent_parent_guardians.json");
+const OLD_PARENTS_FILE = path.join(__dirname, "../../persistent_parent_guardians.json");
+if (!fs.existsSync(PARENTS_FILE) && fs.existsSync(OLD_PARENTS_FILE)) {
+  try { fs.copyFileSync(OLD_PARENTS_FILE, PARENTS_FILE); } catch (e) {}
+}
 const parentStore = new Map(); // Key: student_id -> array of guardian records
 
 // Load persisted parent guardian records from disk on startup
@@ -46,7 +54,6 @@ async function getStudentParents(studentId) {
 
     if (!error && data && data.length > 0) {
       parentStore.set(studentId, data);
-      saveParentsToDisk();
       return data;
     }
   } catch (e) {}
@@ -93,6 +100,7 @@ async function saveStudentParent(studentId, parentData) {
     relationship: String(parentData.relationship || "Parent/Guardian").trim(),
     email: String(parentData.email || "").trim(),
     mobile: String(parentData.mobile || "").trim(),
+    preferred_language: String(parentData.preferred_language || "TRILINGUAL").toUpperCase(),
     is_primary: isPrimary,
     email_enabled: parentData.email_enabled !== false,
     sms_enabled: Boolean(parentData.sms_enabled),

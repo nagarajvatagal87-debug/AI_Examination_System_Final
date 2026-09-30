@@ -2,7 +2,11 @@ const fs = require("fs");
 const path = require("path");
 const { supabaseAdmin } = require("../../config/Supabase");
 
-const BOOKMARKS_FILE = path.join(__dirname, "../../persistent_bookmarks.json");
+const DATA_DIR = path.join(__dirname, "../../data");
+if (!fs.existsSync(DATA_DIR)) {
+  try { fs.mkdirSync(DATA_DIR, { recursive: true }); } catch (e) {}
+}
+const BOOKMARKS_FILE = path.join(DATA_DIR, "persistent_bookmarks.json");
 const memoryBookmarks = new Map(); // userId -> array of bookmarks
 
 // Load from disk on startup

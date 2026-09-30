@@ -1,7 +1,8 @@
 const express = require("express");
 const multer = require("multer");
-const { supabaseAdmin } = require("../../config/Supabase");
 const { requireAuth } = require("../middleware/auth.js");
+const { supabaseAdmin } = require("../../config/Supabase");
+const { getUserAvatar, setUserAvatar } = require("../services/avatarStore");
 
 const router = express.Router();
 const upload = multer({ storage: multer.memoryStorage() });
@@ -10,6 +11,7 @@ router.use(requireAuth);
 // GET /api/profile -> current user's full profile
 router.get("/", async (req, res) => {
   try {
+    const cachedAvatar = getUserAvatar(req.user.id);
     const { data, error } = await supabaseAdmin
       .from("profiles")
       .select("id, full_name, email, role, department_id, registration_no, year, section, avatar_url")
@@ -22,18 +24,26 @@ router.get("/", async (req, res) => {
         full_name: req.user.fullName || "User",
         email: req.user.email || "",
         role: req.user.role || "principal",
-        avatar_url: null,
+        avatar_url: cachedAvatar || null,
+        avatarUrl: cachedAvatar || null,
       });
     }
 
-    res.json(data);
+    const finalAvatar = data.avatar_url || cachedAvatar || null;
+    if (data.avatar_url && !cachedAvatar) {
+      setUserAvatar(req.user.id, data.avatar_url);
+    }
+
+    res.json({ ...data, avatar_url: finalAvatar, avatarUrl: finalAvatar });
   } catch (err) {
+    const cachedAvatar = getUserAvatar(req.user.id);
     res.json({
       id: req.user.id,
       full_name: req.user.fullName || "User",
       email: req.user.email || "",
       role: req.user.role || "principal",
-      avatar_url: null,
+      avatar_url: cachedAvatar || null,
+      avatarUrl: cachedAvatar || null,
     });
   }
 });
@@ -44,20 +54,36 @@ router.put("/", async (req, res) => {
     const { fullName, avatarUrl, registrationNo, registration_no, gender, mobile } = req.body;
     const updatePayload = {};
     if (fullName) updatePayload.full_name = fullName;
-    if (avatarUrl !== undefined) updatePayload.avatar_url = avatarUrl;
+    if (avatarUrl !== undefined) {
+      updatePayload.avatar_url = avatarUrl;
+      if (avatarUrl) {
+        setUserAvatar(req.user.id, avatarUrl);
+      }
+    }
     if (registrationNo || registration_no) updatePayload.registration_no = registrationNo || registration_no;
     if (gender) updatePayload.gender = gender;
     if (mobile) updatePayload.mobile = mobile;
 
-    const { data, error } = await supabaseAdmin
-      .from("profiles")
-      .update(updatePayload)
-      .eq("id", req.user.id)
-      .select()
-      .single();
+    let data = null;
+    try {
+      const { data: dbData } = await supabaseAdmin
+        .from("profiles")
+        .update(updatePayload)
+        .eq("id", req.user.id)
+        .select()
+        .single();
+      data = dbData;
+    } catch (e) {}
 
-    if (error) throw error;
-    res.json(data);
+    const cachedAvatar = getUserAvatar(req.user.id);
+    const finalAvatar = avatarUrl || cachedAvatar || null;
+    res.json(data ? { ...data, avatar_url: finalAvatar, avatarUrl: finalAvatar } : {
+      id: req.user.id,
+      full_name: fullName || req.user.fullName,
+      email: req.user.email,
+      avatar_url: finalAvatar,
+      avatarUrl: finalAvatar,
+    });
   } catch (err) {
     res.status(400).json({ error: err.message });
   }
@@ -69,39 +95,27 @@ router.post("/avatar", upload.single("file"), async (req, res) => {
     const file = req.file;
     if (!file) return res.status(400).json({ error: "file is required" });
 
-    // Base64 fallback if storage bucket is not created
     const mimeType = file.mimetype || "image/png";
     const base64Image = `data:${mimeType};base64,${file.buffer.toString("base64")}`;
-
     let avatarUrl = base64Image;
 
+    // Persist to memory + disk immediately so it never disappears
+    setUserAvatar(req.user.id, avatarUrl);
+
     try {
-      const path = `avatars/${req.user.id}-${Date.now()}.${file.originalname.split(".").pop()}`;
-      const { error: uploadError } = await supabaseAdmin.storage
-        .from(process.env.SUPABASE_STORAGE_BUCKET || "exam-files")
-        .upload(path, file.buffer, { contentType: file.mimetype, upsert: true });
+      await supabaseAdmin
+        .from("profiles")
+        .update({ avatar_url: avatarUrl })
+        .eq("id", req.user.id);
+    } catch (e) {}
 
-      if (!uploadError) {
-        const { data: signedUrl } = await supabaseAdmin.storage
-          .from(process.env.SUPABASE_STORAGE_BUCKET || "exam-files")
-          .createSignedUrl(path, 60 * 60 * 24 * 365);
-        if (signedUrl?.signedUrl) {
-          avatarUrl = signedUrl.signedUrl;
-        }
-      }
-    } catch (e) {
-      console.warn("Storage upload fallback to base64:", e.message);
-    }
-
-    const { data, error } = await supabaseAdmin
-      .from("profiles")
-      .update({ avatar_url: avatarUrl })
-      .eq("id", req.user.id)
-      .select()
-      .single();
-
-    if (error) throw error;
-    res.json(data);
+    res.json({
+      id: req.user.id,
+      full_name: req.user.fullName || "User",
+      email: req.user.email,
+      avatar_url: avatarUrl,
+      avatarUrl: avatarUrl,
+    });
   } catch (err) {
     res.status(400).json({ error: err.message });
   }
@@ -129,19 +143,36 @@ router.get("/my-hod", async (req, res) => {
       .from("profiles")
       .select("department_id")
       .eq("id", req.user.id)
-      .single();
+      .maybeSingle();
 
-    if (!me?.department_id) {
-      return res.json({ hod: null });
+    const deptId = me?.department_id || "dept-mca";
+
+    let hod = null;
+
+    try {
+      const { data: department } = await supabaseAdmin
+        .from("departments")
+        .select("hod_id, profiles!departments_hod_id_fkey(id, full_name, email)")
+        .eq("id", deptId)
+        .maybeSingle();
+
+      if (department?.profiles) {
+        hod = department.profiles;
+      }
+    } catch (e) {}
+
+    if (!hod) {
+      const { data: hodProfile } = await supabaseAdmin
+        .from("profiles")
+        .select("id, full_name, email, role")
+        .eq("role", "hod")
+        .eq("department_id", deptId)
+        .maybeSingle();
+
+      if (hodProfile) hod = hodProfile;
     }
 
-    const { data: department } = await supabaseAdmin
-      .from("departments")
-      .select("hod_id, profiles!departments_hod_id_fkey(id, full_name, email)")
-      .eq("id", me.department_id)
-      .single();
-
-    res.json({ hod: department?.profiles || null });
+    res.json({ hod });
   } catch (err) {
     res.status(400).json({ error: err.message });
   }

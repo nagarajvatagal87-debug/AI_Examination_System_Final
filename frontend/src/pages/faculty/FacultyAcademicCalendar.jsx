@@ -36,7 +36,7 @@ export default function FacultyAcademicCalendar() {
           <p style={{ color: '#475569', fontWeight: 600 }}>Loading academic calendar events from database...</p>
         ) : !events || events.length === 0 ? (
           <div style={{ padding: 24, textAlign: 'center', color: '#64748b', background: '#f8fafc', borderRadius: 10, border: '1px dashed #cbd5e1', fontWeight: 600 }}>
-            No academic events scheduled yet.
+            No academic calendar events available.
           </div>
         ) : (
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: 16 }}>

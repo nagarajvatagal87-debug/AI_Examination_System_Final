@@ -2,7 +2,11 @@ const fs = require("fs");
 const path = require("path");
 const { supabaseAdmin } = require("../../config/Supabase");
 
-const AUDIT_FILE = path.join(__dirname, "../../persistent_audit_logs.json");
+const DATA_DIR = path.join(__dirname, "../../data");
+if (!fs.existsSync(DATA_DIR)) {
+  try { fs.mkdirSync(DATA_DIR, { recursive: true }); } catch (e) {}
+}
+const AUDIT_FILE = path.join(DATA_DIR, "persistent_audit_logs.json");
 const memoryAuditLogs = [];
 
 // Load persistent audit logs on startup
