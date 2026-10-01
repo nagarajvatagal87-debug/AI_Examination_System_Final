@@ -106,18 +106,19 @@ export default function ExamDeptDashboard() {
     ? subjects.filter((s) => s.department_id === modalDeptId || s.departments?.id === modalDeptId)
     : subjects
 
-  // 10-step visual pipeline with real database aggregation
+  // 10-step visual pipeline bound to backend database API response
+  const pData = stats?.pipeline || {}
   const pipelineSteps = [
-    { label: 'Eligible Students', count: studentCount, icon: '🎓', color: '#2563eb' },
-    { label: 'Hall Tickets', count: Math.round(studentCount * 0.98), icon: '🎟️', color: '#4f46e5' },
-    { label: 'Exam Completed', count: examCount, icon: '📝', color: '#7c3aed' },
-    { label: 'Scripts Received', count: evaluatedCount + pendingEvaluations, icon: '📦', color: '#db2777' },
-    { label: 'Scripts Assigned', count: evaluatedCount + pendingEvaluations, icon: '👤', color: '#ea580c' },
-    { label: 'Evaluation', count: evaluatedCount, icon: '🤖', color: '#059669' },
-    { label: 'Verification', count: Math.round(evaluatedCount * 0.9), icon: '🔍', color: '#0d9488' },
-    { label: 'Result Processing', count: Math.round(evaluatedCount * 0.85), icon: '⚙️', color: '#6d28d9' },
-    { label: 'Approval', count: Math.round(evaluatedCount * 0.8), icon: '⚖️', color: '#d97706' },
-    { label: 'Published Results', count: Math.round(evaluatedCount * 0.8), icon: '📢', color: '#16a34a' },
+    { label: 'Eligible Students', count: pData.eligibleStudents ?? studentCount, icon: '🎓', color: '#2563eb' },
+    { label: 'Hall Tickets', count: pData.hallTicketsPublished ?? studentCount, icon: '🎟️', color: '#4f46e5' },
+    { label: 'Exam Completed', count: pData.examsCompleted ?? examCount, icon: '📝', color: '#7c3aed' },
+    { label: 'Scripts Received', count: pData.scriptsReceived ?? (evaluatedCount + pendingEvaluations), icon: '📦', color: '#db2777' },
+    { label: 'Scripts Assigned', count: pData.scriptsAssigned ?? (evaluatedCount + pendingEvaluations), icon: '👤', color: '#ea580c' },
+    { label: 'Evaluation', count: pData.evaluation ?? evaluatedCount, icon: '🤖', color: '#059669' },
+    { label: 'Verification', count: pData.verification ?? evaluatedCount, icon: '🔍', color: '#0d9488' },
+    { label: 'Result Processing', count: pData.resultProcessing ?? evaluatedCount, icon: '⚙️', color: '#6d28d9' },
+    { label: 'Approval', count: pData.approval ?? evaluatedCount, icon: '⚖️', color: '#d97706' },
+    { label: 'Published Results', count: pData.publishedResults ?? 0, icon: '📢', color: '#16a34a' },
   ]
 
   return (
@@ -140,7 +141,7 @@ export default function ExamDeptDashboard() {
             <option value="ALL">🌐 All Departments (Institutional Overview)</option>
             {departments.map((d) => (
               <option key={d.id} value={d.id}>
-                {d.name} ({d.studentCount || 60} Students)
+                {d.name} ({d.studentCount || 0} Students)
               </option>
             ))}
           </select>
@@ -357,6 +358,7 @@ export default function ExamDeptDashboard() {
                   <th>#</th>
                   <th>USN</th>
                   <th>Student Name</th>
+                  <th>Department</th>
                   <th>Semester</th>
                   <th>Internal Score</th>
                   <th>Eligibility</th>
@@ -369,8 +371,26 @@ export default function ExamDeptDashboard() {
                     <td style={{ color: '#64748b', fontWeight: 700 }}>{idx + 1}</td>
                     <td style={{ fontWeight: 800, color: '#1d4ed8' }}>{st.registrationNo}</td>
                     <td style={{ fontWeight: 700, color: '#0f172a' }}>{st.fullName}</td>
+                    <td>
+                      <span
+                        onClick={() => st.departmentId && setSelectedDeptId(st.departmentId)}
+                        title="Click to filter dashboard by this department"
+                        style={{
+                          padding: '3px 8px',
+                          borderRadius: 6,
+                          fontSize: 11,
+                          fontWeight: 700,
+                          background: '#eff6ff',
+                          color: '#1d4ed8',
+                          border: '1px solid #bfdbfe',
+                          cursor: 'pointer'
+                        }}
+                      >
+                        🏛️ {st.departmentName || 'Master of Computer Applications'}
+                      </span>
+                    </td>
                     <td style={{ color: '#475569' }}>{st.semester}</td>
-                    <td style={{ fontWeight: 900, color: st.avgInternal50 >= 20 ? '#059669' : '#e11d48' }}>
+                    <td style={{ fontWeight: 900, color: st.avgInternal50 >= 25 ? '#059669' : '#e11d48' }}>
                       {st.avgInternal50 > 0 ? `${st.avgInternal50} / 50` : '0 / 50'}
                     </td>
                     <td>
@@ -379,11 +399,11 @@ export default function ExamDeptDashboard() {
                         borderRadius: 20,
                         fontSize: 11,
                         fontWeight: 800,
-                        background: st.avgInternal50 >= 20 ? '#ecfdf5' : '#fff1f2',
-                        color: st.avgInternal50 >= 20 ? '#047857' : '#e11d48',
-                        border: `1px solid ${st.avgInternal50 >= 20 ? '#a7f3d0' : '#fecdd3'}`,
+                        background: st.avgInternal50 >= 25 ? '#ecfdf5' : '#fff1f2',
+                        color: st.avgInternal50 >= 25 ? '#047857' : '#e11d48',
+                        border: `1px solid ${st.avgInternal50 >= 25 ? '#a7f3d0' : '#fecdd3'}`,
                       }}>
-                        {st.avgInternal50 >= 20 ? 'ELIGIBLE' : 'NOT ELIGIBLE (Low Internal)'}
+                        {st.avgInternal50 >= 25 ? 'ELIGIBLE' : 'NOT ELIGIBLE (Low Internal)'}
                       </span>
                     </td>
                     <td>
@@ -430,7 +450,7 @@ export default function ExamDeptDashboard() {
                 >
                   <option value="">-- All Departments --</option>
                   {departments.map((d) => (
-                    <option key={d.id} value={d.id}>{d.name} ({d.studentCount || 60} Students)</option>
+                    <option key={d.id} value={d.id}>{d.name} ({d.studentCount || 0} Students)</option>
                   ))}
                 </select>
               </div>

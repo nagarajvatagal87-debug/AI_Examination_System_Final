@@ -5,6 +5,8 @@ import './ExamDeptDashboard.css'
 export default function ExamDeptScripts() {
   const [scripts, setScripts] = useState([])
   const [exams, setExams] = useState([])
+  const [departments, setDepartments] = useState([])
+  const [selectedDeptId, setSelectedDeptId] = useState('ALL')
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const [filterExam, setFilterExam] = useState('ALL')
@@ -24,11 +26,13 @@ export default function ExamDeptScripts() {
     setError('')
     Promise.all([
       api.get('/examdept/scripts'),
-      api.get('/examdept/exams')
+      api.get('/examdept/exams'),
+      api.get('/examdept/departments')
     ])
-      .then(([sRes, eRes]) => {
+      .then(([sRes, eRes, dRes]) => {
         setScripts(Array.isArray(sRes.data) ? sRes.data : [])
         setExams(Array.isArray(eRes.data) ? eRes.data : [])
+        setDepartments(Array.isArray(dRes.data) ? dRes.data : [])
       })
       .catch((err) => setError(err.response?.data?.error || 'Failed to load answer script records.'))
       .finally(() => setLoading(false))
@@ -71,16 +75,21 @@ export default function ExamDeptScripts() {
   }
 
   const filteredScripts = scripts.filter((s) => {
+    if (selectedDeptId !== 'ALL') {
+      const examMatch = exams.find((e) => String(e.id) === String(s.exam_id))
+      const deptId = examMatch?.subjects?.department_id || examMatch?.subjects?.departments?.id || s.department_id
+      if (deptId && deptId !== selectedDeptId) return false
+    }
     if (filterExam !== 'ALL' && String(s.exam_id) !== String(filterExam)) return false
     if (filterStatus !== 'ALL' && s.status !== filterStatus) return false
     return true
   })
 
   // Aggregate stats
-  const totalCount = scripts.length
-  const receivedCount = scripts.filter((s) => s.status === 'RECEIVED' || s.status === 'SCANNED' || s.status === 'ASSIGNED' || s.status === 'EVALUATED').length
-  const missingCount = scripts.filter((s) => s.status === 'MISSING').length
-  const evaluatedCount = scripts.filter((s) => s.status === 'EVALUATED' || s.status === 'VERIFIED').length
+  const totalCount = filteredScripts.length
+  const receivedCount = filteredScripts.filter((s) => s.status === 'RECEIVED' || s.status === 'SCANNED' || s.status === 'ASSIGNED' || s.status === 'EVALUATED').length
+  const missingCount = filteredScripts.filter((s) => s.status === 'MISSING').length
+  const evaluatedCount = filteredScripts.filter((s) => s.status === 'EVALUATED' || s.status === 'VERIFIED').length
 
   return (
     <div className="edd-wrap">
@@ -173,6 +182,13 @@ export default function ExamDeptScripts() {
 
         {/* Filter Controls */}
         <div style={{ display: 'flex', gap: 12, marginBottom: 16 }}>
+          <select value={selectedDeptId} onChange={(e) => setSelectedDeptId(e.target.value)} className="edd-dept-select">
+            <option value="ALL">🏛️ All Departments</option>
+            {departments.map((d) => (
+              <option key={d.id} value={d.id}>{d.name}</option>
+            ))}
+          </select>
+
           <select value={filterStatus} onChange={(e) => setFilterStatus(e.target.value)} className="edd-dept-select">
             <option value="ALL">All Script Statuses</option>
             <option value="RECEIVED">Received</option>

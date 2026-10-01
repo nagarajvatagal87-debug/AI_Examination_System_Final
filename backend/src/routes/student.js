@@ -203,6 +203,35 @@ router.post("/complaints", async (req, res) => {
 router.get("/hall-ticket", async (req, res) => {
   try {
     const studentId = req.user.id;
+    const { getStudentHallTicket } = require("../services/examCentreService");
+    const publishedTicket = await getStudentHallTicket(studentId);
+
+    if (publishedTicket) {
+      return res.json({
+        generated: true,
+        published: true,
+        institution: publishedTicket.institution || "DAYANANDA SAGAR ACADEMY OF TECHNOLOGY AND MANAGEMENT",
+        title: "OFFICIAL MAIN EXAMINATION HALL TICKET / ADMIT CARD",
+        academicYear: publishedTicket.academic_year || "2026-2027",
+        studentName: publishedTicket.student_name,
+        registrationNo: publishedTicket.registration_no,
+        departmentName: publishedTicket.department_name,
+        semester: publishedTicket.semester,
+        examCenter: publishedTicket.centre_name || "DSATM Main Campus, Kanakapura Road, Bengaluru - 560082",
+        roomNumber: publishedTicket.room_number,
+        seatNumber: publishedTicket.seat_number,
+        timetable: [
+          {
+            slNo: 1,
+            subjectCode: publishedTicket.subject_code || "MMC321",
+            subjectName: publishedTicket.subject_name || "Main Exam Subject",
+            examDate: publishedTicket.exam_date || "Scheduled",
+            timeSlot: publishedTicket.exam_time || "09:30 AM - 12:30 PM",
+            hallNo: `${publishedTicket.room_number} (${publishedTicket.seat_number})`,
+          }
+        ],
+      });
+    }
 
     const { data: student, error: studentError } = await supabaseAdmin
       .from("profiles")
@@ -226,7 +255,7 @@ router.get("/hall-ticket", async (req, res) => {
     if (activeSubjects.length === 0) {
       return res.json({
         generated: false,
-        message: "Hall ticket has not been generated yet.",
+        message: "No Hall Ticket has been published yet.",
       });
     }
 
@@ -248,6 +277,7 @@ router.get("/hall-ticket", async (req, res) => {
 
     res.json({
       generated: true,
+      published: false,
       institution: "DAYANANDA SAGAR ACADEMY OF TECHNOLOGY AND MANAGEMENT",
       title: "OFFICIAL MAIN EXAMINATION HALL TICKET / ADMIT CARD",
       academicYear: "2026-2027",
@@ -270,7 +300,7 @@ router.get("/main-results", async (req, res) => {
     const studentId = req.user.id;
     const { data, error } = await supabaseAdmin
       .from("main_results")
-      .select("id, total_marks, max_marks, passed, published_at, exams(title, total_marks, subjects(name, code))")
+      .select("id, internal_marks, main_raw_marks, main_converted_marks, final_marks, total_marks, max_marks, grade, passed, published_at, exams(title, total_marks, subject_id, subjects(name, code))")
       .eq("student_id", studentId)
       .eq("published", true)
       .order("published_at", { ascending: false });
@@ -279,6 +309,51 @@ router.get("/main-results", async (req, res) => {
     res.json(data || []);
   } catch (err) {
     res.status(500).json({ error: err.message });
+  }
+});
+
+// Student Revaluation Endpoints
+router.get("/revaluation/config", (req, res) => {
+  const { getRevaluationConfig } = require("../services/revaluationService");
+  res.json(getRevaluationConfig());
+});
+
+router.get("/revaluation/applications", async (req, res) => {
+  try {
+    const { getRevaluationApplications } = require("../services/revaluationService");
+    const list = await getRevaluationApplications({ studentId: req.user.id });
+    res.json(list);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+router.post("/revaluation/apply", async (req, res) => {
+  try {
+    const { initiateRevaluationPayment, createRevaluationApplication } = require("../services/revaluationService");
+    const { examId, subjectId, subjectName, originalMarks } = req.body;
+
+    const payment = await initiateRevaluationPayment({
+      studentId: req.user.id,
+      examId,
+      subjectId,
+      subjectName,
+      amount: 500,
+    });
+
+    const application = await createRevaluationApplication({
+      studentId: req.user.id,
+      examId,
+      subjectId,
+      subjectName,
+      originalMarks,
+      paymentId: payment.payment_id,
+      applicationType: "REVALUATION",
+    });
+
+    res.status(201).json({ status: "submitted", application, payment });
+  } catch (err) {
+    res.status(400).json({ error: err.message });
   }
 });
 

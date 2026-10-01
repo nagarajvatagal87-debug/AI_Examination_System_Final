@@ -93,7 +93,56 @@ async function createExamCentre(payload) {
     await supabaseAdmin.from("exam_centres").insert(newCentre);
   } catch (e) {}
 
+  await logAuditEvent({
+    userId: "examdept",
+    userRole: "examdept",
+    action: "EXAM_CENTRE_CREATED",
+    entityType: "exam_centres",
+    entityId: newCentre.id,
+    newValue: `Centre: ${newCentre.name} (${newCentre.code}), Capacity: ${newCentre.capacity}`,
+  });
+
   return newCentre;
+}
+
+/**
+ * Add a room to an existing exam centre
+ */
+async function addRoomToCentre(centreId, roomPayload) {
+  const centre = memoryCentres.find((c) => c.id === centreId);
+  const roomId = `room-${Date.now()}-${Math.random().toString(36).substring(2, 5)}`;
+  const newRoom = {
+    id: roomId,
+    building: roomPayload.building || "Main Block",
+    floor: roomPayload.floor || "1st Floor",
+    room_number: roomPayload.room_number || roomPayload.roomNumber || `LH-${Math.floor(100 + Math.random() * 800)}`,
+    capacity: Number(roomPayload.capacity) || 40,
+    status: roomPayload.status || "ACTIVE",
+  };
+
+  if (centre) {
+    if (!Array.isArray(centre.rooms)) centre.rooms = [];
+    centre.rooms.push(newRoom);
+    // Recalculate centre capacity as sum of room capacities
+    const sumCap = centre.rooms.reduce((acc, r) => acc + (Number(r.capacity) || 0), 0);
+    if (sumCap > centre.capacity) centre.capacity = sumCap;
+    saveCentresToDisk();
+  }
+
+  try {
+    await supabaseAdmin.from("exam_rooms").insert({ ...newRoom, centre_id: centreId });
+  } catch (e) {}
+
+  await logAuditEvent({
+    userId: "examdept",
+    userRole: "examdept",
+    action: "EXAM_ROOM_ADDED",
+    entityType: "exam_rooms",
+    entityId: roomId,
+    newValue: `Centre: ${centre?.name || centreId}, Room: ${newRoom.room_number}, Capacity: ${newRoom.capacity}`,
+  });
+
+  return { centre, room: newRoom };
 }
 
 /**
@@ -220,10 +269,22 @@ async function getStudentHallTicket(studentId) {
   return memory || null;
 }
 
+async function getAllHallTickets() {
+  let dbTickets = [];
+  try {
+    const { data } = await supabaseAdmin.from("hall_tickets").select("*");
+    if (data && data.length > 0) dbTickets = data;
+  } catch (e) {}
+  return dbTickets.length > 0 ? dbTickets : memoryHallTickets;
+}
+
 module.exports = {
   getExamCentres,
   createExamCentre,
+  addRoomToCentre,
   allocateStudentToRoom,
   generateAndPublishHallTicket,
   getStudentHallTicket,
+  getAllHallTickets,
 };
+

@@ -56,10 +56,10 @@ export default function HodPublicPublishSection() {
         if (data) {
           setDeptName(data.department_name || 'MCA')
           setAbout(data.about || '')
-          setStudentCount(data.student_count || 120)
-          setPlacementPct(data.placement_percentage || 95)
-          setHighestPkg(data.highest_package ? data.highest_package / 100000 : 18)
-          setAvgPkg(data.average_package ? data.average_package / 100000 : 6.5)
+          setStudentCount(data.student_count || 0)
+          setPlacementPct(data.placement_percentage || 0)
+          setHighestPkg(data.highest_package ? data.highest_package / 100000 : 0)
+          setAvgPkg(data.average_package ? data.average_package / 100000 : 0)
 
           if (data.fees && typeof data.fees === 'object') {
             setFees({
