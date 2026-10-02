@@ -7,6 +7,8 @@ import LmsPdfViewerModal from '../../components/LmsPdfViewerModal.jsx'
 import ProfileSettings from '../../components/ProfileSettings.jsx'
 import AcademicProfileTab from './AcademicProfileTab.jsx'
 import AcademicReportsTab from './AcademicReportsTab.jsx'
+import AcademicCalendarView from '../../components/AcademicCalendar/AcademicCalendarView.jsx'
+import SportsManagementView from '../../components/SportsManagement/SportsManagementView.jsx'
 import './StudentDashboard.css'
 
 function SafeMarkdown({ content }) {
@@ -432,6 +434,12 @@ export default function StudentDashboard() {
               onClick={() => setActiveTab('academic-calendar')}
             >
               <span className="nav-icon">🗓️</span> Academic Calendar
+            </button>
+            <button
+              className={`nav-btn ${activeTab === 'sports' ? 'active' : ''}`}
+              onClick={() => setActiveTab('sports')}
+            >
+              <span className="nav-icon">🏆</span> Sports Module
             </button>
             <button
               className={`nav-btn ${activeTab === 'bookmarks' ? 'active' : ''}`}
@@ -1218,6 +1226,11 @@ export default function StudentDashboard() {
               <StudentAcademicCalendarTab />
             )}
 
+            {/* Tab 14: Sports Module */}
+            {activeTab === 'sports' && (
+              <SportsManagementView role="student" />
+            )}
+
             {/* Tab 14: Bookmarks */}
             {activeTab === 'bookmarks' && (
               <div className="content-card">
@@ -1728,94 +1741,5 @@ function ExactAttendanceView({ attendanceData }) {
 }
 
 function StudentAcademicCalendarTab() {
-  const [events, setEvents] = useState([])
-  const [loading, setLoading] = useState(true)
-
-  useEffect(() => {
-    setLoading(true)
-    api.get('/student/calendar')
-      .then((res) => setEvents(res.data || []))
-      .catch(() => {})
-      .finally(() => setLoading(false))
-  }, [])
-
-  function formatCalendarDate(dateStr) {
-    if (!dateStr) return 'Date TBA'
-    try {
-      if (/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) {
-        const [yyyy, mm, dd] = dateStr.split('-')
-        const d = new Date(Number(yyyy), Number(mm) - 1, Number(dd))
-        return d.toLocaleDateString("en-IN", { day: 'numeric', month: 'short', year: 'numeric' })
-      }
-      const d = new Date(dateStr)
-      if (!isNaN(d.getTime())) {
-        return d.toLocaleDateString("en-IN", { day: 'numeric', month: 'short', year: 'numeric' })
-      }
-      return dateStr
-    } catch (e) {
-      return dateStr
-    }
-  }
-
-  return (
-    <div className="content-card" style={{ padding: 24, background: '#ffffff', borderRadius: 16, border: '1.5px solid #e2e8f0' }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
-        <div>
-          <h2 style={{ color: '#0f172a', margin: 0, fontSize: 20, fontWeight: 900 }}>🗓️ Department Academic Calendar</h2>
-          <p style={{ color: '#64748b', fontSize: 13, margin: '4px 0 0 0' }}>
-            Official examination dates, academic events, assignment deadlines, and department schedules.
-          </p>
-        </div>
-        {events.length > 0 && (
-          <span style={{ fontSize: 12, padding: '4px 12px', background: '#eff6ff', color: '#2563eb', fontWeight: 800, borderRadius: 20, border: '1px solid #bfdbfe' }}>
-            {events.length} Events Scheduled
-          </span>
-        )}
-      </div>
-
-      {loading ? (
-        <p style={{ color: '#475569', padding: 12 }}>Loading academic calendar events from database...</p>
-      ) : !events || events.length === 0 ? (
-        <div style={{ padding: 36, textAlign: 'center', color: '#64748b', background: '#f8fafc', borderRadius: 12, border: '1px dashed #cbd5e1' }}>
-          No academic calendar events available yet.
-        </div>
-      ) : (
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: 18 }}>
-          {events.map((ev, idx) => {
-            const dateFormatted = formatCalendarDate(ev.start_datetime)
-            return (
-              <div key={ev.id || idx} style={{
-                background: '#f8fafc', borderRadius: 14, padding: 20,
-                border: '1.5px solid #cbd5e1', boxShadow: '0 4px 14px rgba(15,23,42,0.04)',
-                display: 'flex', flexDirection: 'column', gap: 10
-              }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 10 }}>
-                  <span style={{ padding: '4px 10px', borderRadius: 6, background: '#eff6ff', color: '#2563eb', fontSize: 11, fontWeight: 800, border: '1px solid #bfdbfe' }}>
-                    {ev.event_type || 'Academic Event'}
-                  </span>
-                  <span style={{ fontSize: 12, fontWeight: 800, color: '#0f172a', background: '#ffffff', padding: '4px 10px', borderRadius: 6, border: '1px solid #cbd5e1' }}>
-                    📅 {dateFormatted}
-                  </span>
-                </div>
-
-                <h3 style={{ margin: '4px 0 0 0', fontSize: 17, fontWeight: 800, color: '#0f172a' }}>
-                  {ev.title || 'Academic Notice'}
-                </h3>
-
-                <p style={{ margin: 0, fontSize: 13, color: '#475569', lineHeight: 1.5 }}>
-                  {ev.description || 'Scheduled department academic event.'}
-                </p>
-
-                {ev.subjects?.name && (
-                  <div style={{ fontSize: 11, color: '#64748b', fontWeight: 600, paddingTop: 6, borderTop: '1px solid #e2e8f0' }}>
-                    Subject: {ev.subjects.name} ({ev.subjects.code})
-                  </div>
-                )}
-              </div>
-            )
-          })}
-        </div>
-      )}
-    </div>
-  )
+  return <AcademicCalendarView role="student" />
 }

@@ -81,18 +81,7 @@ router.get("/all-info", async (req, res) => {
 
     const formatted = (data || []).map((row) => {
       const deptName = row.departments?.name || "MCA";
-      const toppersList = row.toppers || row.fees?.toppers || [
-        {
-          id: "top-1",
-          name: "Ananya Sharma",
-          usn: "1DT22MC045",
-          cgpa: "9.84",
-          class_sem: "4th Sem MCA",
-          rank_title: "🏆 1st Rank - VTU Gold Medalist",
-          year: "2025",
-          photo_url: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=300"
-        }
-      ];
+      const toppersList = row.toppers || row.fees?.toppers || [];
 
       return {
         id: row.department_id,

@@ -74,18 +74,7 @@ export default function HodPublicPublishSection() {
           if (Array.isArray(data.toppers) && data.toppers.length > 0) {
             setToppers(data.toppers)
           } else {
-            setToppers([
-              {
-                id: 'top-1',
-                name: 'Ananya Sharma',
-                usn: '1DT22MC045',
-                cgpa: '9.84',
-                class_sem: '4th Sem MCA',
-                rank_title: '🏆 1st Rank - VTU Gold Medalist',
-                year: '2025',
-                photo_url: PRESET_AVATARS[0]
-              }
-            ])
+            setToppers([])
           }
 
           if (Array.isArray(data.achievements)) {

@@ -537,6 +537,8 @@ router.post("/faculty", async (req, res) => {
     const initialPassword = password && password.length >= 6 ? password : "Faculty@" + crypto.randomBytes(4).toString("hex");
 
     // Check if profile exists
+    let authUserId = null;
+
     const { data: existingProfile } = await supabaseAdmin
       .from("profiles")
       .select("id")
@@ -544,37 +546,39 @@ router.post("/faculty", async (req, res) => {
       .maybeSingle();
 
     if (existingProfile) {
-      // Update password for existing user auth
+      authUserId = existingProfile.id;
       try {
         await supabaseAdmin.auth.admin.updateUserById(existingProfile.id, {
           password: initialPassword,
           email_confirm: true,
         });
       } catch (e) {}
+    } else {
+      const { data: authData, error: authError } = await supabaseAdmin.auth.admin.createUser({
+        email,
+        password: initialPassword,
+        email_confirm: true,
+      });
 
-      const { data: updatedProf, error: updateProfErr } = await supabaseAdmin
-        .from("profiles")
-        .update({ full_name: fullName, role: "faculty", department_id: departmentId })
-        .eq("id", existingProfile.id)
-        .select("id, full_name, email, created_at")
-        .single();
-      if (updateProfErr) throw updateProfErr;
-
-      return res.status(200).json({ faculty: updatedProf, tempPassword: initialPassword, updated: true });
+      if (authData?.user) {
+        authUserId = authData.user.id;
+      } else if (authError) {
+        const { data: list } = await supabaseAdmin.auth.admin.listUsers();
+        const existingAuth = (list?.users || []).find((u) => u.email.toLowerCase() === email.toLowerCase());
+        if (existingAuth) {
+          authUserId = existingAuth.id;
+          await supabaseAdmin.auth.admin.updateUserById(authUserId, { password: initialPassword, email_confirm: true }).catch(() => {});
+        } else {
+          throw authError;
+        }
+      }
     }
 
-    const { data: authData, error: authError } = await supabaseAdmin.auth.admin.createUser({
-      email,
-      password: initialPassword,
-      email_confirm: true,
-    });
-    if (authError) throw authError;
-
-    // Use upsert without gender column to avoid schema cache issues
+    // Use upsert to create or update profile without schema conflicts
     const { data: profile, error: profileError } = await supabaseAdmin
       .from("profiles")
       .upsert({
-        id: authData.user.id,
+        id: authUserId,
         role: "faculty",
         full_name: fullName,
         email,
@@ -583,10 +587,7 @@ router.post("/faculty", async (req, res) => {
       .select("id, full_name, email, created_at")
       .single();
 
-    if (profileError) {
-      await supabaseAdmin.auth.admin.deleteUser(authData.user.id);
-      throw profileError;
-    }
+    if (profileError) throw profileError;
 
     res.status(201).json({ faculty: profile, tempPassword: initialPassword });
   } catch (err) {
@@ -1842,19 +1843,23 @@ router.get("/reports", async (req, res) => {
 });
 
 // ---------------------------------------------------------------------------
-// 📋 NEW FEATURE #2 — ACADEMIC CALENDAR
+// 📋 NEW FEATURE #2 — ACADEMIC CALENDAR (HOD DELEGATION TO UNIFIED SERVICE)
 // ---------------------------------------------------------------------------
 router.get("/calendar", async (req, res) => {
   try {
     const departmentId = await getHodDepartmentId(req.user.id);
-    const { semester } = req.query;
+    const { semester, eventType, status, search, referenceDate } = req.query;
 
     const { getAcademicCalendarEvents } = require("../services/calendarService");
     const events = await getAcademicCalendarEvents({
-      departmentId,
+      departmentId: departmentId || "MCA",
       semester,
       role: "hod",
       userId: req.user.id,
+      eventType,
+      status,
+      search,
+      referenceDate,
     });
 
     res.json(events);
@@ -1865,75 +1870,15 @@ router.get("/calendar", async (req, res) => {
 
 router.post("/calendar", async (req, res) => {
   try {
-    const userId = req.user?.id || "57a98e1a-17f5-4ce5-802d-923960121d37";
+    const userId = req.user?.id || "hod-mca-user";
     const departmentId = await getHodDepartmentId(userId);
-    const { title, description, event_type, subject_id, semester, section, start_datetime, end_datetime, visibility } = req.body;
-
-    if (!title || !title.trim()) return res.status(400).json({ error: "Event Title is required." });
 
     const { createAcademicCalendarEvent } = require("../services/calendarService");
     const event = await createAcademicCalendarEvent({
-      title: title.trim(),
-      description: description || "",
-      event_type: event_type || "Academic Event",
-      department_id: departmentId,
-      subject_id: subject_id || null,
-      semester: semester || null,
-      section: section || null,
-      start_datetime: start_datetime || new Date().toISOString(),
-      end_datetime: end_datetime || start_datetime || new Date().toISOString(),
+      ...req.body,
+      department_id: departmentId || req.body.department_id || "MCA",
       created_by: userId,
-      visibility: visibility || "department",
     });
-
-    try {
-      const { logAuditEvent } = require("../services/auditService");
-      await logAuditEvent({
-        userId,
-        userRole: "hod",
-        action: "CALENDAR_EVENT_CREATED",
-        entityType: "calendar_event",
-        entityId: event.id,
-        newValue: title,
-        departmentId,
-      });
-    } catch (auditErr) {}
-
-    // 📢 AUTOMATIC NOTIFICATION & EMAIL DISPATCH TO ALL STUDENTS & FACULTY
-    try {
-      const { notify, sendEmail } = require("../services/notification.service");
-      const { data: deptUsers } = await supabaseAdmin
-        .from("profiles")
-        .select("id, email, full_name, role")
-        .or(`role.eq.student,role.eq.faculty`);
-
-      const recipientList = deptUsers || [];
-      const eventDateFormatted = new Date(event.start_datetime).toLocaleDateString("en-IN", {
-        weekday: "long",
-        year: "numeric",
-        month: "long",
-        day: "numeric",
-      });
-
-      const notifTitle = `📅 Academic Calendar Notice: ${event.event_type} - ${event.title}`;
-      const notifBody = `HOD Announcement: ${event.title} (${event.event_type}) is scheduled on ${eventDateFormatted}. ${event.description ? 'Notes: ' + event.description : ''}`;
-
-      for (const u of recipientList) {
-        // Send in-app notification
-        notify(u.id, "academic_calendar", notifTitle, notifBody).catch(() => {});
-
-        // Send Email notification
-        if (u.email) {
-          const emailSubject = `📢 DSATM Academic Alert: ${event.event_type} scheduled on ${eventDateFormatted}`;
-          const emailContent = `Dear ${u.full_name || (u.role === 'student' ? 'Student' : 'Faculty Member')},\n\nAn official academic calendar event has been announced by the Department HOD:\n\n📌 Event Title: ${event.title}\n🏷️ Event Type: ${event.event_type}\n📅 Scheduled Date: ${eventDateFormatted}\n${event.description ? '📝 Details: ' + event.description + '\n' : ''}\nPlease check your Academic Dashboard to review the complete calendar schedule.\n\nBest Regards,\nDepartment HOD & Academic Management System\nDayananda Sagar Academy of Technology and Management (DSATM)`;
-          
-          sendEmail(u.email, emailSubject, emailContent).catch((e) => console.warn(`Calendar email failed for ${u.email}:`, e.message));
-        }
-      }
-      console.log(`Dispatched academic calendar notification & email to ${recipientList.length} user(s).`);
-    } catch (notifErr) {
-      console.warn("Calendar notification dispatch warning:", notifErr.message);
-    }
 
     res.status(201).json(event);
   } catch (err) {
@@ -1941,25 +1886,46 @@ router.post("/calendar", async (req, res) => {
   }
 });
 
+router.put("/calendar/:id", async (req, res) => {
+  try {
+    const userId = req.user?.id || "hod-mca-user";
+    const { updateAcademicCalendarEvent } = require("../services/calendarService");
+    const event = await updateAcademicCalendarEvent(req.params.id, req.body, { userId, userRole: "hod" });
+    res.json(event);
+  } catch (err) {
+    res.status(400).json({ error: err.message || "Failed to update event." });
+  }
+});
+
+router.post("/calendar/:id/publish", async (req, res) => {
+  try {
+    const userId = req.user?.id || "hod-mca-user";
+    const { publishAcademicCalendarEvent } = require("../services/calendarService");
+    const event = await publishAcademicCalendarEvent(req.params.id, { userId, userRole: "hod" });
+    res.json(event);
+  } catch (err) {
+    res.status(400).json({ error: err.message || "Failed to publish event." });
+  }
+});
+
+router.post("/calendar/:id/cancel", async (req, res) => {
+  try {
+    const userId = req.user?.id || "hod-mca-user";
+    const { cancelAcademicCalendarEvent } = require("../services/calendarService");
+    const event = await cancelAcademicCalendarEvent(req.params.id, req.body.reason, { userId, userRole: "hod" });
+    res.json(event);
+  } catch (err) {
+    res.status(400).json({ error: err.message || "Failed to cancel event." });
+  }
+});
+
 router.delete("/calendar/:id", async (req, res) => {
   try {
-    const departmentId = await getHodDepartmentId(req.user.id);
     const { deleteAcademicCalendarEvent } = require("../services/calendarService");
-    await deleteAcademicCalendarEvent(req.params.id, departmentId);
-
-    const { logAuditEvent } = require("../services/auditService");
-    await logAuditEvent({
-      userId: req.user.id,
-      userRole: "hod",
-      action: "CALENDAR_EVENT_DELETED",
-      entityType: "calendar_event",
-      entityId: req.params.id,
-      departmentId,
-    });
-
-    res.json({ success: true });
+    await deleteAcademicCalendarEvent(req.params.id);
+    res.json({ success: true, message: "Calendar event deleted successfully." });
   } catch (err) {
-    res.status(400).json({ error: err.message });
+    res.status(500).json({ error: err.message });
   }
 });
 

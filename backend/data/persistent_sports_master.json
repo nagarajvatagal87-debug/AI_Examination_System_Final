@@ -1,0 +1,82 @@
+[
+  {
+    "id": "sport-cricket",
+    "name": "Cricket",
+    "description": "Outdoor team sport with 11 players per team",
+    "type": "TEAM",
+    "status": "ACTIVE",
+    "icon": "🏏"
+  },
+  {
+    "id": "sport-football",
+    "name": "Football",
+    "description": "Outdoor team sport with 11 players per team",
+    "type": "TEAM",
+    "status": "ACTIVE",
+    "icon": "⚽"
+  },
+  {
+    "id": "sport-volleyball",
+    "name": "Volleyball",
+    "description": "Court team sport with 6 players per team",
+    "type": "TEAM",
+    "status": "ACTIVE",
+    "icon": "🏐"
+  },
+  {
+    "id": "sport-basketball",
+    "name": "Basketball",
+    "description": "Court team sport with 5 players per team",
+    "type": "TEAM",
+    "status": "ACTIVE",
+    "icon": "🏀"
+  },
+  {
+    "id": "sport-kabaddi",
+    "name": "Kabaddi",
+    "description": "Traditional contact team sport",
+    "type": "TEAM",
+    "status": "ACTIVE",
+    "icon": "🤼"
+  },
+  {
+    "id": "sport-badminton",
+    "name": "Badminton",
+    "description": "Racquet sport available in singles or doubles",
+    "type": "INDIVIDUAL",
+    "status": "ACTIVE",
+    "icon": "🏸"
+  },
+  {
+    "id": "sport-tabletennis",
+    "name": "Table Tennis",
+    "description": "Indoor table racquet sport",
+    "type": "INDIVIDUAL",
+    "status": "ACTIVE",
+    "icon": "🏓"
+  },
+  {
+    "id": "sport-tennis",
+    "name": "Tennis",
+    "description": "Lawn tennis singles or doubles match",
+    "type": "INDIVIDUAL",
+    "status": "ACTIVE",
+    "icon": "🎾"
+  },
+  {
+    "id": "sport-chess",
+    "name": "Chess",
+    "description": "Strategic board game tournament",
+    "type": "INDIVIDUAL",
+    "status": "ACTIVE",
+    "icon": "♟️"
+  },
+  {
+    "id": "sport-athletics",
+    "name": "Athletics",
+    "description": "Track & field events (100m, 400m, Long Jump, Relay)",
+    "type": "INDIVIDUAL",
+    "status": "ACTIVE",
+    "icon": "🏃"
+  }
+]

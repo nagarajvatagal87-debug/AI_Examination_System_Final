@@ -20,6 +20,7 @@ import CollegeInfoPublish from './CollegeInfoPublish.jsx'
 import PrincipalMessages from './PrincipalMessages.jsx'
 import AuditGovernanceLog from './AuditGovernanceLog.jsx'
 import InstitutionalReports from './InstitutionalReports.jsx'
+import SportsManagementView from '../../components/SportsManagement/SportsManagementView.jsx'
 
 const NAV = [
   { key: 'overview', icon: '🏠', label: 'Overview' },
@@ -29,6 +30,7 @@ const NAV = [
   { key: 'top-students', icon: '🏆', label: 'Top Students' },
   { key: 'exam-overview', icon: '📝', label: 'Examination Overview' },
   { key: 'calendar', icon: '📅', label: 'Academic Calendar' },
+  { key: 'sports', icon: '🏆', label: 'Sports Overview' },
   { key: 'circulars', icon: '📢', label: 'Circulars & Announcements' },
   { key: 'publish', icon: '📣', label: 'Publish College Info' },
   { key: 'messages', icon: '💬', label: 'Messages & Invites' },
@@ -222,6 +224,7 @@ export default function PrincipalDashboard() {
             {active === 'top-students' && <TopStudentsOverall departments={departments} />}
             {active === 'exam-overview' && <ExaminationOverview />}
             {active === 'calendar' && <AcademicCalendar />}
+            {active === 'sports' && <SportsManagementView role="principal" />}
             {active === 'circulars' && <CircularsAnnouncements departments={departments} />}
             {active === 'publish' && <CollegeInfoPublish />}
             {active === 'messages' && (

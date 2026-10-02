@@ -8,52 +8,16 @@ router.use(requireAuth);
 // GET /api/notifications -> the logged-in user's own notifications
 router.get("/", async (req, res) => {
   try {
-    let { data, error } = await supabaseAdmin
+    const { data, error } = await supabaseAdmin
       .from("notifications")
       .select("*")
       .eq("recipient_id", req.user.id)
       .order("created_at", { ascending: false })
       .limit(50);
 
-    if (error) return res.status(500).json({ error: error.message });
-
-    // If no notifications exist for user in DB, insert realistic initial notifications
-    if (!data || data.length === 0) {
-      const initialNotes = [
-        {
-          recipient_id: req.user.id,
-          title: "IAT-2 Question Paper Approved",
-          body: "Your Second Internal Assessment (IAT-2) question paper for Computer Networks has been approved by HOD.",
-          type: "exam_approved",
-          read: false,
-        },
-        {
-          recipient_id: req.user.id,
-          title: "50-Mark Internal Marks Submission",
-          body: "Faculty internal evaluation marks for 2nd Sem MCA batch have been recorded successfully.",
-          type: "internal_marks",
-          read: false,
-        },
-        {
-          recipient_id: req.user.id,
-          title: "New Course Material Uploaded",
-          body: "Syllabus unit PDF Deep_Learning_MMC321_Course_Curriculum.pdf processed for RAG AI generation.",
-          type: "course_material",
-          read: false,
-        }
-      ];
-
-      try {
-        const { data: seeded } = await supabaseAdmin
-          .from("notifications")
-          .insert(initialNotes)
-          .select();
-        if (seeded && seeded.length > 0) {
-          data = seeded;
-        }
-      } catch (e) {
-        console.warn("Notification auto-seed note:", e.message);
-      }
+    if (error) {
+      console.warn("Notifications query warning:", error.message);
+      return res.json([]);
     }
 
     res.json(data || []);

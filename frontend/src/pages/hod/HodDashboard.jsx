@@ -6,6 +6,8 @@ import NotificationBell from '../../components/NotificationBell.jsx'
 import HeaderBanner from '../../components/HeaderBanner.jsx'
 import Notifications from '../faculty/Notifications.jsx'
 import HodPublicPublishSection from './HodPublicPublishSection.jsx'
+import AcademicCalendarView from '../../components/AcademicCalendar/AcademicCalendarView.jsx'
+import SportsManagementView from '../../components/SportsManagement/SportsManagementView.jsx'
 import '../student/StudentDashboard.css'
 import './HodDashboard.css'
 
@@ -18,6 +20,7 @@ const SECTIONS = [
   { key: 'internal_analytics', label: 'Internal Analytics', icon: '📉' },
   { key: 'timetable', label: 'Exam Schedule & Hall Tickets', icon: '🎫' },
   { key: 'academic_calendar', label: 'Academic Calendar', icon: '📅' },
+  { key: 'department_sports', label: 'Department Sports', icon: '🏆' },
   { key: 'mainexam', label: 'Main Exam Analytics', icon: '📈' },
   { key: 'attendance', label: 'Attendance', icon: '📅' },
   { key: 'results', label: 'Results & Ranking', icon: '🏆' },
@@ -98,6 +101,7 @@ export default function HodDashboard() {
           {!loading && !error && activeSection === 'internal_analytics' && <HodInternalAnalyticsSection />}
           {!loading && !error && activeSection === 'timetable' && <HodExamTimetableSection overview={overview} />}
           {!loading && !error && activeSection === 'academic_calendar' && <HodAcademicCalendarSection />}
+          {!loading && !error && activeSection === 'department_sports' && <SportsManagementView role="hod" />}
           {!loading && !error && activeSection === 'mainexam' && <MainExamAnalyticsSection />}
           {!loading && !error && activeSection === 'attendance' && <HodAttendanceSection />}
           {!loading && !error && activeSection === 'results' && <ResultsSection />}
@@ -2745,126 +2749,7 @@ function HodAcademicReportsSection() {
 // 📋 Academic Calendar Section
 // ---------------------------------------------------------------------------
 function HodAcademicCalendarSection() {
-  const [events, setEvents] = useState([])
-  const [loading, setLoading] = useState(true)
-  const [showAdd, setShowAdd] = useState(false)
-  const [title, setTitle] = useState('')
-  const [description, setDescription] = useState('')
-  const [eventType, setEventType] = useState('Internal Examination')
-  const [startDate, setStartDate] = useState('')
-  const [msg, setMsg] = useState('')
-
-  function loadEvents() {
-    setLoading(true)
-    api.get('/hod/calendar')
-      .then((res) => setEvents(res.data || []))
-      .catch(() => setEvents([]))
-      .finally(() => setLoading(false))
-  }
-
-  useEffect(() => { loadEvents() }, [])
-
-  async function handleCreateEvent(e) {
-    e.preventDefault()
-    if (!title) return
-    setMsg('Creating academic event...')
-    try {
-      await api.post('/hod/calendar', {
-        title,
-        description,
-        event_type: eventType,
-        start_datetime: startDate || new Date().toISOString(),
-        visibility: 'department',
-      })
-      setMsg('✅ Academic calendar event created successfully!')
-      setTitle('')
-      setDescription('')
-      setShowAdd(false)
-      loadEvents()
-    } catch (err) {
-      const backendErr = err.response?.data?.error || err.response?.data?.message || err.message || 'Failed to create event'
-      setMsg(`❌ ${backendErr}`)
-    }
-  }
-
-  async function handleDeleteEvent(id) {
-    if (!confirm('Delete this academic event?')) return
-    try {
-      await api.delete(`/hod/calendar/${id}`)
-      loadEvents()
-    } catch (err) {}
-  }
-
-  return (
-    <div className="hod-card">
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20, flexWrap: 'wrap', gap: 12 }}>
-        <div>
-          <h3 className="hod-card-title" style={{ margin: 0 }}>📋 Academic Calendar & Department Schedule</h3>
-          <p style={{ color: '#475569', fontSize: 13, margin: '4px 0 0' }}>
-            Central database-driven academic calendar linked across HOD, Faculty, Student, and Principal portals.
-          </p>
-        </div>
-        <button
-          onClick={() => setShowAdd(!showAdd)}
-          style={{ padding: '9px 18px', borderRadius: 8, border: 'none', background: 'linear-gradient(135deg, #7c3aed, #db2777)', color: '#fff', fontWeight: 800, fontSize: 13, cursor: 'pointer' }}
-        >
-          📅 + Add Academic Event
-        </button>
-      </div>
-
-      {msg && <p style={{ fontSize: 13, fontWeight: 700, color: msg.includes('❌') ? '#ef4444' : '#10b981', marginBottom: 16 }}>{msg}</p>}
-
-      {showAdd && (
-        <form onSubmit={handleCreateEvent} style={{ padding: 18, background: '#f8fafc', borderRadius: 10, border: '1.5px solid #0f172a', marginBottom: 20, display: 'grid', gridTemplateColumns: '1fr 1fr auto auto', gap: 12, alignItems: 'end' }}>
-          <div>
-            <label style={{ display: 'block', fontSize: 12, fontWeight: 700, color: '#0f172a', marginBottom: 4 }}>Event Title</label>
-            <input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="e.g. Internal Test-1 Commencement" required style={{ width: '100%', padding: '8px 12px', borderRadius: 6, border: '1.5px solid #cbd5e1' }} />
-          </div>
-          <div>
-            <label style={{ display: 'block', fontSize: 12, fontWeight: 700, color: '#0f172a', marginBottom: 4 }}>Event Type</label>
-            <select value={eventType} onChange={(e) => setEventType(e.target.value)} style={{ width: '100%', padding: '8px 12px', borderRadius: 6, border: '1.5px solid #cbd5e1' }}>
-              <option value="Internal Examination">Internal Examination</option>
-              <option value="Main Examination">Main Examination</option>
-              <option value="Assignment Deadline">Assignment Deadline</option>
-              <option value="Result Publication">Result Publication</option>
-              <option value="Academic Event">Academic Event</option>
-              <option value="Holiday">Holiday</option>
-            </select>
-          </div>
-          <div>
-            <label style={{ display: 'block', fontSize: 12, fontWeight: 700, color: '#0f172a', marginBottom: 4 }}>Event Date</label>
-            <input type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} style={{ padding: '8px 12px', borderRadius: 6, border: '1.5px solid #cbd5e1' }} />
-          </div>
-          <button type="submit" style={{ padding: '9px 18px', borderRadius: 6, border: 'none', background: '#2563eb', color: '#fff', fontWeight: 800, cursor: 'pointer' }}>Save Event</button>
-        </form>
-      )}
-
-      {loading ? (
-        <p style={{ color: '#475569' }}>Loading academic events...</p>
-      ) : events.length === 0 ? (
-        <div className="hod-empty">No academic events scheduled.</div>
-      ) : (
-        <table className="hod-table">
-          <thead>
-            <tr><th>Event Type</th><th>Title</th><th>Date</th><th>Visibility</th><th>Action</th></tr>
-          </thead>
-          <tbody>
-            {events.map((ev) => (
-              <tr key={ev.id}>
-                <td><span style={{ padding: '3px 10px', borderRadius: 12, background: '#eff6ff', border: '1px solid #bfdbfe', color: '#1d4ed8', fontSize: 11, fontWeight: 800 }}>{ev.event_type}</span></td>
-                <td style={{ fontWeight: 700, color: '#0f172a' }}>{ev.title}</td>
-                <td style={{ color: '#475569', fontSize: 13 }}>{new Date(ev.start_datetime).toLocaleDateString()}</td>
-                <td style={{ color: '#64748b', fontSize: 12 }}>{ev.visibility || 'Department'}</td>
-                <td>
-                  <button onClick={() => handleDeleteEvent(ev.id)} style={{ background: 'transparent', border: 'none', color: '#ef4444', fontWeight: 800, cursor: 'pointer' }}>✖ Remove</button>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      )}
-    </div>
-  )
+  return <AcademicCalendarView role="hod" />
 }
 
 // ---------------------------------------------------------------------------

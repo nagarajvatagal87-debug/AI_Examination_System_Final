@@ -67,13 +67,21 @@ router.post("/register", async (req, res) => {
     // 1. Create Supabase Auth user if password provided
     if (password) {
       try {
-        const { data: authData } = await supabaseAdmin.auth.admin.createUser({
+        const { data: authData, error: authErr } = await supabaseAdmin.auth.admin.createUser({
           email: cleanEmail,
           password: password,
           email_confirm: true,
         });
         if (authData?.user) {
           userId = authData.user.id;
+        } else if (authErr) {
+          // If user already registered in Supabase Auth, look up existing user ID and update password
+          const { data: list } = await supabaseAdmin.auth.admin.listUsers();
+          const existingAuth = (list?.users || []).find((u) => u.email.toLowerCase() === cleanEmail);
+          if (existingAuth) {
+            userId = existingAuth.id;
+            await supabaseAdmin.auth.admin.updateUserById(userId, { password: password, email_confirm: true }).catch(() => {});
+          }
         }
       } catch (e) {
         console.warn("Auth creation bypass note:", e.message);

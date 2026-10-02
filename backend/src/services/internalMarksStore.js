@@ -42,8 +42,6 @@ function saveMarksToDisk() {
 
 const { getEnrolledStudentIds } = require("./enrollmentStore");
 
-const DEEP_LEARNING_ID = "050ba71c-1308-415a-bbd4-d294de0eefe3";
-
 async function getSubjectInternalMarks(subjectId) {
   let enrolledIds = getEnrolledStudentIds(subjectId);
 
@@ -56,17 +54,6 @@ async function getSubjectInternalMarks(subjectId) {
     }
     if (memIds.length > 0) {
       enrolledIds = memIds;
-    } else {
-      const dlSet = getEnrolledStudentIds(DEEP_LEARNING_ID);
-      if (dlSet.length > 0) {
-        enrolledIds = dlSet;
-        dlSet.forEach((stId) => {
-          const oldRec = memoryStore.get(`${DEEP_LEARNING_ID}:${stId}`);
-          if (oldRec && !memoryStore.has(`${subjectId}:${stId}`)) {
-            memoryStore.set(`${subjectId}:${stId}`, { ...oldRec, subject_id: subjectId });
-          }
-        });
-      }
     }
   }
 
