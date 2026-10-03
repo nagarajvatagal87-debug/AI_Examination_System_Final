@@ -127,17 +127,25 @@ export default function Login() {
   return (
     <div className="auth-page">
       <div className="auth-container">
-        {/* Header with College Name & Logo */}
+        {/* Institutional Header with Moving College Title */}
         <header className="auth-header-bar">
           <div className="auth-header-brand">
             <div className="auth-logo-box">
               <img src="/dsi-logo.png" alt="DSI Logo" className="auth-dsi-logo" />
             </div>
-            <div>
-              <h2 className="auth-college-name">DAYANANDA SAGAR ACADEMY OF TECHNOLOGY AND MANAGEMENT</h2>
-              <p className="auth-college-sub">Autonomous Institute Affiliated to VTU • AI Examination Portal</p>
+          </div>
+
+          <div className="auth-marquee-box">
+            <div className="auth-marquee-track">
+              <span className="marquee-text-item">
+                🏛️ <strong className="marquee-college-highlight">DAYANANDA SAGAR ACADEMY OF TECHNOLOGY AND MANAGEMENT</strong> • Autonomous Institute Affiliated to VTU • AI Examination Portal
+              </span>
+              <span className="marquee-text-item">
+                🏛️ <strong className="marquee-college-highlight">DAYANANDA SAGAR ACADEMY OF TECHNOLOGY AND MANAGEMENT</strong> • Autonomous Institute Affiliated to VTU • AI Examination Portal
+              </span>
             </div>
           </div>
+
           <Link to="/" className="auth-back-link">
             ← Main Portal
           </Link>

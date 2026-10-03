@@ -94,26 +94,59 @@ initSportsMasterSeed();
 // ---------------------------------------------------------------------------
 async function getDepartmentFaculty(departmentId = null) {
   try {
-    let query = supabaseAdmin.from("profiles").select("id, full_name, email, department_id, designation").eq("role", "faculty");
-    if (departmentId) {
-      query = query.eq("department_id", departmentId);
+    let query = supabaseAdmin
+      .from("profiles")
+      .select("id, full_name, email, role, department_id, departments!profiles_department_fk(id, name)")
+      .in("role", ["faculty", "hod"]);
+
+    if (departmentId && departmentId !== "ALL") {
+      const { data: depts } = await supabaseAdmin.from("departments").select("id, name");
+      const matchedDept = (depts || []).find(
+        (d) =>
+          String(d.id).toLowerCase() === String(departmentId).toLowerCase() ||
+          String(d.name).toLowerCase() === String(departmentId).toLowerCase() ||
+          (d.name && d.name.toLowerCase().includes(String(departmentId).toLowerCase()))
+      );
+
+      if (matchedDept) {
+        query = query.eq("department_id", matchedDept.id);
+      } else {
+        query = query.eq("department_id", departmentId);
+      }
     }
+
     const { data, error } = await query;
-    if (!error && data && data.length > 0) return data;
+    if (!error && data && data.length > 0) {
+      return data.map((f) => ({
+        id: f.id,
+        full_name: f.full_name || f.email,
+        email: f.email,
+        department_id: f.departments?.name || "MCA",
+        designation: f.role === "hod" ? "HOD" : "Faculty Coordinator",
+      }));
+    }
+  } catch (e) {
+    console.error("Error in getDepartmentFaculty:", e);
+  }
+
+  // Fallback: fetch all real database faculty & HOD profiles without dummy names
+  try {
+    const { data } = await supabaseAdmin
+      .from("profiles")
+      .select("id, full_name, email, role, department_id, departments!profiles_department_fk(id, name)")
+      .in("role", ["faculty", "hod"]);
+    if (data && data.length > 0) {
+      return data.map((f) => ({
+        id: f.id,
+        full_name: f.full_name || f.email,
+        email: f.email,
+        department_id: f.departments?.name || "MCA",
+        designation: f.role === "hod" ? "HOD" : "Faculty Coordinator",
+      }));
+    }
   } catch (e) {}
 
-  // Fallback faculty list for database matching or local persistent testing
-  const FALLBACK_FACULTY = [
-    { id: "fac-mca-001", full_name: "Prof. Sunita M", email: "sunita.m@dsatm.edu.in", department_id: "MCA", designation: "Assistant Professor" },
-    { id: "fac-mca-002", full_name: "Dr. Ramesh Kumar", email: "ramesh.k@dsatm.edu.in", department_id: "MCA", designation: "Associate Professor" },
-    { id: "fac-cse-001", full_name: "Dr. Anupama V", email: "anupama.v@dsatm.edu.in", department_id: "CSE", designation: "Professor" },
-    { id: "fac-ece-001", full_name: "Prof. Rajesh S", email: "rajesh.s@dsatm.edu.in", department_id: "ECE", designation: "Assistant Professor" },
-  ];
-
-  if (departmentId) {
-    return FALLBACK_FACULTY.filter(f => String(f.department_id).toLowerCase() === String(departmentId).toLowerCase());
-  }
-  return FALLBACK_FACULTY;
+  return [];
 }
 
 async function getSportsMaster() {

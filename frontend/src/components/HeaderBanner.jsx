@@ -23,9 +23,15 @@ export default function HeaderBanner({
           </div>
         </div>
 
-        <div className="header-center">
-          <h1 className="header-college-title-center">{collegeName}</h1>
-          <p className="header-system-subtitle-center">{subtitle}</p>
+        <div className="header-center-marquee">
+          <div className="header-marquee-track">
+            <span className="header-marquee-item">
+              🏛️ <strong>DAYANANDA SAGAR ACADEMY OF TECHNOLOGY AND MANAGEMENT</strong> • Autonomous Institute Affiliated to VTU • {subtitle}
+            </span>
+            <span className="header-marquee-item">
+              🏛️ <strong>DAYANANDA SAGAR ACADEMY OF TECHNOLOGY AND MANAGEMENT</strong> • Autonomous Institute Affiliated to VTU • {subtitle}
+            </span>
+          </div>
         </div>
 
         <div className="header-right">

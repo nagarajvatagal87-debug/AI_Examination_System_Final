@@ -80,5 +80,86 @@
     "changed_by": "HOD",
     "changed_at": "2026-10-02T16:18:31.539Z",
     "reason": "Initial calendar entry creation"
+  },
+  {
+    "id": "hist-1791052791785",
+    "event_id": "mca-cal-1791052791778-6z8zs",
+    "action": "CREATED",
+    "old_value": null,
+    "new_value": {
+      "id": "mca-cal-1791052791778-6z8zs",
+      "title": "Copy of Commencement of Odd Semester",
+      "event_type": "ACADEMIC",
+      "department_id": "37909cba-a75d-428e-9181-fddf9920fb0b",
+      "program": "MCA",
+      "semester": "III",
+      "academic_year": "2026-27",
+      "start_date": "2026-08-24",
+      "end_date": "2026-12-12",
+      "start_time": "09:00 AM",
+      "end_time": "04:30 PM",
+      "description": "Official commencement of III Semester MCA Academic Session (August 2026 to December 2026).",
+      "remarks": "Regular classes begin for all registered students.",
+      "location": "MCA Department, DSATM",
+      "audience": [
+        "students",
+        "faculty",
+        "hod",
+        "principal"
+      ],
+      "priority": "HIGH",
+      "status": "DRAFT",
+      "created_by": "9e9f16a4-a622-4121-b6e1-b7075f947b25",
+      "created_at": "2026-10-03T18:39:51.778Z",
+      "updated_by": "9e9f16a4-a622-4121-b6e1-b7075f947b25",
+      "updated_at": "2026-10-03T18:39:51.778Z",
+      "published_by": null,
+      "published_at": null,
+      "linked_exam_id": null,
+      "version": 1
+    },
+    "changed_by": "9e9f16a4-a622-4121-b6e1-b7075f947b25",
+    "changed_at": "2026-10-03T18:39:51.778Z",
+    "reason": "Initial calendar entry creation"
+  },
+  {
+    "id": "hist-1791052832293",
+    "event_id": "mca-cal-1791052791778-6z8zs",
+    "action": "STATUS_CHANGED_PUBLISHED",
+    "old_value": {
+      "start_date": "2026-08-24",
+      "end_date": "2026-12-12",
+      "title": "Copy of Commencement of Odd Semester",
+      "status": "DRAFT"
+    },
+    "new_value": {
+      "start_date": "2026-08-24",
+      "end_date": "2026-12-12",
+      "title": "Copy of Commencement of Odd Semester",
+      "status": "PUBLISHED"
+    },
+    "changed_by": "9e9f16a4-a622-4121-b6e1-b7075f947b25",
+    "changed_at": "2026-10-03T18:40:32.289Z",
+    "reason": "Event details updated"
+  },
+  {
+    "id": "hist-1791052833620",
+    "event_id": "mca-cal-1791052791778-6z8zs",
+    "action": "UPDATED",
+    "old_value": {
+      "start_date": "2026-08-24",
+      "end_date": "2026-12-12",
+      "title": "Copy of Commencement of Odd Semester",
+      "status": "PUBLISHED"
+    },
+    "new_value": {
+      "start_date": "2026-08-24",
+      "end_date": "2026-12-12",
+      "title": "Copy of Commencement of Odd Semester",
+      "status": "PUBLISHED"
+    },
+    "changed_by": "9e9f16a4-a622-4121-b6e1-b7075f947b25",
+    "changed_at": "2026-10-03T18:40:33.618Z",
+    "reason": "Event details updated"
   }
 ]

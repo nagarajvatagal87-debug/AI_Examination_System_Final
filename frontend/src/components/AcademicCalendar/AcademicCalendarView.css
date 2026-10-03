@@ -205,8 +205,10 @@
 
 .cal-grid {
   display: grid;
-  grid-template-columns: repeat(7, 1fr);
+  grid-template-columns: repeat(7, minmax(0, 1fr));
   gap: 8px;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .cal-grid-header {
@@ -216,19 +218,23 @@
   color: #64748b;
   text-transform: uppercase;
   padding: 8px 0;
+  overflow: hidden;
 }
 
 .cal-day-cell {
   min-height: 105px;
-  background: #f8fafc;
+  width: 100%;
+  box-sizing: border-box;
+  background: #ffffff;
   border: 1px solid #e2e8f0;
   border-radius: 10px;
   padding: 8px;
   display: flex;
   flex-direction: column;
-  justify-content: space-between;
+  justify-content: flex-start;
   transition: all 0.2s ease;
   cursor: pointer;
+  overflow: hidden;
 }
 
 .cal-day-cell:hover {
@@ -262,6 +268,8 @@
   gap: 4px;
   margin-top: 6px;
   overflow: hidden;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .cal-event-chip {
@@ -272,6 +280,8 @@
   overflow: hidden;
   text-overflow: ellipsis;
   font-weight: 700;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 /* List Table View */

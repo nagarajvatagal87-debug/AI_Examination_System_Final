@@ -1978,26 +1978,34 @@ router.get("/students/:studentId/profile", async (req, res) => {
     // Enrolled courses & Subjects
     let { data: deptSubjects } = await supabaseAdmin
       .from("subjects")
-      .select("id, name, code, semester")
-      .eq("department_id", student.department_id || departmentId);
+      .select("id, name, code");
 
-    if (!deptSubjects || deptSubjects.length === 0) {
-      deptSubjects = [
-        { id: "050ba71c-1308-415a-bbd4-d294de0eefe3", name: "Deep Learning & Neural Networks", code: "MMC301", semester: student.semester || "3rd Sem" },
-        { id: "devops-sub-002", name: "DevOps & Cloud Infrastructure", code: "MMC302", semester: student.semester || "3rd Sem" },
-        { id: "cn-sub-003", name: "Computer Networks & Security", code: "MMC303", semester: student.semester || "3rd Sem" }
-      ];
+    if (student.department_id) {
+      const { data: matchedDeptSubs } = await supabaseAdmin
+        .from("subjects")
+        .select("id, name, code")
+        .eq("department_id", student.department_id);
+      if (matchedDeptSubs && matchedDeptSubs.length > 0) {
+        deptSubjects = matchedDeptSubs;
+      }
     }
 
+    const formattedDeptSubs = (deptSubjects || []).map((sub) => ({
+      ...sub,
+      semester: student.semester || "3rd Sem"
+    }));
+
     const { getEnrolledStudentIds } = require("../services/enrollmentStore");
-    let enrolledSubjects = (deptSubjects || []).filter((sub) => {
+    let enrolledSubjects = formattedDeptSubs.filter((sub) => {
       const eIds = getEnrolledStudentIds(sub.id);
-      if (eIds.length > 0) return eIds.includes(studentId);
+      if (eIds && eIds.length > 0) {
+        return eIds.includes(studentId);
+      }
       return true;
     });
 
-    if (enrolledSubjects.length === 0) {
-      enrolledSubjects = deptSubjects;
+    if (!enrolledSubjects || enrolledSubjects.length === 0) {
+      enrolledSubjects = formattedDeptSubs;
     }
 
     // Attendance
@@ -2010,8 +2018,8 @@ router.get("/students/:studentId/profile", async (req, res) => {
     const rawMarks = await getStudentInternalMarks(studentId);
     const internalMarks = (rawMarks || []).map((m, idx) => {
       const matchingSub = (deptSubjects || []).find((s) => s.id === m.subject_id) || deptSubjects[idx % deptSubjects.length];
-      const subName = (m.subjects?.name && m.subjects?.name !== "Subject") ? m.subjects.name : (matchingSub?.name || "Deep Learning & Neural Networks");
-      const subCode = (m.subjects?.code && m.subjects?.code !== "SUB") ? m.subjects.code : (matchingSub?.code || "MMC301");
+      const subName = (m.subjects?.name && m.subjects?.name !== "Subject") ? m.subjects.name : (matchingSub?.name || "Devops");
+      const subCode = (m.subjects?.code && m.subjects?.code !== "SUB") ? m.subjects.code : (matchingSub?.code || "MMC335");
       return {
         ...m,
         subjects: {

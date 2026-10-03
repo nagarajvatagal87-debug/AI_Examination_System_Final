@@ -2,6 +2,14 @@ import React, { useState, useEffect } from 'react';
 import api from '../../api/client.js';
 import './AcademicCalendarView.css';
 
+function getLocalDateStr(dateObj) {
+  if (!dateObj) return '';
+  const y = dateObj.getFullYear();
+  const m = String(dateObj.getMonth() + 1).padStart(2, '0');
+  const d = String(dateObj.getDate()).padStart(2, '0');
+  return `${y}-${m}-${d}`;
+}
+
 export default function AcademicCalendarView({ role = 'student' }) {
   const [events, setEvents] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -487,6 +495,24 @@ export default function AcademicCalendarView({ role = 'student' }) {
                 </button>
               </div>
 
+              <div style={{
+                background: '#f8fafc',
+                border: '1px solid #cbd5e1',
+                padding: '8px 14px',
+                borderRadius: 8,
+                fontSize: 12,
+                color: '#334155',
+                fontWeight: 600,
+                marginBottom: 14,
+                display: 'flex',
+                alignItems: 'center',
+                gap: 8,
+                flexWrap: 'wrap'
+              }}>
+                <span>📌 <strong>III Semester MCA Session:</strong> August 24, 2026 – December 12, 2026</span>
+                <span style={{ color: '#64748b' }}>• Only specific daily events & general holidays highlighted with category light tints below</span>
+              </div>
+
               <div className="cal-grid">
                 {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map((d) => (
                   <div key={d} className="cal-grid-header">{d}</div>
@@ -497,44 +523,102 @@ export default function AcademicCalendarView({ role = 'student' }) {
                     return <div key={`empty-${idx}`} className="cal-day-cell other-month" />;
                   }
 
-                  const dayIso = dayObj.toISOString().split('T')[0];
+                  const dayIso = getLocalDateStr(dayObj);
+                  const todayIso = getLocalDateStr(new Date());
+
+                  // Match events that start on this specific local day to ensure clean, non-repeating event placement
                   const dayEvents = events.filter((ev) => {
-                    return ev.start_date <= dayIso && (ev.end_date ? ev.end_date >= dayIso : ev.start_date >= dayIso);
+                    const start = ev.start_date || (ev.start_datetime ? ev.start_datetime.split('T')[0] : '');
+                    return start === dayIso;
                   });
 
-                  const isToday = new Date().toISOString().split('T')[0] === dayIso;
+                  const isToday = todayIso === dayIso;
+                  const isPastDay = dayIso < todayIso;
 
                   return (
                     <div
                       key={dayIso}
                       className={`cal-day-cell ${isToday ? 'today' : ''}`}
+                      style={{
+                        background: isToday ? '#eff6ff' : '#ffffff',
+                        border: isToday ? '2px solid #2563eb' : '1px solid #e2e8f0',
+                        minHeight: 110,
+                        padding: 8,
+                      }}
                       onClick={() => {
                         if (dayEvents.length > 0) handleOpenDetail(dayEvents[0]);
                       }}
                     >
                       <div className="cal-day-num">
-                        <span>{dayObj.getDate()}</span>
+                        <span style={{ color: isToday ? '#2563eb' : '#1e293b', fontWeight: isToday ? 800 : 700 }}>
+                          {dayObj.getDate()}
+                        </span>
                         {dayEvents.length > 0 && (
-                          <span style={{ fontSize: 10, background: '#2563eb', color: '#fff', padding: '1px 5px', borderRadius: 10 }}>
+                          <span style={{
+                            fontSize: 10,
+                            fontWeight: 800,
+                            background: isPastDay ? '#94a3b8' : '#2563eb',
+                            color: '#fff',
+                            padding: '1px 6px',
+                            borderRadius: 10
+                          }}>
                             {dayEvents.length}
                           </span>
                         )}
                       </div>
 
-                      <div className="cal-day-events">
-                        {dayEvents.slice(0, 3).map((ev) => (
-                          <div
-                            key={ev.id}
-                            className="cal-event-chip"
-                            style={{
-                              background: ev.event_type === 'GENERAL_HOLIDAY' ? '#fef9c3' : '#eff6ff',
-                              color: ev.event_type === 'GENERAL_HOLIDAY' ? '#854d0e' : '#1d4ed8',
-                              border: `1px solid ${ev.event_type === 'GENERAL_HOLIDAY' ? '#fde047' : '#bfdbfe'}`,
-                            }}
-                          >
-                            {ev.title}
-                          </div>
-                        ))}
+                      <div className="cal-day-events" style={{ marginTop: 6, display: 'flex', flexDirection: 'column', gap: 4 }}>
+                        {dayEvents.slice(0, 3).map((ev) => {
+                          const isH = ev.event_type === 'GENERAL_HOLIDAY' || ev.event_type === 'HOLIDAY';
+                          const isEx = (ev.event_type || '').includes('EXAM') || (ev.event_type || '').includes('INTERNAL');
+                          const isWs = ev.event_type === 'WORKSHOP' || ev.event_type === 'PROJECT';
+                          const isEvPast = ev.start_date < todayIso;
+
+                          let chipBg = '#e0f2fe';
+                          let chipColor = '#0369a1';
+                          let chipBorder = '#7dd3fc';
+
+                          if (isEvPast) {
+                            chipBg = '#f1f5f9';
+                            chipColor = '#64748b';
+                            chipBorder = '#cbd5e1';
+                          } else if (isH) {
+                            chipBg = '#fee2e2';
+                            chipColor = '#991b1b';
+                            chipBorder = '#fca5a5';
+                          } else if (isEx) {
+                            chipBg = '#ede9fe';
+                            chipColor = '#5b21b6';
+                            chipBorder = '#c4b5fd';
+                          } else if (isWs) {
+                            chipBg = '#d1fae5';
+                            chipColor = '#065f46';
+                            chipBorder = '#6ee7b7';
+                          }
+
+                          return (
+                            <div
+                              key={ev.id}
+                              style={{
+                                background: chipBg,
+                                color: chipColor,
+                                border: `1px solid ${chipBorder}`,
+                                padding: '4px 7px',
+                                borderRadius: 6,
+                                fontSize: 11,
+                                lineHeight: '1.3',
+                                fontWeight: 700,
+                                whiteSpace: 'nowrap',
+                                overflow: 'hidden',
+                                textOverflow: 'ellipsis',
+                                cursor: 'pointer'
+                              }}
+                              title={ev.title}
+                            >
+                              {isEvPast ? '✓ ' : (isH ? '🇮🇳 ' : isEx ? '📝 ' : isWs ? '🛠️ ' : '📅 ')}{ev.title}
+                            </div>
+                          );
+                        })}
                       </div>
                     </div>
                   );

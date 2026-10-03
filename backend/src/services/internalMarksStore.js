@@ -1,5 +1,6 @@
 const fs = require("fs");
 const path = require("path");
+const { supabaseAdmin } = require("../../config/Supabase");
 
 const DATA_DIR = path.join(__dirname, "../../data");
 if (!fs.existsSync(DATA_DIR)) {
@@ -75,8 +76,7 @@ async function getSubjectInternalMarks(subjectId) {
 
   return students.map((s) => {
     const memKey = `${subjectId}:${s.id}`;
-    const fallbackKey = `${DEEP_LEARNING_ID}:${s.id}`;
-    const rec = memoryStore.get(memKey) || memoryStore.get(fallbackKey) || {};
+    const rec = memoryStore.get(memKey) || {};
 
     const i1 = Number(rec.internal1_marks ?? 0);
     const i2 = Number(rec.internal2_marks ?? 0);

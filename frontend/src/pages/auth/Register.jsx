@@ -68,9 +68,34 @@ export default function Register() {
 
   return (
     <div className="auth-page">
-      <div className="auth-card">
-        <h1 className="auth-title">Create Account</h1>
-        <p className="auth-subtitle">Set up your AI Examination Platform login</p>
+      <div className="auth-container" style={{ maxWidth: 640 }}>
+        {/* Institutional Header with Moving College Title */}
+        <header className="auth-header-bar">
+          <div className="auth-header-brand">
+            <div className="auth-logo-box">
+              <img src="/dsi-logo.png" alt="DSI Logo" className="auth-dsi-logo" />
+            </div>
+          </div>
+
+          <div className="auth-marquee-box">
+            <div className="auth-marquee-track">
+              <span className="marquee-text-item">
+                🏛️ <strong className="marquee-college-highlight">DAYANANDA SAGAR ACADEMY OF TECHNOLOGY AND MANAGEMENT</strong> • Autonomous Institute Affiliated to VTU • AI Examination Portal
+              </span>
+              <span className="marquee-text-item">
+                🏛️ <strong className="marquee-college-highlight">DAYANANDA SAGAR ACADEMY OF TECHNOLOGY AND MANAGEMENT</strong> • Autonomous Institute Affiliated to VTU • AI Examination Portal
+              </span>
+            </div>
+          </div>
+
+          <Link to="/login" className="auth-back-link">
+            ← Login
+          </Link>
+        </header>
+
+        <div className="auth-card">
+          <h1 className="auth-title">Create Account</h1>
+          <p className="auth-subtitle">Set up your AI Examination Platform login</p>
 
         <form onSubmit={handleSubmit}>
           <div className="auth-field">
@@ -140,5 +165,6 @@ export default function Register() {
         </p>
       </div>
     </div>
+  </div>
   )
 }

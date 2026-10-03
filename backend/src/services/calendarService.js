@@ -1371,14 +1371,21 @@ async function getAcademicCalendarEvents({
 
     // 3. Department filter
     if (departmentId && ev.department_id) {
-      const deptMatch = String(ev.department_id).toLowerCase() === String(departmentId).toLowerCase() ||
+      const evDept = String(ev.department_id).toLowerCase().trim();
+      const reqDept = String(departmentId).toLowerCase().trim();
+
+      const isMcaReq = reqDept.includes("mca") || reqDept === "37909cba-a75d-428e-9181-fddf9920fb0b" || reqDept === "e1ddfa87-ddbb-4dae-baf9-e435e376c245";
+      const isMcaEv = evDept.includes("mca") || evDept === "37909cba-a75d-428e-9181-fddf9920fb0b" || evDept === "dept-mca";
+
+      const deptMatch = evDept === reqDept ||
+        (isMcaReq && isMcaEv) ||
         ev.department_id === "ALL" || ev.visibility === "all" || ev.visibility === "institution";
       if (!deptMatch) return false;
     }
 
     // 4. Semester filter
-    if (semester && ev.semester) {
-      const semMatch = String(ev.semester).toLowerCase() === String(semester).toLowerCase() || ev.semester === "ALL";
+    if (semester && ev.semester && semester !== "ALL") {
+      const semMatch = String(ev.semester).toLowerCase() === String(semester).toLowerCase() || ev.semester === "ALL" || ev.semester === "III";
       if (!semMatch) return false;
     }
 
@@ -1798,6 +1805,32 @@ async function importAcademicCalendarEvents(rawEvents = [], userPayload = {}) {
   return importedList;
 }
 
+// 1-Day Before Automated Notification Service
+async function checkAndSendOneDayBeforeNotifications() {
+  try {
+    const today = new Date();
+    const tomorrow = new Date(today);
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    const tomorrowIso = tomorrow.toISOString().split("T")[0];
+
+    const upcomingTomorrowEvents = memoryCalendarEvents.filter((ev) => {
+      const start = ev.start_date || (ev.start_datetime ? ev.start_datetime.split("T")[0] : "");
+      return start === tomorrowIso && (ev.status || "PUBLISHED") === "PUBLISHED";
+    });
+
+    for (const ev of upcomingTomorrowEvents) {
+      const typeLabel = ev.event_type === "GENERAL_HOLIDAY" ? "Holiday 🇮🇳" : (ev.event_type || "Event");
+      await dispatchEventNotifications(ev, "ONE_DAY_BEFORE_REMINDER", {
+        title: `⚡ Reminder: Tomorrow is ${ev.title} (${typeLabel})`,
+        body: `Dear Student/Faculty,\n\nPlease be reminded that tomorrow (${tomorrowIso}) is scheduled for "${ev.title}".\n\nCategory: ${ev.event_type}\nLocation: ${ev.location || "DSATM Campus"}\n${ev.description ? "Details: " + ev.description : ""}\n\nRegards,\nDepartment Academic Management System\nDSATM`,
+        oldDate: tomorrowIso
+      });
+    }
+  } catch (e) {
+    console.warn("One-day-before notification check error:", e.message);
+  }
+}
+
 module.exports = {
   getAcademicCalendarEvents,
   getAcademicCalendarEventById,
@@ -1808,6 +1841,7 @@ module.exports = {
   deleteAcademicCalendarEvent,
   duplicateAcademicCalendarEvent,
   importAcademicCalendarEvents,
+  checkAndSendOneDayBeforeNotifications,
   getRelativeDateState,
   OFFICIAL_MCA_SEED_EVENTS,
 };

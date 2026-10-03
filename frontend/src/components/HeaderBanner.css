@@ -40,7 +40,8 @@
   width: 100%;
   height: 100%;
   border-radius: 50%;
-  object-fit: cover;
+  object-fit: contain;
+  padding: 2px;
   background: #ffffff;
 }
 
@@ -61,39 +62,49 @@
   box-shadow: 0 0 10px rgba(245, 158, 11, 0.2);
 }
 
-.header-center {
+/* Moving Header Marquee Track */
+.header-center-marquee {
   flex: 3;
-  text-align: center;
+  overflow: hidden;
+  position: relative;
+  white-space: nowrap;
+  margin: 0 16px;
+}
+
+.header-marquee-track {
   display: flex;
-  flex-direction: column;
+  gap: 60px;
+  white-space: nowrap;
+  animation: headerMarqueeLoop 26s linear infinite;
+  will-change: transform;
+}
+
+.header-center-marquee:hover .header-marquee-track {
+  animation-play-state: paused;
+}
+
+@keyframes headerMarqueeLoop {
+  0% {
+    transform: translateX(0%);
+  }
+  100% {
+    transform: translateX(-50%);
+  }
+}
+
+.header-marquee-item {
+  font-size: 15.5px;
+  font-weight: 900;
+  color: #ffffff;
+  letter-spacing: 0.8px;
+  text-transform: uppercase;
+  display: inline-flex;
   align-items: center;
-}
-
-.main-header-banner .header-college-title-center {
-  font-size: 17px !important;
-  font-weight: 900 !important;
-  letter-spacing: 1px !important;
-  text-transform: uppercase !important;
-  color: #ffffff !important;
-  background: linear-gradient(135deg, #ffffff 0%, #fef08a 45%, #93c5fd 100%) !important;
-  -webkit-background-clip: text !important;
-  -webkit-text-fill-color: transparent !important;
-  margin: 0 !important;
-  line-height: 1.25 !important;
-  filter: drop-shadow(0 2px 8px rgba(0, 0, 0, 0.8)) !important;
-  opacity: 1 !important;
-  visibility: visible !important;
-}
-
-.main-header-banner .header-system-subtitle-center {
-  font-size: 13.5px !important;
-  font-weight: 800 !important;
-  color: #38bdf8 !important;
-  -webkit-text-fill-color: #38bdf8 !important;
-  margin-top: 3px !important;
-  letter-spacing: 0.6px !important;
-  opacity: 1 !important;
-  visibility: visible !important;
+  gap: 8px;
+  background: linear-gradient(135deg, #ffffff 0%, #fef08a 45%, #93c5fd 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  filter: drop-shadow(0 2px 8px rgba(0, 0, 0, 0.8));
 }
 
 .header-right {
