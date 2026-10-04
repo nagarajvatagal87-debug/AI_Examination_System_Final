@@ -71,8 +71,19 @@ function unenrollStudent(subjectId, studentId) {
   }
 }
 
+function getEnrolledSubjectIdsForStudent(studentId) {
+  const enrolledSubjectIds = [];
+  for (const [subId, setOfStds] of enrollmentStore.entries()) {
+    if (setOfStds.has(studentId)) {
+      enrolledSubjectIds.push(subId);
+    }
+  }
+  return enrolledSubjectIds;
+}
+
 module.exports = {
   getEnrolledStudentIds,
+  getEnrolledSubjectIdsForStudent,
   enrollStudent,
   enrollMultipleStudents,
   unenrollStudent,

@@ -399,9 +399,15 @@ export default function LmsPdfViewerModal({ material, onClose }) {
         uncompleted = [...pool]
       }
       const shuffled = [...uncompleted].sort(() => 0.5 - Math.random())
-      return shuffled.slice(0, count)
+      return shuffled.slice(0, count).map((q) => ({
+        ...q,
+        question: q.question.includes(subjectName) ? q.question : `In ${subjectName} (${docTitle}): ${q.question}`
+      }))
     } catch (e) {
-      return [...pool].sort(() => 0.5 - Math.random()).slice(0, count)
+      return [...pool].sort(() => 0.5 - Math.random()).slice(0, count).map((q) => ({
+        ...q,
+        question: q.question.includes(subjectName) ? q.question : `In ${subjectName} (${docTitle}): ${q.question}`
+      }))
     }
   }
 

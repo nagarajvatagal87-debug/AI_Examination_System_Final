@@ -138,7 +138,7 @@ export default function AcademicReportsTab() {
             </div>
 
             {/* Document Content */}
-            <div className="printable-academic-report" style={{ border: '2px solid #0f172a', padding: 28, borderRadius: 12, background: '#ffffff' }}>
+            <div className="printable-academic-report" style={{ border: '2px solid #0f172a', padding: 24, borderRadius: 12, background: '#ffffff', overflow: 'hidden' }}>
               {/* Header */}
               <div style={{ textAlign: 'center', borderBottom: '2px double #0f172a', paddingBottom: 16, marginBottom: 20 }}>
                 <div style={{ fontSize: 12, fontWeight: 800, color: '#2563eb', textTransform: 'uppercase', letterSpacing: 1 }}>
@@ -152,27 +152,31 @@ export default function AcademicReportsTab() {
                 </div>
               </div>
 
-              {/* Summary Rows */}
-              <table className="results-data-table" style={{ width: '100%', marginBottom: 20 }}>
-                <thead>
-                  <tr>
-                    {activeReportModal.dataRows?.[0] && Object.keys(activeReportModal.dataRows[0]).map((k) => (
-                      <th key={k} style={{ textTransform: 'uppercase', fontSize: 11 }}>{k.replace(/([A-Z])/g, ' $1')}</th>
-                    ))}
-                  </tr>
-                </thead>
-                <tbody>
-                  {activeReportModal.dataRows?.map((row, idx) => (
-                    <tr key={idx}>
-                      {Object.values(row).map((val, vIdx) => (
-                        <td key={vIdx} style={{ fontSize: 13, fontWeight: vIdx === 0 ? 700 : 500 }}>
-                          {String(val)}
-                        </td>
+              {/* Summary Rows Table - Strictly constrained within inner box */}
+              <div style={{ width: '100%', overflowX: 'auto', marginBottom: 20 }}>
+                <table className="results-data-table" style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12 }}>
+                  <thead>
+                    <tr style={{ background: '#f8fafc' }}>
+                      {activeReportModal.dataRows?.[0] && Object.keys(activeReportModal.dataRows[0]).map((k) => (
+                        <th key={k} style={{ textTransform: 'uppercase', fontSize: 10, padding: '8px 6px', letterSpacing: 0.5, whiteSpace: 'nowrap' }}>
+                          {k.replace(/([A-Z])/g, ' $1')}
+                        </th>
                       ))}
                     </tr>
-                  ))}
-                </tbody>
-              </table>
+                  </thead>
+                  <tbody>
+                    {activeReportModal.dataRows?.map((row, idx) => (
+                      <tr key={idx}>
+                        {Object.values(row).map((val, vIdx) => (
+                          <td key={vIdx} style={{ fontSize: 12, fontWeight: vIdx === 0 ? 700 : 500, padding: '10px 6px', wordBreak: 'break-word' }}>
+                            {String(val)}
+                          </td>
+                        ))}
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
 
               {/* Authorization Seal */}
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', paddingTop: 24, borderTop: '1px solid #e2e8f0' }}>

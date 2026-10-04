@@ -26,6 +26,7 @@ import HODMessages from './pages/faculty/HODMessages.jsx'
 import Notifications from './pages/faculty/Notifications.jsx'
 import FacultyAcademicCalendar from './pages/faculty/FacultyAcademicCalendar.jsx'
 import FacultySports from './pages/faculty/FacultySports.jsx'
+import FacultyClubs from './pages/faculty/FacultyClubs.jsx'
 import ProfileSettings from './components/ProfileSettings.jsx'
 
 import ExamDeptLayout from './pages/examdept/ExamDeptLayout.jsx'
@@ -89,6 +90,7 @@ export default function App() {
             <Route path="messages" element={<HODMessages />} />
             <Route path="academic-calendar" element={<FacultyAcademicCalendar />} />
             <Route path="sports" element={<FacultySports />} />
+            <Route path="clubs" element={<FacultyClubs />} />
             <Route path="notifications" element={<Notifications />} />
             <Route path="settings" element={<ProfileSettings />} />
           </Route>

@@ -131,15 +131,21 @@ async function sendEmail(to, subject, body, html = null) {
 
 async function notify(recipientId, type, title, body, relatedExamId = null) {
   let notifType = type || "general";
-  const { error } = await supabaseAdmin.from("notifications").insert({
-    recipient_id: recipientId, type: notifType, title, body, related_exam_id: relatedExamId,
-  });
-  if (error && error.message.includes("enum")) {
-    await supabaseAdmin.from("notifications").insert({
-      recipient_id: recipientId, type: "general", title, body, related_exam_id: relatedExamId,
-    }).catch(() => {});
-  } else if (error) {
-    console.error("Failed to create notification:", error.message);
+  try {
+    const { error } = await supabaseAdmin.from("notifications").insert({
+      recipient_id: recipientId, type: notifType, title, body, related_exam_id: relatedExamId,
+    });
+    if (error && error.message.includes("enum")) {
+      try {
+        await supabaseAdmin.from("notifications").insert({
+          recipient_id: recipientId, type: "general", title, body, related_exam_id: relatedExamId,
+        });
+      } catch (e) {}
+    } else if (error) {
+      console.error("Failed to create notification:", error.message);
+    }
+  } catch (err) {
+    console.warn("Notification insert caught error (handled):", err.message);
   }
 }
 

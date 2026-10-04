@@ -1,0 +1,44 @@
+[
+  {
+    "id": "act-1791109419734-txm4a",
+    "club_id": "club-1791105347822-p45mu",
+    "club_name": "Coding",
+    "department_id": "37909cba-a75d-428e-9181-fddf9920fb0b",
+    "activity_name": "Coding",
+    "activity_type": "Coding Competition",
+    "description": "",
+    "additional_info": "",
+    "schedule": {
+      "start_date": "2026-10-30",
+      "end_date": "2026-10-04",
+      "start_time": "10:00 AM",
+      "end_time": "04:00 PM",
+      "venue": "DSATM Main Seminar Hall"
+    },
+    "registration": {
+      "registration_start": "2026-10-04",
+      "registration_end": "2026-10-04",
+      "max_participants": 50,
+      "participation_type": "INDIVIDUAL",
+      "team_size": 1
+    },
+    "eligibility": {
+      "department_id": "37909cba-a75d-428e-9181-fddf9920fb0b",
+      "program": "ALL",
+      "semester": "ALL",
+      "section": "ALL",
+      "academic_year": "2026-2027"
+    },
+    "rules": {
+      "instructions": "Follow standard college technical conduct.",
+      "required_materials": "Laptop & DSATM Student Identity Card.",
+      "evaluation_criteria": "Problem Solving, Code Quality & Speed."
+    },
+    "status": "PUBLISHED",
+    "created_by": "cc568ab9-9840-43e9-b581-9dcacea491a2",
+    "created_at": "2026-10-04T10:23:39.735Z",
+    "updated_at": "2026-10-04T10:24:15.520Z",
+    "published_by": "cc568ab9-9840-43e9-b581-9dcacea491a2",
+    "published_at": "2026-10-04T10:24:15.520Z"
+  }
+]

@@ -47,6 +47,7 @@ const NAV_ITEMS = [
   { to: '/faculty/examinations', label: 'Examinations', icon: '📝' },
   { to: '/faculty/academic-calendar', label: 'Academic Calendar', icon: '📅' },
   { to: '/faculty/sports', label: 'Sports Events', icon: '🏆' },
+  { to: '/faculty/clubs', label: 'Clubs & Activities', icon: '🎓' },
   { to: '/faculty/evaluation', label: 'AI Evaluation', icon: '🤖' },
   { to: '/faculty/results', label: 'Results', icon: '📊' },
   { to: '/faculty/analytics', label: 'Analytics', icon: '📈' },

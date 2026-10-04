@@ -8,6 +8,7 @@ import Notifications from '../faculty/Notifications.jsx'
 import HodPublicPublishSection from './HodPublicPublishSection.jsx'
 import AcademicCalendarView from '../../components/AcademicCalendar/AcademicCalendarView.jsx'
 import SportsManagementView from '../../components/SportsManagement/SportsManagementView.jsx'
+import ClubsManagementView from '../../components/ClubsManagement/ClubsManagementView.jsx'
 import '../student/StudentDashboard.css'
 import './HodDashboard.css'
 
@@ -15,6 +16,7 @@ const SECTIONS = [
   { key: 'overview', label: 'Dashboard', icon: '📊' },
   { key: 'students', label: 'Department Students', icon: '🎓' },
   { key: 'faculty', label: 'Manage Faculty', icon: '👩‍🏫' },
+  { key: 'department_clubs', label: 'Clubs & Activities', icon: '🎪' },
   { key: 'public_publish', label: 'Public Info & Toppers', icon: '📢' },
   { key: 'internals', label: '50m Internal Approval', icon: '📋' },
   { key: 'internal_analytics', label: 'Internal Analytics', icon: '📉' },
@@ -102,6 +104,7 @@ export default function HodDashboard() {
           {!loading && !error && activeSection === 'timetable' && <HodExamTimetableSection overview={overview} />}
           {!loading && !error && activeSection === 'academic_calendar' && <HodAcademicCalendarSection />}
           {!loading && !error && activeSection === 'department_sports' && <SportsManagementView role="hod" />}
+          {!loading && !error && activeSection === 'department_clubs' && <ClubsManagementView role="hod" />}
           {!loading && !error && activeSection === 'mainexam' && <MainExamAnalyticsSection />}
           {!loading && !error && activeSection === 'attendance' && <HodAttendanceSection />}
           {!loading && !error && activeSection === 'results' && <ResultsSection />}

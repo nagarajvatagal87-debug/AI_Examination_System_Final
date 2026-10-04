@@ -115,9 +115,23 @@ export default function MySubjects() {
     setStudentMsg('')
     setSelectedCandidateIds([])
 
-    api.get(`/faculty/subjects/${subject.id}/enrolled-students`)
-      .then((res) => setStudentsList(res.data || []))
-      .catch(() => setStudentsList([]))
+    Promise.all([
+      api.get(`/faculty/subjects/${subject.id}/enrolled-students`).catch(() => ({ data: [] })),
+      api.get(`/faculty/attendance?subjectId=${subject.id}`).catch(() => ({ data: [] }))
+    ]).then(([stRes, attRes]) => {
+      const students = stRes.data || []
+      const attList = attRes.data || []
+      const attMap = new Map(attList.map((a) => [a.student_id, a]))
+      const merged = students.map((s) => {
+        const att = attMap.get(s.id)
+        return {
+          ...s,
+          percentage: att?.hasAttendance ? att.percentage : undefined,
+          hasAttendance: att?.hasAttendance || false
+        }
+      })
+      setStudentsList(merged)
+    }).catch(() => setStudentsList([]))
 
     api.get(`/faculty/subjects/${subject.id}/eligible-students`)
       .then((res) => setCandidateList(res.data || []))
@@ -932,8 +946,8 @@ export default function MySubjects() {
                   <tr key={st.id} style={{ borderBottom: '1px solid #e2e8f0' }}>
                     <td style={{ padding: 10, fontWeight: 700 }}>{st.full_name}</td>
                     <td style={{ padding: 10, color: '#2563eb', fontWeight: 700 }}>{st.registration_no || '—'}</td>
-                    <td style={{ padding: 10, fontWeight: 800, color: (st.percentage || 90) >= 75 ? '#059669' : '#dc2626' }}>
-                      {st.percentage !== undefined ? `${st.percentage}%` : '90%'}
+                    <td style={{ padding: 10, fontWeight: 800, color: st.hasAttendance ? (st.percentage >= 75 ? '#059669' : '#dc2626') : '#64748b' }}>
+                      {st.hasAttendance && st.percentage !== undefined ? `${st.percentage}%` : 'Not Marked'}
                     </td>
                     <td style={{ padding: 10 }}>
                       {st.hasParentContact || st.parentContact ? (

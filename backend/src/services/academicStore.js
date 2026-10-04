@@ -148,8 +148,15 @@ function isCondoned(studentId) {
 async function getStudentAttendanceSummary(studentId) {
   let subjects = [];
   try {
-    const { data } = await supabaseAdmin.from("subjects").select("id, name, code");
-    subjects = data || [];
+    const { getEnrolledSubjectIdsForStudent } = require("./enrollmentStore");
+    const enrolledSubjIds = getEnrolledSubjectIdsForStudent(studentId);
+    if (enrolledSubjIds.length > 0) {
+      const { data } = await supabaseAdmin.from("subjects").select("id, name, code").in("id", enrolledSubjIds);
+      subjects = data || [];
+    } else {
+      const { data } = await supabaseAdmin.from("subjects").select("id, name, code");
+      subjects = data || [];
+    }
   } catch (e) {}
 
   let grandTotalClasses = 0;

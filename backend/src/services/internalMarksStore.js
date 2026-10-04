@@ -213,7 +213,15 @@ async function getStudentInternalMarks(studentId) {
     });
   });
 
-  return Array.from(map.values());
+  const { getEnrolledSubjectIdsForStudent } = require("./enrollmentStore");
+  const enrolledSubjIds = getEnrolledSubjectIdsForStudent(studentId);
+
+  const allRows = Array.from(map.values());
+  if (enrolledSubjIds.length > 0) {
+    return allRows.filter((r) => enrolledSubjIds.includes(r.subject_id));
+  }
+
+  return allRows;
 }
 
 module.exports = {

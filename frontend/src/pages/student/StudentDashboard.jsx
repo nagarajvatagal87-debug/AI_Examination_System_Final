@@ -9,6 +9,7 @@ import AcademicProfileTab from './AcademicProfileTab.jsx'
 import AcademicReportsTab from './AcademicReportsTab.jsx'
 import AcademicCalendarView from '../../components/AcademicCalendar/AcademicCalendarView.jsx'
 import SportsManagementView from '../../components/SportsManagement/SportsManagementView.jsx'
+import ClubsManagementView from '../../components/ClubsManagement/ClubsManagementView.jsx'
 import './StudentDashboard.css'
 
 function SafeMarkdown({ content }) {
@@ -440,6 +441,12 @@ export default function StudentDashboard() {
               onClick={() => setActiveTab('sports')}
             >
               <span className="nav-icon">🏆</span> Sports Module
+            </button>
+            <button
+              className={`nav-btn ${activeTab === 'clubs' ? 'active' : ''}`}
+              onClick={() => setActiveTab('clubs')}
+            >
+              <span className="nav-icon">🎓</span> Clubs & Activities
             </button>
             <button
               className={`nav-btn ${activeTab === 'bookmarks' ? 'active' : ''}`}
@@ -927,13 +934,8 @@ export default function StudentDashboard() {
                 ) : (
                   <div className="materials-grid-list">
                     {subjects.map((sub) => {
-                      const targetMat = safeDbMaterials.find((m) => String(m.subject_id) === String(sub.id)) || {
-                        id: `mat-${sub.id}`,
-                        title: `${sub.fullName} Full Syllabus Notes.pdf`,
-                        file_name: `${sub.code}_Notes.pdf`,
-                        subject_id: sub.id,
-                        subjects: { name: sub.fullName, code: sub.code }
-                      }
+                      const realMat = safeDbMaterials.find((m) => String(m.subject_id) === String(sub.id))
+                      const hasNotes = Boolean(realMat)
 
                       const subAttempts = practiceScores.filter(sc =>
                         sc.subject === sub.fullName ||
@@ -942,18 +944,23 @@ export default function StudentDashboard() {
                       )
                       const latestAttempt = subAttempts[0]
                       const pctVal = latestAttempt ? latestAttempt.percentage : (sub.progress || 0)
-                      const barColor = sub.color || (pctVal >= 75 ? '#10b981' : '#2563eb')
+                      const barColor = hasNotes ? (sub.color || (pctVal >= 75 ? '#10b981' : '#2563eb')) : '#94a3b8'
 
                       return (
-                        <div key={sub.id} className="material-item-card" style={{ display: 'flex', flexDirection: 'column', justifyContent: 'space-between', padding: 18 }}>
+                        <div key={sub.id} className="material-item-card" style={{ display: 'flex', flexDirection: 'column', justifyContent: 'space-between', padding: 18, opacity: hasNotes ? 1 : 0.85, background: hasNotes ? '#ffffff' : '#f8fafc' }}>
                           <div>
                             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                              <div className="mat-tag">{sub.code} · Quiz Practice</div>
-                              <span style={{ fontSize: 13, fontWeight: 900, color: barColor, background: '#eff6ff', padding: '2px 8px', borderRadius: 6, border: `1px solid ${barColor}40` }}>
-                                {latestAttempt ? `${pctVal}%` : `${pctVal}% Progress`}
+                              <div className="mat-tag" style={{ background: hasNotes ? '#ecfdf5' : '#fef2f2', color: hasNotes ? '#065f46' : '#991b1b', border: hasNotes ? '1px solid #a7f3d0' : '1px solid #fca5a5', fontWeight: 800 }}>
+                                {sub.code} · {hasNotes ? '✓ Notes Uploaded' : '⚠️ Awaiting Notes'}
+                              </div>
+                              <span style={{ fontSize: 12, fontWeight: 800, color: barColor, background: hasNotes ? '#eff6ff' : '#f1f5f9', padding: '2px 8px', borderRadius: 6, border: `1px solid ${barColor}30` }}>
+                                {latestAttempt ? `${pctVal}%` : hasNotes ? `${pctVal}% Progress` : 'Notes Pending'}
                               </span>
                             </div>
-                            <h4 className="mat-title" style={{ margin: '8px 0 12px 0' }}>{sub.fullName} MCQ Practice Test</h4>
+                            <h4 className="mat-title" style={{ margin: '10px 0 4px 0' }}>{sub.fullName} MCQ Practice Test</h4>
+                            <p style={{ fontSize: 12, color: hasNotes ? '#059669' : '#64748b', margin: '0 0 12px 0', fontWeight: 600 }}>
+                              {hasNotes ? `📄 Notes: ${realMat.title || realMat.file_name || 'Course PDF'}` : '⚠️ Faculty has not uploaded syllabus course notes for this subject yet.'}
+                            </p>
                             
                             {/* Practice Progress Bar */}
                             <div style={{ margin: '8px 0 14px 0' }}>
@@ -967,9 +974,15 @@ export default function StudentDashboard() {
                             </div>
                           </div>
 
-                          <button className="open-pdf-btn" onClick={() => handleOpenAiAssistant(targetMat, 'practice-tests')} style={{ width: '100%', marginTop: 4 }}>
-                            ✍️ Start Practice
-                          </button>
+                          {hasNotes ? (
+                            <button className="open-pdf-btn" onClick={() => handleOpenAiAssistant(realMat, 'practice-tests')} style={{ width: '100%', marginTop: 4 }}>
+                              ✍️ Start Practice
+                            </button>
+                          ) : (
+                            <button disabled className="open-pdf-btn" style={{ width: '100%', marginTop: 4, background: '#f1f5f9', color: '#94a3b8', border: '1px solid #cbd5e1', cursor: 'not-allowed', opacity: 0.85, boxShadow: 'none' }}>
+                              ⏳ Awaiting Faculty Notes Upload
+                            </button>
+                          )}
                         </div>
                       )
                     })}
@@ -1229,6 +1242,11 @@ export default function StudentDashboard() {
             {/* Tab 14: Sports Module */}
             {activeTab === 'sports' && (
               <SportsManagementView role="student" />
+            )}
+
+            {/* Tab 15: Clubs & Technical Activities */}
+            {activeTab === 'clubs' && (
+              <ClubsManagementView role="student" />
             )}
 
             {/* Tab 14: Bookmarks */}

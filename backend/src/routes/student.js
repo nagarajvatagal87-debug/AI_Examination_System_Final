@@ -50,26 +50,30 @@ router.get("/dashboard", async (req, res) => {
   }
 });
 
-// GET /api/student/subjects -> subjects in the student's enrollment/department
+// GET /api/student/subjects -> ONLY subjects the student is enrolled in
 router.get("/subjects", async (req, res) => {
   try {
     const studentId = req.user.id;
+    const { getEnrolledSubjectIdsForStudent } = require("../services/enrollmentStore");
     const { data: profile } = await supabaseAdmin
       .from("profiles")
       .select("department_id")
       .eq("id", studentId)
       .maybeSingle();
 
-    let studentSubjIds = [];
-    try {
-      const { data: ss } = await supabaseAdmin
-        .from("student_subjects")
-        .select("subject_id")
-        .eq("student_id", studentId);
-      if (ss && ss.length > 0) {
-        studentSubjIds = ss.map((s) => s.subject_id);
-      }
-    } catch (e) {}
+    let studentSubjIds = getEnrolledSubjectIdsForStudent(studentId);
+
+    if (studentSubjIds.length === 0) {
+      try {
+        const { data: ss } = await supabaseAdmin
+          .from("student_subjects")
+          .select("subject_id")
+          .eq("student_id", studentId);
+        if (ss && ss.length > 0) {
+          studentSubjIds = ss.map((s) => s.subject_id);
+        }
+      } catch (e) {}
+    }
 
     let subjects = [];
     if (studentSubjIds.length > 0) {
@@ -79,9 +83,7 @@ router.get("/subjects", async (req, res) => {
         .in("id", studentSubjIds)
         .order("name");
       subjects = data || [];
-    }
-
-    if (subjects.length === 0 && profile?.department_id) {
+    } else if (profile?.department_id) {
       const { data } = await supabaseAdmin
         .from("subjects")
         .select("id, name, code, department_id, faculty_id, profiles:faculty_id(full_name, email)")
@@ -90,23 +92,19 @@ router.get("/subjects", async (req, res) => {
       subjects = data || [];
     }
 
-    if (subjects.length === 0) {
-      const { data: allSubjects } = await supabaseAdmin
-        .from("subjects")
-        .select("id, name, code, department_id, faculty_id, profiles:faculty_id(full_name, email)")
-        .order("name");
-      subjects = allSubjects || [];
-    }
-
     res.json(subjects);
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
 });
 
-// GET /api/student/materials -> ONLY published course materials for student's subjects
+// GET /api/student/materials -> ONLY published course materials for student's enrolled subjects
 router.get("/materials", async (req, res) => {
   try {
+    const studentId = req.user.id;
+    const { getEnrolledSubjectIdsForStudent } = require("../services/enrollmentStore");
+    const enrolledSubjIds = getEnrolledSubjectIdsForStudent(studentId);
+
     const { subjectId } = req.query;
     let query = supabaseAdmin
       .from("course_materials")
@@ -115,6 +113,8 @@ router.get("/materials", async (req, res) => {
 
     if (subjectId) {
       query = query.eq("subject_id", subjectId);
+    } else if (enrolledSubjIds.length > 0) {
+      query = query.in("subject_id", enrolledSubjIds);
     }
 
     const { data, error } = await query;
@@ -129,46 +129,32 @@ router.get("/materials", async (req, res) => {
   }
 });
 
-// GET /api/student/examinations -> scheduled examinations from DB applicable to student's department/semester
+// GET /api/student/examinations -> scheduled examinations for student's enrolled subjects
 router.get("/examinations", async (req, res) => {
   try {
     const studentId = req.user.id;
-    const { data: profile } = await supabaseAdmin
-      .from("profiles")
-      .select("department_id, semester")
-      .eq("id", studentId)
-      .maybeSingle();
+    const { getEnrolledSubjectIdsForStudent } = require("../services/enrollmentStore");
+    const enrolledSubjIds = getEnrolledSubjectIdsForStudent(studentId);
 
-    const deptId = profile?.department_id;
+    let exams = [];
+    try {
+      let query = supabaseAdmin
+        .from("exams")
+        .select("id, title, type, date, subject_id, subjects(name, code, department_id)")
+        .order("date", { ascending: true });
 
-    // Fetch subjects in student's department
-    let subjectIds = [];
-    if (deptId) {
-      const { data: deptSubjects } = await supabaseAdmin
-        .from("subjects")
-        .select("id")
-        .eq("department_id", deptId);
-      subjectIds = (deptSubjects || []).map((s) => s.id);
-    }
+      if (enrolledSubjIds.length > 0) {
+        query = query.in("subject_id", enrolledSubjIds);
+      }
 
-    let query = supabaseAdmin
-      .from("exams")
-      .select("id, title, type, date, time, total_marks, subject_id, status, subjects(name, code, department_id)")
-      .order("date", { ascending: true });
+      const { data, error } = await query;
+      if (!error && data) exams = data;
+    } catch (e) {}
 
-    if (subjectIds.length > 0) {
-      query = query.in("subject_id", subjectIds);
-    }
-
-    const { data: exams, error } = await query;
-    if (error) throw error;
-
-    // Only show published/approved exams to students
     const visibleExams = (exams || []).filter((e) => !e.status || e.status === "PUBLISHED" || e.status === "APPROVED" || e.status === "published" || e.status === "approved");
-
     res.json(visibleExams);
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    res.json([]);
   }
 });
 
@@ -419,104 +405,158 @@ router.get("/academic-profile", async (req, res) => {
     const studentId = req.user.id;
 
     // 1. Profile details
-    const { data: profile } = await supabaseAdmin
-      .from("profiles")
-      .select("id, full_name, email, registration_no, semester, section, department_id, avatar_url, created_at, departments(name)")
-      .eq("id", studentId)
-      .maybeSingle();
+    let profile = null;
+    try {
+      const { data } = await supabaseAdmin
+        .from("profiles")
+        .select("id, full_name, email, registration_no, semester, section, department_id, avatar_url, created_at")
+        .eq("id", studentId)
+        .maybeSingle();
+      profile = data;
+    } catch (e) {}
+
+    // Department name lookup
+    let deptName = "Computer Applications";
+    if (profile?.department_id) {
+      try {
+        const { data: d } = await supabaseAdmin
+          .from("departments")
+          .select("name")
+          .eq("id", profile.department_id)
+          .maybeSingle();
+        if (d?.name) deptName = d.name;
+      } catch (e) {}
+    }
 
     // 2. Attendance Summary
-    const { getStudentAttendanceSummary } = require("../services/academicStore.js");
-    const attSummary = await getStudentAttendanceSummary(studentId);
+    let attSummary = { hasAnyAttendance: false, overallPercentage: 0, subjectBreakdown: [] };
+    try {
+      const { getStudentAttendanceSummary } = require("../services/academicStore.js");
+      attSummary = (await getStudentAttendanceSummary(studentId)) || attSummary;
+    } catch (e) {}
 
     // 3. Internal Marks
-    const { getStudentInternalMarks } = require("../services/internalMarksStore");
-    const internalMarks = await getStudentInternalMarks(studentId);
+    let internalMarks = [];
+    try {
+      const { getStudentInternalMarks } = require("../services/internalMarksStore");
+      internalMarks = (await getStudentInternalMarks(studentId)) || [];
+    } catch (e) {}
 
     // 4. Main Results
-    const { data: mainResults } = await supabaseAdmin
-      .from("main_results")
-      .select("id, total_marks, max_marks, passed, published_at, exams(title, subject_id, subjects(name, code))")
-      .eq("student_id", studentId)
-      .eq("published", true);
+    let mainResults = [];
+    try {
+      const { data } = await supabaseAdmin
+        .from("main_results")
+        .select("id, total_marks, max_marks, passed, published_at, exams(title, subject_id, subjects(name, code))")
+        .eq("student_id", studentId)
+        .eq("published", true);
+      mainResults = data || [];
+    } catch (e) {}
 
-    // 5. Enrolled Subjects - Fallback to all subjects if department_id not set
+    // 5. Enrolled Subjects
     let subjects = [];
-    if (profile?.department_id) {
-      const { data } = await supabaseAdmin
-        .from("subjects")
-        .select("id, name, code, faculty_id, profiles:faculty_id(full_name)")
-        .eq("department_id", profile.department_id);
-      subjects = data || [];
-    }
+    try {
+      const { getEnrolledSubjectIdsForStudent } = require("../services/enrollmentStore");
+      const enrolledSubjIds = getEnrolledSubjectIdsForStudent(studentId);
+      if (enrolledSubjIds.length > 0) {
+        const { data } = await supabaseAdmin
+          .from("subjects")
+          .select("id, name, code, faculty_id")
+          .in("id", enrolledSubjIds);
+        subjects = data || [];
+      } else if (profile?.department_id) {
+        const { data } = await supabaseAdmin
+          .from("subjects")
+          .select("id, name, code, faculty_id")
+          .eq("department_id", profile.department_id);
+        subjects = data || [];
+      }
+    } catch (e) {}
 
-    if (!subjects || subjects.length === 0) {
-      const { data } = await supabaseAdmin
-        .from("subjects")
-        .select("id, name, code, faculty_id, profiles:faculty_id(full_name)");
-      subjects = data || [];
-    }
-
-    // Resolve USN / Reg No
-    let regNo = profile?.registration_no || req.user?.registration_no || req.user?.registrationNo;
-    if (!regNo || regNo === "USN Pending" || regNo === "N/A" || regNo.trim() === "") {
-      regNo = "1DS23MCA087";
-    }
-
-    // Resolve Email
-    let studentEmail = profile?.email || req.user?.email;
-    if (!studentEmail || studentEmail.trim() === "") {
-      studentEmail = "nagaraj.mca@dsatm.edu.in";
-    }
+    // Resolve USN / Reg No & Email
+    const resolvedRegNo = profile?.registration_no || req.user?.registration_no || req.user?.registrationNo || "USN Pending";
+    const resolvedEmail = profile?.email || req.user?.email || "Pending Email";
 
     // Build subject summary breakdown
+    let publishedInternalsCount = 0;
+    let publishedMainExamsCount = 0;
+
     const subjectSummary = subjects.map((sub, idx) => {
       const attRec = (attSummary.subjectBreakdown || []).find((a) => a.subjectId === sub.id || a.subjectName === sub.name);
       const intRec = (internalMarks || []).find((i) => String(i.subject_id) === String(sub.id) || i.subject_name === sub.name || (i.subjects && i.subjects.name === sub.name));
       const mainRec = (mainResults || []).find((m) => m.exams?.subject_id === sub.id);
 
-      const intTot = intRec ? (intRec.total_internal_marks ?? ((intRec.internal1_marks || 0) + (intRec.internal2_marks || 0) + (intRec.assignment_marks || 0) + (intRec.project_marks || 0))) : (42 + (idx % 6));
+      const hasInt = Boolean(intRec && (intRec.total_internal_marks !== null || intRec.internal1_marks !== undefined));
+      if (hasInt) publishedInternalsCount++;
+
+      const intTot = hasInt ? (intRec.total_internal_marks ?? ((intRec.internal1_marks || 0) + (intRec.internal2_marks || 0) + (intRec.assignment_marks || 0) + (intRec.project_marks || 0))) : null;
+
+      const hasMain = Boolean(mainRec);
+      if (hasMain) publishedMainExamsCount++;
 
       const attDisplay = attRec?.hasAttendance ? `${attRec.percentage}%` : "Not Marked";
       const attPctVal = attRec?.hasAttendance ? attRec.percentage : 100;
+
+      let acadStatus = "REGULAR / ELIGIBLE";
+      if (hasInt && intTot < 25) {
+        acadStatus = "DETAINED (<25 Marks)";
+      } else if (attRec?.hasAttendance && attPctVal < 75) {
+        acadStatus = "SHORTAGE (<75%)";
+      } else if (!hasInt && !attRec?.hasAttendance) {
+        acadStatus = "REGULAR";
+      }
 
       return {
         subjectId: sub.id,
         subjectName: sub.name,
         subjectCode: sub.code || `MMC30${idx + 1}`,
-        facultyName: sub.profiles?.full_name || (idx % 2 === 0 ? "Dr. Ameer Nagarasi" : "Prof. Prajwal Kumar"),
+        facultyName: "Faculty Assigned",
         attendancePercentage: attDisplay,
-        internalMarks: `${intTot} / 50`,
-        mainExamStatus: mainRec ? (mainRec.passed ? `PASSED (${mainRec.total_marks}/${mainRec.max_marks})` : `FAILED (${mainRec.total_marks}/${mainRec.max_marks})`) : "PASSED (86/100)",
-        academicStatus: intTot < 25 ? "DETAINED (<25 Marks)" : (attRec?.hasAttendance && attPctVal < 75) ? "SHORTAGE (<75%)" : "REGULAR / ELIGIBLE",
+        hasInternalMarks: hasInt,
+        internalMarks: hasInt ? `${intTot} / 50` : "Not Published",
+        mainExamStatus: hasMain ? (mainRec.passed ? `PASSED (${mainRec.total_marks}/${mainRec.max_marks})` : `FAILED (${mainRec.total_marks}/${mainRec.max_marks})`) : "Not Published",
+        academicStatus: acadStatus,
       };
     });
 
     const overallAttPct = attSummary.hasAnyAttendance ? `${attSummary.overallPercentage}%` : "Not Marked";
 
     res.json({
-      studentName: profile?.full_name || req.user.full_name || "Nagaraj",
-      registrationNo: regNo,
-      email: studentEmail,
+      studentName: profile?.full_name || req.user?.full_name || "Student",
+      registrationNo: resolvedRegNo,
+      email: resolvedEmail,
       program: "Master of Computer Applications (MCA)",
-      departmentName: profile?.departments?.name || "Computer Applications",
+      departmentName: deptName,
       semester: profile?.semester || "3rd Sem",
-      section: profile?.section || "Section A",
+      section: profile?.section ? (profile.section.toLowerCase().includes("section") ? profile.section : `Section ${profile.section}`) : "Section A",
       academicYear: "2026-2027",
       enrollmentStatus: "ACTIVE / REGULAR",
-      avatarUrl: profile?.avatar_url,
+      avatarUrl: profile?.avatar_url || null,
       summary: {
         enrolledSubjectsCount: subjects.length,
         overallAttendance: overallAttPct,
         attendanceEligible: attSummary.hasAnyAttendance ? attSummary.overallPercentage >= 75 : true,
-        internalEvaluationsCount: Math.max(subjects.length, (internalMarks || []).length),
-        mainExamPublishedCount: Math.max(subjects.length, (mainResults || []).length),
+        internalEvaluationsCount: publishedInternalsCount,
+        mainExamPublishedCount: publishedMainExamsCount,
         backlogsCount: (mainResults || []).filter((m) => !m.passed).length,
       },
       subjectSummary,
     });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    res.json({
+      studentName: req.user?.full_name || "Student",
+      registrationNo: req.user?.registration_no || "USN Pending",
+      email: req.user?.email || "Pending Email",
+      program: "Master of Computer Applications (MCA)",
+      departmentName: "Computer Applications",
+      semester: "3rd Sem",
+      section: "Section A",
+      academicYear: "2026-2027",
+      enrollmentStatus: "ACTIVE / REGULAR",
+      avatarUrl: null,
+      summary: { enrolledSubjectsCount: 0, overallAttendance: "Not Marked", attendanceEligible: true, internalEvaluationsCount: 0, mainExamPublishedCount: 0, backlogsCount: 0 },
+      subjectSummary: [],
+    });
   }
 });
 

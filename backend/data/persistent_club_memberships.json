@@ -1,0 +1,22 @@
+[
+  {
+    "id": "mem-1791105444861-m60qx",
+    "club_id": "club-1791105347822-p45mu",
+    "student_id": "85947c37-dfc9-442b-9918-72b4124492ff",
+    "student_name": "Nagaraj",
+    "student_usn": "USN Pending",
+    "academic_year": "2026-2027",
+    "status": "ACTIVE",
+    "joined_at": "2026-10-04T09:17:24.861Z"
+  },
+  {
+    "id": "mem-1791104085161-12lrx",
+    "club_id": "club-1791103849551-mkhqw",
+    "student_id": "85947c37-dfc9-442b-9918-72b4124492ff",
+    "student_name": "Nagaraj",
+    "student_usn": "USN Pending",
+    "academic_year": "2026-2027",
+    "status": "ACTIVE",
+    "joined_at": "2026-10-04T08:54:45.161Z"
+  }
+]
