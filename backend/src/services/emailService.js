@@ -15,10 +15,14 @@ module.exports = {
   sendInternalResultEmail: async (toEmail, studentName, examTitle, score, maxScore, subjectName = '') => {
     const courseLabel = subjectName || 'Course Subject';
     const isPass = Number(score) >= (Number(maxScore) * 0.4);
+    const dsiLogoUrl = `${process.env.FRONTEND_ORIGIN || 'http://localhost:5173'}/dsi-logo.png`;
     const html = `
       <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f1f5f9; padding: 30px 10px;">
         <div style="max-width: 600px; margin: 0 auto; background: #ffffff; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.08); border: 1px solid #e2e8f0;">
           <div style="background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%); padding: 24px; text-align: center; color: #ffffff;">
+            <div style="margin-bottom: 10px;">
+              <img src="${dsiLogoUrl}" alt="DSI Logo" style="height: 54px; width: auto; max-width: 180px; object-fit: contain; display: inline-block; filter: drop-shadow(0 2px 6px rgba(0,0,0,0.3));" />
+            </div>
             <h2 style="margin: 0; font-size: 18px; font-weight: 700; letter-spacing: 0.5px;">DAYANANDA SAGAR ACADEMY OF TECHNOLOGY & MANAGEMENT</h2>
             <p style="margin: 4px 0 0 0; font-size: 12px; opacity: 0.9;">Autonomous Institute under VTU | Department of MCA</p>
           </div>

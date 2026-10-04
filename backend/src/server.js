@@ -24,6 +24,7 @@ const profileRoutes = require("./routes/profile.js");
 const academicCalendarRoutes = require("./routes/academicCalendar.js");
 const sportsRoutes = require("./routes/sports.js");
 const clubRoutes = require("./routes/clubs.js");
+const verificationRoutes = require("./routes/verification.js");
 const { seedDepartments } = require("./services/departmentSeeder.js");
 
 const app = express();
@@ -34,6 +35,7 @@ app.use(morgan("dev"));
 
 app.get("/health", (req, res) => res.json({ status: "ok", service: "ai-examination-backend" }));
 
+app.use("/api/verification", verificationRoutes);
 app.use("/api/clubs", clubRoutes);
 app.use("/api/sports", sportsRoutes);
 app.use("/api/academic-calendar", academicCalendarRoutes);

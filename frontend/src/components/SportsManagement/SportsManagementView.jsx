@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import api from '../../api/client.js';
+import DocumentQrBadge from '../DocumentQrBadge.jsx';
 import './SportsManagementView.css';
 
 export default function SportsManagementView({ role = 'student' }) {
@@ -643,8 +644,15 @@ export default function SportsManagementView({ role = 'student' }) {
                       <p style={{ margin: 0, fontSize: 13, color: '#475569' }}>
                         {ach.description}
                       </p>
-                      <div style={{ marginTop: 12, fontSize: 11, color: '#94a3b8', borderTop: '1px solid #f1f5f9', paddingTop: 6 }}>
-                        Awarded to: <strong>{ach.student_name}</strong> ({ach.department_id})
+                      <div style={{ marginTop: 12, fontSize: 11, color: '#94a3b8', borderTop: '1px solid #f1f5f9', paddingTop: 6, display: 'flex', flexDirection: 'column', gap: 8 }}>
+                        <div>Awarded to: <strong>{ach.student_name}</strong> ({ach.department_id})</div>
+                        <DocumentQrBadge
+                          documentId={ach.id}
+                          documentType="SPORTS_CERTIFICATE"
+                          documentTitle={ach.achievement_title || "Sports Excellence Certificate"}
+                          studentName={ach.student_name}
+                          metadata={{ position: ach.position, category: ach.category }}
+                        />
                       </div>
                     </div>
                   ))}

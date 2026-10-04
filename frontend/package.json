@@ -16,6 +16,7 @@
     "lucide-react": "^1.45.0",
     "morgan": "^1.12.1",
     "nodemailer": "^10.0.6",
+    "qrcode": "^1.5.4",
     "react": "^19.2.8",
     "react-bootstrap": "^2.10.10",
     "react-dom": "^19.2.8",

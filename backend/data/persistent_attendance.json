@@ -117,7 +117,7 @@
     "percentage": 0,
     "isEligible": false,
     "status": "NOT_ELIGIBLE_ATTENDANCE_SHORTAGE",
-    "updatedAt": "2026-10-04T05:26:51.638Z"
+    "updatedAt": "2026-10-04T18:28:17.904Z"
   },
   "f1c125fa-ca62-44a8-9e88-1c96c0fa9358:2aaf1dd3-7b24-45a0-b432-ed0b5266816b": {
     "subjectId": "f1c125fa-ca62-44a8-9e88-1c96c0fa9358",
@@ -127,7 +127,7 @@
     "percentage": 0,
     "isEligible": false,
     "status": "NOT_ELIGIBLE_ATTENDANCE_SHORTAGE",
-    "updatedAt": "2026-10-04T05:26:51.638Z"
+    "updatedAt": "2026-10-04T18:28:17.904Z"
   },
   "f1c125fa-ca62-44a8-9e88-1c96c0fa9358:00256413-ddb4-4582-bd05-cb35f6333e85": {
     "subjectId": "f1c125fa-ca62-44a8-9e88-1c96c0fa9358",
@@ -137,7 +137,7 @@
     "percentage": 0,
     "isEligible": false,
     "status": "NOT_ELIGIBLE_ATTENDANCE_SHORTAGE",
-    "updatedAt": "2026-10-04T05:26:51.638Z"
+    "updatedAt": "2026-10-04T18:28:17.904Z"
   },
   "f1c125fa-ca62-44a8-9e88-1c96c0fa9358:35decdb3-3b0c-49de-8ea3-af777faedf77": {
     "subjectId": "f1c125fa-ca62-44a8-9e88-1c96c0fa9358",
@@ -147,17 +147,17 @@
     "percentage": 0,
     "isEligible": false,
     "status": "NOT_ELIGIBLE_ATTENDANCE_SHORTAGE",
-    "updatedAt": "2026-10-04T05:26:51.638Z"
+    "updatedAt": "2026-10-04T18:28:17.904Z"
   },
   "f1c125fa-ca62-44a8-9e88-1c96c0fa9358:85947c37-dfc9-442b-9918-72b4124492ff": {
     "subjectId": "f1c125fa-ca62-44a8-9e88-1c96c0fa9358",
     "studentId": "85947c37-dfc9-442b-9918-72b4124492ff",
-    "totalClasses": 1,
-    "attendedClasses": 0,
-    "percentage": 0,
+    "totalClasses": 3,
+    "attendedClasses": 2,
+    "percentage": 67,
     "isEligible": false,
     "status": "NOT_ELIGIBLE_ATTENDANCE_SHORTAGE",
-    "updatedAt": "2026-10-04T05:26:51.638Z"
+    "updatedAt": "2026-10-04T18:28:17.904Z"
   },
   "f1c125fa-ca62-44a8-9e88-1c96c0fa9358:6f47f01e-41a4-4728-be8b-f7f733a9e69f": {
     "subjectId": "f1c125fa-ca62-44a8-9e88-1c96c0fa9358",
@@ -167,7 +167,7 @@
     "percentage": 0,
     "isEligible": false,
     "status": "NOT_ELIGIBLE_ATTENDANCE_SHORTAGE",
-    "updatedAt": "2026-10-04T05:26:51.638Z"
+    "updatedAt": "2026-10-04T18:28:17.904Z"
   },
   "f1c125fa-ca62-44a8-9e88-1c96c0fa9358:f9a2ed7e-b209-4ae1-a090-2771f46759ca": {
     "subjectId": "f1c125fa-ca62-44a8-9e88-1c96c0fa9358",
@@ -177,7 +177,7 @@
     "percentage": 0,
     "isEligible": false,
     "status": "NOT_ELIGIBLE_ATTENDANCE_SHORTAGE",
-    "updatedAt": "2026-10-04T05:26:51.638Z"
+    "updatedAt": "2026-10-04T18:28:17.904Z"
   },
   "f1c125fa-ca62-44a8-9e88-1c96c0fa9358:8cdf0ffc-ec96-4e11-bebd-cb41ea33de61": {
     "subjectId": "f1c125fa-ca62-44a8-9e88-1c96c0fa9358",
@@ -187,7 +187,7 @@
     "percentage": 0,
     "isEligible": false,
     "status": "NOT_ELIGIBLE_ATTENDANCE_SHORTAGE",
-    "updatedAt": "2026-10-04T05:26:51.638Z"
+    "updatedAt": "2026-10-04T18:28:17.904Z"
   },
   "f1c125fa-ca62-44a8-9e88-1c96c0fa9358:726035a1-0968-40b0-ae11-f1ab41eb4385": {
     "subjectId": "f1c125fa-ca62-44a8-9e88-1c96c0fa9358",
@@ -197,7 +197,7 @@
     "percentage": 0,
     "isEligible": false,
     "status": "NOT_ELIGIBLE_ATTENDANCE_SHORTAGE",
-    "updatedAt": "2026-10-04T05:26:51.638Z"
+    "updatedAt": "2026-10-04T18:28:17.904Z"
   },
   "f1c125fa-ca62-44a8-9e88-1c96c0fa9358:39cbf29b-98aa-4dee-a63d-c2e43f4bf8d1": {
     "subjectId": "f1c125fa-ca62-44a8-9e88-1c96c0fa9358",
@@ -207,7 +207,7 @@
     "percentage": 0,
     "isEligible": false,
     "status": "NOT_ELIGIBLE_ATTENDANCE_SHORTAGE",
-    "updatedAt": "2026-10-04T05:26:51.638Z"
+    "updatedAt": "2026-10-04T18:28:17.904Z"
   },
   "f1c125fa-ca62-44a8-9e88-1c96c0fa9358:f559dc23-19fd-4e83-b327-96dbd81a48bc": {
     "subjectId": "f1c125fa-ca62-44a8-9e88-1c96c0fa9358",
@@ -217,7 +217,7 @@
     "percentage": 0,
     "isEligible": false,
     "status": "NOT_ELIGIBLE_ATTENDANCE_SHORTAGE",
-    "updatedAt": "2026-10-04T05:26:51.638Z"
+    "updatedAt": "2026-10-04T18:28:17.904Z"
   },
   "f1c125fa-ca62-44a8-9e88-1c96c0fa9358:993e925b-4425-4c23-886a-bf750057d461": {
     "subjectId": "f1c125fa-ca62-44a8-9e88-1c96c0fa9358",
@@ -227,7 +227,7 @@
     "percentage": 0,
     "isEligible": false,
     "status": "NOT_ELIGIBLE_ATTENDANCE_SHORTAGE",
-    "updatedAt": "2026-10-04T05:26:51.638Z"
+    "updatedAt": "2026-10-04T18:28:17.904Z"
   },
   "f1c125fa-ca62-44a8-9e88-1c96c0fa9358:50b4e425-470f-4def-9b32-b2abdedf8207": {
     "subjectId": "f1c125fa-ca62-44a8-9e88-1c96c0fa9358",
@@ -237,6 +237,6 @@
     "percentage": 0,
     "isEligible": false,
     "status": "NOT_ELIGIBLE_ATTENDANCE_SHORTAGE",
-    "updatedAt": "2026-10-04T05:26:51.638Z"
+    "updatedAt": "2026-10-04T18:28:17.904Z"
   }
 }

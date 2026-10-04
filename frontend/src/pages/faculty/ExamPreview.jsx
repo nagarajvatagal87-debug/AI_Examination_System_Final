@@ -109,14 +109,30 @@ export default function ExamPreview({ examId }) {
 
       {/* Official Institutional Document Preview Box */}
       <div className="ep-paper-sheet">
-        {/* Header */}
-        <div className="ep-paper-header">
-          <h1 className="ep-inst-title">Dayananda Sagar Academy of Technology & Management</h1>
-          <p className="ep-inst-sub">(Autonomous Institute under VTU)</p>
-          <p className="ep-inst-sub">Affiliated to VTU, Approved by AICTE, Accredited by NAAC with A+ Grade</p>
-          <p className="ep-inst-sub">4 Programs Accredited by NBA (CSE, ISE, ECE, ME)</p>
-          <h3 className="ep-dept-title">Department of Master of Computer Applications</h3>
-          <h4 className="ep-exam-title">{examTitle}</h4>
+        {/* Header with DSI Logo on Left & VTU Logo on Right */}
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: '2.5px solid #000000', paddingBottom: 14, marginBottom: 16, gap: 16 }}>
+          <img src="/dsi-logo.png" alt="DSI Logo" style={{ height: 68, width: 'auto', objectFit: 'contain', flexShrink: 0 }} />
+          <div style={{ textAlign: 'center', flex: 1 }}>
+            <h1 className="ep-inst-title" style={{ margin: 0, fontSize: 17, fontWeight: 900, textTransform: 'uppercase', color: '#000000', letterSpacing: 0.5 }}>
+              DAYANANDA SAGAR ACADEMY OF TECHNOLOGY & MANAGEMENT
+            </h1>
+            <p className="ep-inst-sub" style={{ margin: '2px 0 0 0', fontSize: 11, fontStyle: 'italic', fontWeight: 700, color: '#111111' }}>
+              (An Autonomous Institute Affiliated to VTU, Belagavi & Approved by AICTE, New Delhi)
+            </p>
+            <p className="ep-inst-sub" style={{ margin: '1px 0 0 0', fontSize: 10.5, fontStyle: 'italic', color: '#111111' }}>
+              Kanakapura Road, Opp. Art of Living, Udayapura, Bengaluru - 560082 | NAAC Accredited 'A+'
+            </p>
+            <p className="ep-inst-sub" style={{ margin: '1px 0 0 0', fontSize: 10, color: '#333333', fontWeight: 600 }}>
+              4 Programs Accredited by NBA (CSE, ISE, ECE, ME)
+            </p>
+            <h3 className="ep-dept-title" style={{ margin: '6px 0 2px 0', fontSize: 13.5, fontWeight: 900, textTransform: 'uppercase', color: '#000000' }}>
+              DEPARTMENT OF MASTER OF COMPUTER APPLICATIONS
+            </h3>
+            <h4 className="ep-exam-title" style={{ margin: '4px 0 0 0', fontSize: 14.5, fontWeight: 900, textTransform: 'uppercase', color: '#000000' }}>
+              {examTitle}
+            </h4>
+          </div>
+          <img src="/vtu-logo.png" alt="VTU Logo" style={{ height: 64, width: 'auto', objectFit: 'contain', flexShrink: 0 }} />
         </div>
 
         {/* Metadata Grid Box */}
@@ -155,8 +171,8 @@ export default function ExamPreview({ examId }) {
         </table>
 
         {/* Instructions Box */}
-        <div className="ep-instructions-box">
-          Instruction: Answer the following questions choosing one from each option
+        <div className="ep-instructions-box" style={{ background: '#fafafa', border: '1px solid #000000', padding: '8px 12px', fontWeight: 800, fontSize: 13, marginBottom: 16, color: '#000000' }}>
+          Instruction: Answer the following questions choosing one from each option (e.g., 1 OR 2, 3 OR 4, 5 OR 6, 7 OR 8, 9 OR 10)
         </div>
 
         {/* Questions Table Grid */}
@@ -184,7 +200,7 @@ export default function ExamPreview({ examId }) {
                     {isEditing ? (
                       <td colSpan="6" className="ep-edit-cell">
                         <div className="ep-edit-box">
-                          <div className="ep-edit-header">Edit Question Q{q.question_no}</div>
+                          <div className="ep-edit-header">Edit Question Q{q.question_no || idx + 1}</div>
                           <textarea
                             className="ep-edit-textarea"
                             value={editText}
@@ -226,11 +242,11 @@ export default function ExamPreview({ examId }) {
                       </td>
                     ) : (
                       <>
-                        <td className="col-qno">{q.question_no}</td>
+                        <td className="col-qno">{q.question_no || idx + 1}</td>
                         <td className="col-text">{q.question_text}</td>
                         <td className="col-marks">{q.marks}</td>
-                        <td className="col-co">{q.co || 'CO1'}</td>
-                        <td className="col-rbt">{q.rbt || 'L1'}</td>
+                        <td className="col-co">{q.co || `CO${((Math.floor(idx / 2) % 4) + 1)}`}</td>
+                        <td className="col-rbt">{q.rbt || `L${((Math.floor(idx / 2) % 4) + 1)}`}</td>
                         <td className="col-actions">
                           <button className="ep-sm-btn ep-btn-edit" onClick={() => startEdit(q)} title="Edit Question">✏️</button>
                           <button className="ep-sm-btn ep-btn-reject" onClick={() => handleReject(q.id)} title="Delete Question">🗑️</button>
@@ -243,7 +259,9 @@ export default function ExamPreview({ examId }) {
                 if (isEvenOrRow && !isEditing) {
                   rowElements.push(
                     <tr key={`or-${q.id}`} className="ep-or-row">
-                      <td colSpan="6">OR</td>
+                      <td colSpan="6" style={{ textAlign: 'center', fontWeight: '900', letterSpacing: '4px', background: '#f8fafc', padding: '6px', fontSize: '13px', borderTop: '1px solid #000000', borderBottom: '1px solid #000000' }}>
+                        OR
+                      </td>
                     </tr>
                   )
                 }

@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import api from '../../api/client.js'
+import DocumentQrBadge from '../../components/DocumentQrBadge.jsx'
 
 export default function AcademicProfileTab() {
   const [profileData, setProfileData] = useState(null)
@@ -353,9 +354,15 @@ export default function AcademicProfileTab() {
             <div style={{ fontSize: 9.5, color: '#64748b', fontWeight: 600 }}>Academic & Exam Records Section</div>
           </div>
           <div style={{ textAlign: 'center' }}>
-            <div style={{ width: 52, height: 52, borderRadius: '50%', border: '2px dashed #0284c7', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 8, fontWeight: 900, color: '#0284c7', margin: '0 auto', textTransform: 'uppercase', lineHeight: 1.1 }}>
-              DSATM<br />OFFICIAL<br />SEAL
-            </div>
+            <DocumentQrBadge
+              documentId={`profile-transcript-${activeUsn}`}
+              documentType="MARKS_CARD"
+              documentTitle={`Official Academic Transcript - ${studentName}`}
+              studentName={studentName}
+              usn={activeUsn}
+              departmentName={departmentName}
+              academicYear={academicYear}
+            />
           </div>
           <div style={{ textAlign: 'center' }}>
             <div style={{ fontSize: 11, fontWeight: 800, color: '#0f172a', marginTop: 34 }}>Controller of Examinations / Principal</div>

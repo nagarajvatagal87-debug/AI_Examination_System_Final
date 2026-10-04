@@ -91,19 +91,29 @@ export default function Results() {
 
   function handleDownloadSheet() {
     const sorted = [...rows].sort((a, b) => (Number(b.totalMarks) || 0) - (Number(a.totalMarks) || 0))
-    const facultyName = user?.full_name || user?.fullName || user?.name || 'Faculty In-Charge'
-    const titleBlock = `DAYANANDA SAGAR ACADEMY OF TECHNOLOGY AND MANAGEMENT\nDepartment of Master of Computer Applications\nOFFICIAL ASSESSMENT RESULT SHEET — ${exam?.title || 'Internal Examination'}\nSubject Name: ${exam?.subjectName || 'Computer Networks'}, Max Marks: ${exam?.total_marks || 50}, Date: ${new Date().toLocaleDateString('en-GB')}\nFaculty In-Charge: ${facultyName}\n\n`
-    const header = 'Rank,Register No (USN),Student Full Name,Marks Obtained,Max Marks,Percentage (%),Status\n'
-    const body = sorted.map((r, idx) => {
-      const pct = r.maxMarks > 0 ? Math.round((r.totalMarks / r.maxMarks) * 100) : 0
-      return `${idx + 1},${r.registrationNo},"${r.fullName}",${r.totalMarks},${r.maxMarks},${pct}%,${r.status}`
+
+    // UTF-8 Byte Order Mark (\uFEFF) forces Excel to open CSV directly as a structured table
+    const BOM = '\uFEFF'
+    const headerRow = `"Rank","Register No (USN)","Student Full Name","Marks Obtained (50m)","Max Marks","Percentage (%)","Evaluation Status"`
+    
+    const bodyRows = sorted.map((r, idx) => {
+      const maxM = 50
+      const totalM = Math.min(50, Number(r.totalMarks) || 0)
+      const pct = Math.round((totalM / maxM) * 100)
+      const statusLabel = r.status === 'published' ? 'Published' : r.status === 'verified' ? 'Verified' : 'Pending'
+      return `"${idx + 1}","${r.registrationNo || '—'}","${(r.fullName || 'Student').replace(/"/g, '""')}","${totalM}","${maxM}","${pct}%","${statusLabel}"`
     }).join('\n')
-    const blob = new Blob([titleBlock + header + body], { type: 'text/csv' })
+
+    const csvContent = BOM + headerRow + '\n' + bodyRows
+
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' })
     const url = URL.createObjectURL(blob)
     const a = document.createElement('a')
     a.href = url
-    a.download = `Official-Result-Sheet-${exam?.title || 'DSATM'}.csv`
+    a.download = `DSATM_Result_Sheet_${(exam?.title || 'Exam').replace(/[^a-zA-Z0-9]/g, '_')}_${Date.now()}.csv`
+    document.body.appendChild(a)
     a.click()
+    document.body.removeChild(a)
     URL.revokeObjectURL(url)
   }
 

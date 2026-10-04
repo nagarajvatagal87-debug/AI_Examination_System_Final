@@ -66,34 +66,60 @@ async function getSubjectInternalMarks(subjectId) {
   try {
     const { data } = await supabaseAdmin
       .from("profiles")
-      .select("id, full_name, registration_no")
+      .select("id, full_name, registration_no, email, semester, section")
       .in("id", enrolledIds)
       .order("registration_no");
     students = data || [];
   } catch (e) {}
 
+  let dbMarks = [];
+  try {
+    const { data } = await supabaseAdmin
+      .from("internal_marks")
+      .select("*")
+      .eq("subject_id", subjectId);
+    dbMarks = data || [];
+  } catch (e) {}
+
+  const dbMap = new Map((dbMarks || []).map((m) => [m.student_id, m]));
   const subjectStatus = subjectStatusMap.get(subjectId) || "draft";
 
   return students.map((s) => {
     const memKey = `${subjectId}:${s.id}`;
-    const rec = memoryStore.get(memKey) || {};
+    const memRec = memoryStore.get(memKey);
+    const dbRec = dbMap.get(s.id);
+    const rec = memRec || dbRec || {};
 
-    const i1 = Number(rec.internal1_marks ?? 0);
-    const i2 = Number(rec.internal2_marks ?? 0);
-    const i3 = Number(rec.internal3_marks ?? rec.project_marks ?? 0);
-    const ass = Number(rec.assignment_marks ?? 0);
-    const tot = i1 + i2 + i3 + ass;
+    const i1 = Number(rec.internal1_marks ?? rec.internal1 ?? 0);
+    const i2 = Number(rec.internal2_marks ?? rec.internal2 ?? 0);
+    const i3 = Number(rec.internal3_marks ?? rec.project_marks ?? rec.project ?? rec.internal3 ?? 0);
+    const ass = Number(rec.assignment_marks ?? rec.assignment ?? 0);
+    const tot = rec.total_internal_marks ?? (i1 + i2 + i3 + ass);
     const isEligible = tot >= 25;
 
     return {
       id: rec.id || `im-${s.id}`,
       subject_id: subjectId,
+      studentId: s.id,
       student_id: s.id,
+      fullName: s.full_name || 'Student Candidate',
+      registrationNo: s.registration_no || "—",
+      email: s.email,
+      semester: s.semester || "3rd Sem",
+      section: s.section || "A",
+      internal1: i1,
       internal1_marks: i1,
+      internal2: i2,
       internal2_marks: i2,
+      internal3: i3,
+      project: i3,
+      project_marks: i3,
       internal3_marks: i3,
+      assignment: ass,
       assignment_marks: ass,
+      totalInternal: tot,
       total_internal_marks: tot,
+      isEligible,
       is_eligible: isEligible,
       status: rec.status || subjectStatus,
       hod_approved: rec.status === "approved_by_hod" || subjectStatus === "approved_by_hod",

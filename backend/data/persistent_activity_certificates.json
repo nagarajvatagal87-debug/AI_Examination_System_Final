@@ -1,1 +1,32 @@
-[]
+[
+  {
+    "id": "cert-1791142427380-yb0ex",
+    "verification_token": "CERT-DSATM-JVI4GCMF",
+    "activity_id": "act-1791109419734-txm4a",
+    "activity_name": "Coding",
+    "club_name": "Coding",
+    "department_id": "37909cba-a75d-428e-9181-fddf9920fb0b",
+    "student_id": "85947c37-dfc9-442b-9918-72b4124492ff",
+    "student_name": "Nagaraj",
+    "student_usn": "1DT25MC036",
+    "certificate_type": "Official Certificate",
+    "issue_date": "05 Oct 2026",
+    "verification_url": "http://localhost:5173/verify-certificate?token=CERT-DSATM-JVI4GCMF",
+    "created_at": "2026-10-04T19:33:47.407Z"
+  },
+  {
+    "id": "cert-1791142083871-1crrg",
+    "verification_token": "CERT-DSATM-6FRUWOCD",
+    "activity_id": "act-1791109419734-txm4a",
+    "activity_name": "Coding",
+    "club_name": "Coding",
+    "department_id": "37909cba-a75d-428e-9181-fddf9920fb0b",
+    "student_id": "85947c37-dfc9-442b-9918-72b4124492ff",
+    "student_name": "Nagaraj",
+    "student_usn": "USN Pending",
+    "certificate_type": "Official Certificate",
+    "issue_date": "05 Oct 2026",
+    "verification_url": "http://localhost:5173/verify-certificate?token=CERT-DSATM-6FRUWOCD",
+    "created_at": "2026-10-04T19:28:03.904Z"
+  }
+]

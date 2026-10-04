@@ -13,6 +13,7 @@ const transporter = (resend || !hasSmtpConfig) ? null : nodemailer.createTranspo
 
 function wrapInHtmlTemplate(subject, bodyText) {
   const portalUrl = process.env.FRONTEND_ORIGIN || "http://localhost:5173";
+  const dsiLogoUrl = `${portalUrl}/dsi-logo.png`;
   const rawStr = String(bodyText || "");
 
   const formattedContent = rawStr
@@ -37,9 +38,12 @@ function wrapInHtmlTemplate(subject, bodyText) {
       <td align="center">
         <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="max-width: 620px; background: #ffffff; border-radius: 14px; overflow: hidden; box-shadow: 0 10px 30px rgba(15,23,42,0.08); border: 1px solid #e2e8f0;">
           
-          <!-- Header -->
+          <!-- Header with DSI Logo -->
           <tr>
             <td style="background: linear-gradient(135deg, #0f172a 0%, #1e3a8a 100%); padding: 26px 30px; text-align: center; color: #ffffff;">
+              <div style="margin-bottom: 12px;">
+                <img src="${dsiLogoUrl}" alt="DSI Logo" style="height: 56px; width: auto; max-width: 200px; object-fit: contain; display: inline-block; filter: drop-shadow(0 2px 6px rgba(0,0,0,0.3));" />
+              </div>
               <div style="font-size: 11px; font-weight: 800; letter-spacing: 1.5px; text-transform: uppercase; color: #38bdf8; margin-bottom: 6px;">
                 🎓 Official Academic & Examination Notification
               </div>
@@ -194,9 +198,12 @@ async function sendTrilingualAbsenceEmail({ toEmail, studentName, usn, subjectNa
       <td align="center">
         <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="max-width: 640px; background: #ffffff; border-radius: 16px; overflow: hidden; box-shadow: 0 10px 30px rgba(15,23,42,0.1); border: 1px solid #e2e8f0;">
           
-          <!-- Top Banner -->
+          <!-- Top Banner with DSI Logo -->
           <tr>
             <td style="background: linear-gradient(135deg, #0f172a 0%, #1e3a8a 100%); padding: 24px 24px; text-align: center; color: #ffffff;">
+              <div style="margin-bottom: 10px;">
+                <img src="${portalUrl}/dsi-logo.png" alt="DSI Logo" style="height: 52px; width: auto; max-width: 180px; object-fit: contain; display: inline-block; filter: drop-shadow(0 2px 6px rgba(0,0,0,0.3));" />
+              </div>
               <div style="font-size: 11px; font-weight: 800; letter-spacing: 1.5px; text-transform: uppercase; color: #38bdf8; margin-bottom: 4px;">
                 🎓 DAYANANDA SAGAR ACADEMY OF TECHNOLOGY & MANAGEMENT
               </div>

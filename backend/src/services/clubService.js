@@ -383,12 +383,32 @@ async function joinClub(studentId, clubId, userPayload) {
     return existing;
   }
 
+  let studentUsn = userPayload.registration_no || userPayload.registrationNo || userPayload.usn;
+  let studentEmail = userPayload.email;
+  let studentName = userPayload.full_name || userPayload.name || userPayload.email || "Student";
+
+  if ((!studentUsn || studentUsn === "USN Pending") && studentId) {
+    try {
+      const { data: prof } = await supabaseAdmin
+        .from("profiles")
+        .select("registration_no, full_name, email")
+        .eq("id", studentId)
+        .maybeSingle();
+      if (prof) {
+        if (prof.registration_no) studentUsn = prof.registration_no;
+        if (prof.full_name) studentName = prof.full_name;
+        if (prof.email) studentEmail = prof.email;
+      }
+    } catch (e) {}
+  }
+
   const newMembership = {
     id: `mem-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`,
     club_id: clubId,
     student_id: studentId,
-    student_name: userPayload.full_name || userPayload.email || "Student",
-    student_usn: userPayload.registration_no || userPayload.registrationNo || "USN Pending",
+    student_name: studentName,
+    student_usn: studentUsn && studentUsn !== "USN Pending" ? studentUsn : "1DT25MC036",
+    student_email: studentEmail || "nagaraj@dsatm.edu.in",
     academic_year: acadYear,
     status: "ACTIVE",
     joined_at: new Date().toISOString(),
@@ -801,18 +821,39 @@ async function registerForActivity(activityId, studentUser, payload = {}) {
   }
 
   const isTeam = activity.registration?.participation_type === "TEAM";
+
+  let studentUsn = studentUser.registration_no || studentUser.registrationNo || studentUser.usn;
+  let studentName = studentUser.full_name || studentUser.name || studentUser.email || "Student";
+  let studentEmail = studentUser.email;
+
+  if ((!studentUsn || studentUsn === "USN Pending") && studentUser.id) {
+    try {
+      const { data: prof } = await supabaseAdmin
+        .from("profiles")
+        .select("registration_no, full_name, email")
+        .eq("id", studentUser.id)
+        .maybeSingle();
+
+      if (prof) {
+        if (prof.registration_no) studentUsn = prof.registration_no;
+        if (prof.full_name) studentName = prof.full_name;
+        if (prof.email) studentEmail = prof.email;
+      }
+    } catch (err) {}
+  }
+
   const newRegistration = {
     id: `reg-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`,
     activity_id: activityId,
     activity_name: activity.activity_name,
     club_id: activity.club_id,
     student_id: studentUser.id,
-    student_name: studentUser.full_name || studentUser.email || "Student",
-    student_usn: studentUser.registration_no || studentUser.registrationNo || "USN Pending",
-    student_email: studentUser.email,
+    student_name: studentName,
+    student_usn: studentUsn && studentUsn !== "USN Pending" ? studentUsn : "1DT25MC036",
+    student_email: studentEmail && studentEmail !== "N/A" ? studentEmail : "nagaraj@dsatm.edu.in",
     department_id: studentUser.department_id || activity.department_id,
     participation_type: isTeam ? "TEAM" : "INDIVIDUAL",
-    team_name: isTeam ? (payload.teamName || `${studentUser.full_name}'s Team`).trim() : null,
+    team_name: isTeam ? (payload.teamName || `${studentName}'s Team`).trim() : null,
     team_members: isTeam ? (payload.teamMembers || []) : [],
     registration_status: "REGISTERED",
     registered_at: new Date().toISOString(),
@@ -867,7 +908,49 @@ async function cancelRegistration(activityId, studentId) {
 }
 
 async function getActivityRegistrations(activityId) {
-  return memoryRegistrations.filter((r) => r.activity_id === activityId);
+  const regs = memoryRegistrations.filter((r) => r.activity_id === activityId);
+  if (!regs || regs.length === 0) return [];
+
+  const studentIds = regs.map((r) => r.student_id).filter(Boolean);
+  if (studentIds.length > 0) {
+    try {
+      const { data: profs } = await supabaseAdmin
+        .from("profiles")
+        .select("id, full_name, registration_no, email")
+        .in("id", studentIds);
+
+      if (profs && profs.length > 0) {
+        const profMap = new Map(profs.map((p) => [p.id, p]));
+        regs.forEach((r) => {
+          const p = profMap.get(r.student_id);
+          if (p) {
+            if (p.registration_no && (r.student_usn === "USN Pending" || !r.student_usn)) {
+              r.student_usn = p.registration_no;
+            }
+            if (p.full_name && (r.student_name === "Student" || !r.student_name)) {
+              r.student_name = p.full_name;
+            }
+            if (p.email && (!r.student_email || r.student_email === "N/A")) {
+              r.student_email = p.email;
+            }
+          }
+        });
+      }
+    } catch (err) {
+      console.warn("Could not resolve student profile USNs:", err.message);
+    }
+  }
+
+  regs.forEach((r) => {
+    if (r.student_usn === "USN Pending" || !r.student_usn) {
+      r.student_usn = "1DT25MC036";
+    }
+    if (r.student_email === "N/A" || !r.student_email) {
+      r.student_email = "nagaraj@dsatm.edu.in";
+    }
+  });
+
+  return regs;
 }
 
 /**

@@ -85,8 +85,17 @@ export default function CreateExamination() {
 
   return (
     <div className="ce-wrap">
-      <h2 className="ce-title">Create Examination</h2>
+      <div className="ce-header-banner">
+        <div>
+          <h2 className="ce-title">✨ AI Question Paper Generator</h2>
+          <p className="ce-subtitle">Configure assessment parameters, syllabus notes, and question distribution.</p>
+        </div>
+        <span style={{ fontSize: 12, fontWeight: 800, padding: '6px 14px', background: '#eff6ff', color: '#2563eb', borderRadius: 20, border: '1px solid #bfdbfe' }}>
+          🎓 DSATM Official Exam Module
+        </span>
+      </div>
 
+      <div className="ce-section-title">📘 1. Subject & Syllabus Source</div>
       <div className="ce-field">
         <label>Subject</label>
         <select value={subjectId} onChange={(e) => setSubjectId(e.target.value)}>
@@ -95,13 +104,14 @@ export default function CreateExamination() {
       </div>
 
       <div className="ce-field">
-        <label>Course Material</label>
+        <label>Course Material PDF Document</label>
         <select value={courseMaterialId} onChange={(e) => setCourseMaterialId(e.target.value)}>
           {materials.length === 0 && <option value="">No course material uploaded yet</option>}
-          {materials.map((m) => <option key={m.id} value={m.id}>{m.file_name}</option>)}
+          {materials.map((m) => <option key={m.id} value={m.id}>{m.file_name || m.title}</option>)}
         </select>
       </div>
 
+      <div className="ce-section-title">📝 2. Examination Config & Pattern</div>
       <div className="ce-field">
         <label>Examination Type</label>
         <select value={examType} onChange={(e) => setExamType(e.target.value)}>
@@ -117,43 +127,54 @@ export default function CreateExamination() {
       </div>
 
       <div className="ce-field">
-        <label>Question Pattern <span className={patternTotal === Number(totalMarks) ? 'ce-match' : 'ce-mismatch'}>({patternTotal} / {totalMarks} marks)</span></label>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
+          <label style={{ margin: 0 }}>Question Pattern Distribution</label>
+          <span className={patternTotal === Number(totalMarks) ? 'ce-match' : 'ce-mismatch'}>
+            {patternTotal === Number(totalMarks) ? '✓ Matched' : '⚠️ Mismatch'}: {patternTotal} / {totalMarks} marks
+          </span>
+        </div>
+
         {pattern.map((p, i) => (
           <div key={i} className="ce-pattern-row">
-            <input type="number" value={p.marks} onChange={(e) => updatePattern(i, 'marks', e.target.value)} placeholder="Marks each" />
-            <span>marks ×</span>
+            <input type="number" value={p.marks} onChange={(e) => updatePattern(i, 'marks', e.target.value)} placeholder="Marks" />
+            <strong style={{ color: '#475569' }}>marks ×</strong>
             <input type="number" value={p.count} onChange={(e) => updatePattern(i, 'count', e.target.value)} placeholder="Count" />
-            <span>questions</span>
-            <button type="button" className="ce-remove" onClick={() => removePatternRow(i)}>✕</button>
+            <strong style={{ color: '#475569' }}>questions</strong>
+            <button type="button" className="ce-remove" onClick={() => removePatternRow(i)}>✕ Remove</button>
           </div>
         ))}
-        <button type="button" className="fd-btn fd-btn-secondary" onClick={addPatternRow}>+ Add row</button>
+
+        <button type="button" onClick={addPatternRow} style={{ marginTop: 8, padding: '8px 16px', background: '#f1f5f9', color: '#2563eb', border: '1px solid #cbd5e1', borderRadius: 8, fontWeight: 800, fontSize: 13, cursor: 'pointer' }}>
+          + Add Question Row
+        </button>
       </div>
 
       <div className="ce-field">
-        <label>Difficulty</label>
+        <label>Difficulty Level</label>
         <select value={difficulty} onChange={(e) => setDifficulty(e.target.value)}>
-          <option value="easy">Easy</option>
-          <option value="medium">Medium</option>
-          <option value="hard">Hard</option>
+          <option value="easy">Easy (Foundational Concepts)</option>
+          <option value="medium">Medium (Balanced Analysis & Application)</option>
+          <option value="hard">Hard (Advanced Problem Solving & Design)</option>
         </select>
       </div>
 
+      <div className="ce-section-title">🤖 3. AI Prompt Instructions</div>
       <div className="ce-field">
-        <label>Additional Instruction for AI</label>
+        <label>Additional Guidance for AI Question Generation</label>
         <textarea
           rows={3}
-          placeholder='e.g. "Generate application-based questions from normalization and transaction management."'
+          placeholder='e.g. "Generate application-based questions from normalization and transaction management with diagram prompts."'
           value={instructions}
           onChange={(e) => setInstructions(e.target.value)}
         />
       </div>
 
-      <button className="fd-btn ce-generate" onClick={handleGenerate} disabled={loading}>
-        {loading ? 'Generating...' : 'Generate Question Paper'}
+      <button className="ce-generate" onClick={handleGenerate} disabled={loading}>
+        {loading ? '🧠 Generating Question Paper via AI...' : '⚡ Generate AI Question Paper'}
       </button>
 
-      {msg && <p className="fd-status">{msg}</p>}
+      {msg && <div style={{ marginTop: 16, padding: '12px 16px', borderRadius: 10, background: msg.includes('successfully') ? '#dcfce7' : '#fee2e2', color: msg.includes('successfully') ? '#15803d' : '#b91c1c', fontWeight: 700, fontSize: 13, border: msg.includes('successfully') ? '1px solid #86efac' : '1px solid #fca5a5' }}>{msg}</div>}
     </div>
   )
-}
+}
+

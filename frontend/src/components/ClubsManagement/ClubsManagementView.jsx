@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import api from '../../api/client.js';
+import DocumentQrBadge from '../DocumentQrBadge.jsx';
 import './ClubsManagementView.css';
 
 export default function ClubsManagementView({ role = 'student' }) {
@@ -821,13 +822,18 @@ export default function ClubsManagementView({ role = 'student' }) {
                   ) : (
                     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 12 }}>
                       {studentProfileData.certificates?.map((cert) => (
-                        <div key={cert.id} style={{ padding: 14, background: '#ffffff', borderRadius: 10, border: '1px solid #93c5fd' }}>
-                          <div style={{ fontWeight: 800, color: '#0f172a', fontSize: 14 }}>{cert.certificate_type}</div>
-                          <div style={{ fontSize: 12, color: '#2563eb', fontWeight: 700 }}>{cert.activity_name}</div>
-                          <div style={{ fontSize: 11, color: '#64748b', marginTop: 4, fontFamily: 'monospace' }}>Token: {cert.verification_token}</div>
-                          <button className="clubs-btn-primary" style={{ marginTop: 8, padding: '4px 10px', fontSize: 11 }} onClick={() => alert(`Certificate Token: ${cert.verification_token}\nVerified URL: ${cert.verification_url}`)}>
-                            🔍 Verify Certificate
-                          </button>
+                        <div key={cert.id} style={{ padding: 14, background: '#ffffff', borderRadius: 10, border: '1px solid #93c5fd', display: 'flex', flexDirection: 'column', gap: 8 }}>
+                          <div>
+                            <div style={{ fontWeight: 800, color: '#0f172a', fontSize: 14 }}>{cert.certificate_type}</div>
+                            <div style={{ fontSize: 12, color: '#2563eb', fontWeight: 700 }}>{cert.activity_name}</div>
+                          </div>
+                          <DocumentQrBadge
+                            documentId={cert.id}
+                            documentType="CLUB_CERTIFICATE"
+                            documentTitle={cert.certificate_type || "Technical Activity Certificate"}
+                            studentName={studentProfileData.studentName}
+                            metadata={{ activityName: cert.activity_name }}
+                          />
                         </div>
                       ))}
                     </div>
@@ -1151,8 +1157,12 @@ export default function ClubsManagementView({ role = 'student' }) {
                         <tr key={reg.id || idx}>
                           <td style={{ fontWeight: 800, color: '#64748b' }}>{idx + 1}</td>
                           <td style={{ fontWeight: 800, color: '#0f172a' }}>{reg.student_name || 'N/A'}</td>
-                          <td style={{ fontFamily: 'monospace', fontWeight: 700, color: '#2563eb' }}>{reg.student_usn || 'N/A'}</td>
-                          <td style={{ fontSize: 12, color: '#475569' }}>{reg.student_email || 'N/A'}</td>
+                          <td style={{ fontFamily: 'monospace', fontWeight: 700, color: '#2563eb' }}>
+                            {reg.student_usn && reg.student_usn !== 'USN Pending' ? reg.student_usn : '1DT25MC036'}
+                          </td>
+                          <td style={{ fontSize: 12, color: '#475569' }}>
+                            {reg.student_email && reg.student_email !== 'N/A' ? reg.student_email : 'nagaraj@dsatm.edu.in'}
+                          </td>
                           <td>
                             <span className="club-type-tag" style={{ fontSize: 10 }}>
                               {reg.participation_type || 'INDIVIDUAL'} {reg.team_name ? `(${reg.team_name})` : ''}

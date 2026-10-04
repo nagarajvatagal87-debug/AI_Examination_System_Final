@@ -6,6 +6,7 @@ import Landing from './pages/Landing.jsx'
 import Login from './pages/auth/Login.jsx'
 import Register from './pages/auth/Register.jsx'
 import CollegeInfo from './pages/public/CollegeInfo.jsx'
+import VerifyDocument from './pages/public/VerifyDocument.jsx'
 
 import StudentDashboard from './pages/student/StudentDashboard.jsx'
 import HodDashboard from './pages/hod/HodDashboard.jsx'
@@ -58,6 +59,7 @@ export default function App() {
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
           <Route path="/college-info" element={<CollegeInfo />} />
+          <Route path="/verify/document/:token" element={<VerifyDocument />} />
 
           {/* Authenticated, role-restricted routes */}
           <Route

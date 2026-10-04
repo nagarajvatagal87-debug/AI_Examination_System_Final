@@ -306,4 +306,26 @@ Be polite, professional, and precise. Cite exact numbers for placements, package
   }
 });
 
+// GET /api/public/verify-document/:token -> Public QR Document Verification Endpoint (NO LOGIN REQUIRED)
+const { verifyDocumentToken } = require("../services/verificationService");
+router.get("/verify-document/:token", async (req, res) => {
+  try {
+    const { token } = req.params;
+    const userAgent = req.headers["user-agent"] || "Unknown";
+    const ipAddress = req.ip || req.headers["x-forwarded-for"] || "127.0.0.1";
+
+    const result = await verifyDocumentToken(token, userAgent, ipAddress);
+
+    // Set cache headers to prevent caching sensitive verification queries
+    res.setHeader("Cache-Control", "no-store, no-cache, must-revalidate, private");
+    return res.json(result);
+  } catch (err) {
+    console.error("Public verification endpoint error:", err.message);
+    return res.json({
+      status: "INVALID",
+      message: "Unable to verify this document.",
+    });
+  }
+});
+
 module.exports = router;

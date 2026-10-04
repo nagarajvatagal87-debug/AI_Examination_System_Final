@@ -1,11 +1,13 @@
 import React, { useState, useEffect } from 'react'
 import api from '../../api/client.js'
+import DocumentVerificationAdminModal from '../../components/DocumentVerificationAdminModal.jsx'
 
 export default function ExamDeptAuditLog() {
   const [logs, setLogs] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const [filterAction, setFilterAction] = useState('ALL')
+  const [showVerificationModal, setShowVerificationModal] = useState(false)
 
   function loadAuditLogs() {
     setLoading(true)
@@ -35,9 +37,18 @@ export default function ExamDeptAuditLog() {
               Complete audit trail of exam creation, schedule edits, question paper security, mark modifications, result approvals, and revaluations.
             </p>
           </div>
-          <button className="pd-btn" onClick={loadAuditLogs} style={{ background: 'rgba(255,255,255,0.1)', color: '#fff' }}>
-            🔄 Refresh Trail
-          </button>
+          <div style={{ display: 'flex', gap: 10 }}>
+            <button
+              className="pd-btn"
+              onClick={() => setShowVerificationModal(true)}
+              style={{ background: 'linear-gradient(135deg, #2563eb, #1d4ed8)', color: '#fff', fontWeight: 800 }}
+            >
+              🔐 Manage QR Verification & Audit
+            </button>
+            <button className="pd-btn" onClick={loadAuditLogs} style={{ background: 'rgba(255,255,255,0.1)', color: '#fff' }}>
+              🔄 Refresh Trail
+            </button>
+          </div>
         </div>
 
         {/* Filter bar */}
@@ -102,6 +113,10 @@ export default function ExamDeptAuditLog() {
           </div>
         )}
       </div>
+
+      {showVerificationModal && (
+        <DocumentVerificationAdminModal onClose={() => setShowVerificationModal(false)} />
+      )}
     </div>
   )
 }

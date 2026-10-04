@@ -10,6 +10,7 @@ import AcademicReportsTab from './AcademicReportsTab.jsx'
 import AcademicCalendarView from '../../components/AcademicCalendar/AcademicCalendarView.jsx'
 import SportsManagementView from '../../components/SportsManagement/SportsManagementView.jsx'
 import ClubsManagementView from '../../components/ClubsManagement/ClubsManagementView.jsx'
+import DocumentQrBadge from '../../components/DocumentQrBadge.jsx'
 import './StudentDashboard.css'
 
 function SafeMarkdown({ content }) {
@@ -27,6 +28,7 @@ export default function StudentDashboard() {
   const [activeTab, setActiveTab] = useState('dashboard')
   const [selectedSubject, setSelectedSubject] = useState('')
   const [activePdfModal, setActivePdfModal] = useState(null)
+  const [activeScorecardModal, setActiveScorecardModal] = useState(null)
   const [searchQuery, setSearchQuery] = useState('')
 
   // Complaint form state
@@ -1021,6 +1023,7 @@ export default function StudentDashboard() {
                           <th>TOTAL SCORE (50M)</th>
                           <th>HOD STATUS</th>
                           <th>ELIGIBILITY</th>
+                          <th>OFFICIAL QR SCORECARD</th>
                         </tr>
                       </thead>
                       <tbody>
@@ -1068,6 +1071,17 @@ export default function StudentDashboard() {
                                 }}>
                                   {eligible ? '✓ Eligible' : '⚠️ Detained (<25)'}
                                 </span>
+                              </td>
+                              <td>
+                                <button
+                                  onClick={() => setActiveScorecardModal({ subName, subCode, i1, i2, ass, proj, tot })}
+                                  style={{
+                                    padding: '6px 12px', borderRadius: 6, background: '#0f172a', color: '#ffffff',
+                                    border: 'none', fontWeight: 700, fontSize: 11, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4
+                                  }}
+                                >
+                                  👁️ QR Scorecard
+                                </button>
                               </td>
                             </tr>
                           )
@@ -1413,6 +1427,147 @@ export default function StudentDashboard() {
             onClose={() => setActivePdfModal(null)}
           />
         )}
+
+        {/* Official Printable Scorecard Modal */}
+        {activeScorecardModal && (
+          <div style={{
+            position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
+            background: 'rgba(15, 23, 42, 0.75)', backdropFilter: 'blur(4px)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            zIndex: 9999, padding: 20
+          }}>
+            <div style={{
+              background: '#ffffff', width: '100%', maxWidth: 840, maxHeight: '90vh',
+              borderRadius: 16, overflowY: 'auto', padding: 32, boxShadow: '0 20px 50px rgba(0,0,0,0.3)',
+              display: 'flex', flexDirection: 'column', gap: 20, color: '#0f172a'
+            }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid #e2e8f0', paddingBottom: 14 }}>
+                <div style={{ fontWeight: 800, color: '#64748b', fontSize: 12, textTransform: 'uppercase' }}>
+                  OFFICIAL ACADEMIC DOCUMENT PREVIEW
+                </div>
+                <div style={{ display: 'flex', gap: 10 }}>
+                  <button
+                    onClick={() => window.print()}
+                    style={{ padding: '8px 18px', background: '#2563eb', color: '#ffffff', border: 'none', borderRadius: 8, fontWeight: 800, fontSize: 13, cursor: 'pointer' }}
+                  >
+                    🖨️ Print / Save as PDF
+                  </button>
+                  <button
+                    onClick={() => setActiveScorecardModal(null)}
+                    style={{ padding: '8px 14px', background: '#f1f5f9', color: '#64748b', border: '1px solid #cbd5e1', borderRadius: 8, fontWeight: 700, fontSize: 13, cursor: 'pointer' }}
+                  >
+                    ✖ Close
+                  </button>
+                </div>
+              </div>
+
+              <div className="printable-academic-report" style={{ border: '2px solid #0f172a', padding: 28, borderRadius: 12, background: '#ffffff', overflow: 'hidden' }}>
+                {/* Header Letterhead with DSI & VTU Logos */}
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', paddingBottom: 16, marginBottom: 18, borderBottom: '2px solid #0f172a', gap: 16 }}>
+                  <img src="/dsi-logo.png" alt="DSI Logo" style={{ height: 56, width: 'auto', objectFit: 'contain', flexShrink: 0 }} />
+                  <div style={{ textAlign: 'center', flex: 1 }}>
+                    <h2 style={{ margin: 0, fontSize: 15, fontWeight: 900, color: '#0f172a', letterSpacing: 0.5, textTransform: 'uppercase' }}>
+                      DAYANANDA SAGAR ACADEMY OF TECHNOLOGY AND MANAGEMENT
+                    </h2>
+                    <div style={{ fontSize: 10.5, color: '#334155', fontWeight: 700, marginTop: 2 }}>
+                      (An Autonomous Institute Affiliated to VTU, Belagavi & Approved by AICTE, New Delhi)
+                    </div>
+                    <div style={{ fontSize: 10, color: '#64748b', fontWeight: 600, marginTop: 1 }}>
+                      Kanakapura Road, Opp. Art of Living, Udayapura, Bengaluru - 560082 | NAAC Accredited 'A+'
+                    </div>
+                    <div style={{ fontSize: 13, fontWeight: 900, color: '#1d4ed8', marginTop: 6, letterSpacing: 0.8, textTransform: 'uppercase' }}>
+                      50-MARK CONTINUOUS INTERNAL ASSESSMENT SCORECARD REPORT
+                    </div>
+                  </div>
+                  <img src="/vtu-logo.png" alt="VTU Logo" style={{ height: 52, width: 'auto', objectFit: 'contain', flexShrink: 0 }} />
+                </div>
+
+                {/* Candidate Metadata Box */}
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 12, background: '#f8fafc', padding: '12px 16px', borderRadius: 8, border: '1px solid #cbd5e1', marginBottom: 20, fontSize: 12 }}>
+                  <div>
+                    <span style={{ color: '#64748b', fontWeight: 700, fontSize: 10, textTransform: 'uppercase', display: 'block' }}>Candidate Name</span>
+                    <strong style={{ color: '#0f172a', fontSize: 12 }}>{userProfile?.full_name || user?.fullName || "Student Candidate"}</strong>
+                  </div>
+                  <div>
+                    <span style={{ color: '#64748b', fontWeight: 700, fontSize: 10, textTransform: 'uppercase', display: 'block' }}>USN / Reg No</span>
+                    <strong style={{ color: '#1d4ed8', fontSize: 12, fontFamily: 'monospace' }}>{userProfile?.registration_no || user?.registrationNo || "1DT22MC045"}</strong>
+                  </div>
+                  <div>
+                    <span style={{ color: '#64748b', fontWeight: 700, fontSize: 10, textTransform: 'uppercase', display: 'block' }}>Department</span>
+                    <strong style={{ color: '#0f172a', fontSize: 12 }}>{userProfile?.departments?.name || userProfile?.department_name || "Department of Computer Applications"}</strong>
+                  </div>
+                  <div>
+                    <span style={{ color: '#64748b', fontWeight: 700, fontSize: 10, textTransform: 'uppercase', display: 'block' }}>Semester & Term</span>
+                    <strong style={{ color: '#0f172a', fontSize: 12 }}>Semester: 3rd Sem · A.Y. 2026-2027</strong>
+                  </div>
+                </div>
+
+                {/* Structured Scorecard Table */}
+                <div style={{ width: '100%', overflowX: 'auto', marginBottom: 20, border: '1px solid #cbd5e1', borderRadius: 8 }}>
+                  <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12, textAlign: 'left' }}>
+                    <thead>
+                      <tr style={{ background: '#0f172a', color: '#ffffff' }}>
+                        <th style={{ padding: '10px 12px', fontSize: 10, fontWeight: 800, textTransform: 'uppercase', letterSpacing: 0.5 }}>Subject Name</th>
+                        <th style={{ padding: '10px 12px', fontSize: 10, fontWeight: 800, textTransform: 'uppercase', letterSpacing: 0.5 }}>Code</th>
+                        <th style={{ padding: '10px 12px', fontSize: 10, fontWeight: 800, textTransform: 'uppercase', letterSpacing: 0.5, textAlign: 'center' }}>Internal 1</th>
+                        <th style={{ padding: '10px 12px', fontSize: 10, fontWeight: 800, textTransform: 'uppercase', letterSpacing: 0.5, textAlign: 'center' }}>Internal 2</th>
+                        <th style={{ padding: '10px 12px', fontSize: 10, fontWeight: 800, textTransform: 'uppercase', letterSpacing: 0.5, textAlign: 'center' }}>Assignment</th>
+                        <th style={{ padding: '10px 12px', fontSize: 10, fontWeight: 800, textTransform: 'uppercase', letterSpacing: 0.5, textAlign: 'center' }}>Project</th>
+                        <th style={{ padding: '10px 12px', fontSize: 10, fontWeight: 800, textTransform: 'uppercase', letterSpacing: 0.5, textAlign: 'center' }}>Total Score</th>
+                        <th style={{ padding: '10px 12px', fontSize: 10, fontWeight: 800, textTransform: 'uppercase', letterSpacing: 0.5, textAlign: 'center' }}>Status</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr style={{ background: '#ffffff' }}>
+                        <td style={{ padding: '12px', fontWeight: 800, color: '#0f172a' }}>{activeScorecardModal.subName}</td>
+                        <td style={{ padding: '12px', fontWeight: 700, color: '#2563eb', fontFamily: 'monospace' }}>{activeScorecardModal.subCode}</td>
+                        <td style={{ padding: '12px', textAlign: 'center', fontWeight: 600 }}>{activeScorecardModal.i1}</td>
+                        <td style={{ padding: '12px', textAlign: 'center', fontWeight: 600 }}>{activeScorecardModal.i2}</td>
+                        <td style={{ padding: '12px', textAlign: 'center', fontWeight: 600 }}>{activeScorecardModal.ass}</td>
+                        <td style={{ padding: '12px', textAlign: 'center', fontWeight: 600 }}>{activeScorecardModal.proj}</td>
+                        <td style={{ padding: '12px', textAlign: 'center' }}>
+                          <span style={{ padding: '4px 10px', background: '#eff6ff', color: '#1d4ed8', borderRadius: 6, fontWeight: 900, fontSize: 13, border: '1px solid #bfdbfe' }}>
+                            {activeScorecardModal.tot} / 50
+                          </span>
+                        </td>
+                        <td style={{ padding: '12px', textAlign: 'center' }}>
+                          <span style={{ padding: '4px 10px', background: '#f0fdf4', color: '#15803d', borderRadius: 6, fontWeight: 800, fontSize: 11, border: '1px solid #bbf7d0', whiteSpace: 'nowrap' }}>
+                            ✓ Faculty Entered
+                          </span>
+                        </td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+
+                {/* Authorization Seal & Verification QR */}
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingTop: 20, marginTop: 20, borderTop: '1.5px solid #0f172a' }}>
+                  <div style={{ fontSize: 11, color: '#64748b', maxWidth: 220, lineHeight: 1.4 }}>
+                    🔒 <strong>Authoritative Record</strong><br />
+                    Generated directly from official DSATM academic database records.
+                  </div>
+                  <DocumentQrBadge
+                    documentId={`scorecard-${activeScorecardModal.subCode}-${userProfile?.registration_no || user?.registrationNo || user?.id || 'student'}`}
+                    documentType="MARKS_CARD"
+                    documentTitle={`50-Mark Scorecard - ${activeScorecardModal.subName}`}
+                    studentName={userProfile?.full_name || user?.fullName || "Student Candidate"}
+                    usn={userProfile?.registration_no || user?.registrationNo || "USN Pending"}
+                    departmentName={userProfile?.department_name || "Department of Computer Applications (MCA)"}
+                    academicYear="2026-2027"
+                  />
+                  <div style={{ textAlign: 'center' }}>
+                    <div style={{ fontFamily: 'serif', fontSize: 15, fontWeight: 800, fontStyle: 'italic', color: '#1e3a8a' }}>
+                      Dr. Academic Controller
+                    </div>
+                    <div style={{ fontSize: 10, color: '#64748b', borderTop: '1px solid #0f172a', paddingTop: 2, marginTop: 2, fontWeight: 700 }}>
+                      DEAN OF ACADEMIC AFFAIRS
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   )
@@ -1532,6 +1687,21 @@ function HallTicketSection() {
             ))}
           </tbody>
         </table>
+
+        <div style={{ borderTop: '1px dashed rgba(255,255,255,0.2)', paddingTop: 16, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <div style={{ fontSize: 11, color: '#94a3b8' }}>
+            🔒 Authoritative Official Document · Dayananda Sagar Academy of Technology and Management
+          </div>
+          <DocumentQrBadge
+            documentId={`hallticket-${ticket.registrationNo}`}
+            documentType="HALL_TICKET"
+            documentTitle={`Hall Ticket - ${ticket.title}`}
+            studentName={ticket.studentName}
+            usn={ticket.registrationNo}
+            departmentName={ticket.departmentName}
+            academicYear={ticket.academicYear}
+          />
+        </div>
       </div>
     </div>
   )
