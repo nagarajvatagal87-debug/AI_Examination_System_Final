@@ -90,11 +90,17 @@ async function getSubjectInternalMarks(subjectId) {
     const dbRec = dbMap.get(s.id);
     const rec = memRec || dbRec || {};
 
-    const i1 = Number(rec.internal1_marks ?? rec.internal1 ?? 0);
-    const i2 = Number(rec.internal2_marks ?? rec.internal2 ?? 0);
-    const i3 = Number(rec.internal3_marks ?? rec.project_marks ?? rec.project ?? rec.internal3 ?? 0);
-    const ass = Number(rec.assignment_marks ?? rec.assignment ?? 0);
-    const tot = rec.total_internal_marks ?? (i1 + i2 + i3 + ass);
+    const rawI1 = Number(rec.internal1_marks ?? rec.internal1 ?? 0);
+    const rawI2 = Number(rec.internal2_marks ?? rec.internal2 ?? 0);
+    const rawI3 = Number(rec.internal3_marks ?? rec.project_marks ?? rec.project ?? rec.internal3 ?? 0);
+    const rawAss = Number(rec.assignment_marks ?? rec.assignment ?? 0);
+
+    const i1 = Math.min(15, Math.max(0, rawI1));
+    const i2 = Math.min(15, Math.max(0, rawI2));
+    const i3 = Math.min(10, Math.max(0, rawI3));
+    const ass = Math.min(10, Math.max(0, rawAss));
+
+    const tot = i1 + i2 + i3 + ass;
     const isEligible = tot >= 25;
 
     return {
@@ -130,10 +136,16 @@ async function getSubjectInternalMarks(subjectId) {
 
 async function saveInternalMarks(subjectId, marksArray) {
   const rows = marksArray.map((m) => {
-    const i1 = Number(m.internal1 || m.internal1_marks || 0);
-    const i2 = Number(m.internal2 || m.internal2_marks || 0);
-    const i3 = Number(m.internal3 || m.internal3_marks || m.project || m.project_marks || 0);
-    const ass = Number(m.assignment || m.assignment_marks || 0);
+    const rawI1 = Number(m.internal1 || m.internal1_marks || 0);
+    const rawI2 = Number(m.internal2 || m.internal2_marks || 0);
+    const rawI3 = Number(m.internal3 || m.internal3_marks || m.project || m.project_marks || 0);
+    const rawAss = Number(m.assignment || m.assignment_marks || 0);
+
+    const i1 = Math.min(15, Math.max(0, rawI1));
+    const i2 = Math.min(15, Math.max(0, rawI2));
+    const i3 = Math.min(10, Math.max(0, rawI3));
+    const ass = Math.min(10, Math.max(0, rawAss));
+
     const tot = i1 + i2 + i3 + ass;
     const isEligible = tot >= 25;
 

@@ -37,6 +37,49 @@ try {
   console.warn("Failed to load revaluation file:", e.message);
 }
 
+if (memoryApplications.length === 0) {
+  memoryApplications.push(
+    {
+      id: "app-101",
+      application_no: "REV-2026-8801",
+      student_id: "st-mca-01",
+      student_name: "Ananya Sharma",
+      student_usn: "1DS23MCA001",
+      exam_id: "exam-deep-learning",
+      subject_id: "sub-dl",
+      subject_name: "Deep Learning & AI Applications",
+      subject_code: "22MCA31",
+      original_marks: 58,
+      revised_marks: null,
+      final_marks: 58,
+      fee_amount: 500,
+      fee_paid: 500,
+      payment_status: "SUCCESS", // Paid! Ready for AI Optical Scanner
+      status: "SUBMITTED",
+      created_at: new Date().toISOString(),
+    },
+    {
+      id: "app-102",
+      application_no: "REV-2026-8802",
+      student_id: "st-mca-02",
+      student_name: "Rajesh Kumar",
+      student_usn: "1DS23MCA002",
+      exam_id: "exam-dbms",
+      subject_id: "sub-dbms",
+      subject_name: "Database Management Systems",
+      subject_code: "22MCA32",
+      original_marks: 62,
+      revised_marks: null,
+      final_marks: 62,
+      fee_amount: 500,
+      fee_paid: 0,
+      payment_status: "PENDING", // Pending payment
+      status: "PENDING_PAYMENT",
+      created_at: new Date().toISOString(),
+    }
+  );
+}
+
 function saveRevalToDisk() {
   try {
     fs.writeFileSync(

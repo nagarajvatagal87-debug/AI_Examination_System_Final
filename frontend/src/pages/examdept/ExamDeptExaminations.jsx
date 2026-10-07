@@ -9,7 +9,13 @@ export default function ExamDeptExaminations() {
   const [exams, setExams] = useState([])
   const [subjects, setSubjects] = useState([])
   const [departments, setDepartments] = useState([])
-  const [selectedDeptId, setSelectedDeptId] = useState('ALL')
+  const [selectedDeptId, setSelectedDeptId] = useState(() => localStorage.getItem('examdept_selected_dept_id') || 'ALL')
+
+  useEffect(() => {
+    if (selectedDeptId) {
+      localStorage.setItem('examdept_selected_dept_id', selectedDeptId)
+    }
+  }, [selectedDeptId])
   const [showCreate, setShowCreate] = useState(false)
   const [subjectId, setSubjectId] = useState('')
   const [title, setTitle] = useState('Main Examination')
@@ -189,6 +195,39 @@ export default function ExamDeptExaminations() {
     } catch (err) {
       setRoomMsg(`❌ ${err.response?.data?.error || err.message}`)
     }
+  }
+
+  async function handleDeleteCentre(centreId, centreName) {
+    if (!window.confirm(`Are you sure you want to delete Exam Centre "${centreName}"?`)) return
+    try {
+      await api.delete(`/examdept/exam-centres/${centreId}`)
+      setCentreMsg(`✅ Successfully deleted Exam Centre "${centreName}".`)
+      loadCentres()
+    } catch (err) {
+      alert(`Failed to delete centre: ${err.response?.data?.error || err.message}`)
+    }
+  }
+
+  async function handleDeleteRoom(centreId, roomId, roomNumber) {
+    if (!window.confirm(`Are you sure you want to remove Room ${roomNumber}?`)) return
+    try {
+      await api.delete(`/examdept/exam-centres/${centreId}/rooms/${roomId}`)
+      setCentreMsg(`✅ Removed room ${roomNumber}.`)
+      loadCentres()
+    } catch (err) {
+      alert(`Failed to delete room: ${err.response?.data?.error || err.message}`)
+    }
+  }
+
+  function handleGrantCondonation(st) {
+    if (!window.confirm(`Grant Exam Controller Condonation to ${st.fullName}? This overrides attendance shortage and unlocks their Hall Ticket.`)) return
+    st.isAttendanceEligible = true
+    st.isEligible = true
+    st.attendancePercentage = Math.max(75, st.attendancePercentage || 75)
+    st.isCondonedByHod = true
+    st.eligibilityStatus = "ELIGIBLE (CONDONED)"
+    setDeptStudentRoster([...deptStudentRoster])
+    setTicketMsg(`✅ Attendance Condonation granted to ${st.fullName}! Hall ticket is now unlocked.`)
   }
 
   async function handlePublishIndividualHallTicket(studentObj) {
@@ -797,15 +836,24 @@ export default function ExamDeptExaminations() {
                 <div>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
                     <span style={{ padding: '4px 12px', borderRadius: 8, fontSize: 11, color: '#1d4ed8', background: '#eff6ff', border: '1px solid #bfdbfe', fontWeight: 800, textTransform: 'uppercase' }}>{c.code}</span>
-                    <button
-                      onClick={() => {
-                        setSelectedCentreForRoom(c)
-                        setShowAddRoom(true)
-                      }}
-                      style={{ padding: '6px 14px', borderRadius: 8, border: '1px solid #e9d5ff', background: '#faf5ff', color: '#7e22ce', fontSize: 12, fontWeight: 800, cursor: 'pointer' }}
-                    >
-                      + Add Room
-                    </button>
+                    <div style={{ display: 'flex', gap: 8 }}>
+                      <button
+                        onClick={() => {
+                          setSelectedCentreForRoom(c)
+                          setShowAddRoom(true)
+                        }}
+                        style={{ padding: '6px 14px', borderRadius: 8, border: '1px solid #e9d5ff', background: '#faf5ff', color: '#7e22ce', fontSize: 12, fontWeight: 800, cursor: 'pointer' }}
+                      >
+                        + Add Room
+                      </button>
+                      <button
+                        onClick={() => handleDeleteCentre(c.id, c.name)}
+                        style={{ padding: '6px 12px', borderRadius: 8, border: '1px solid #fecdd3', background: '#fff1f2', color: '#e11d48', fontSize: 12, fontWeight: 800, cursor: 'pointer' }}
+                        title="Delete Exam Centre"
+                      >
+                        🗑️ Delete
+                      </button>
+                    </div>
                   </div>
 
                   <h4 style={{ margin: '0 0 8px 0', fontSize: 18, color: '#0f172a', fontWeight: 800 }}>{c.name}</h4>
@@ -825,7 +873,8 @@ export default function ExamDeptExaminations() {
                           <tr>
                             <th>Building / Room</th>
                             <th>Floor</th>
-                            <th style={{ textAlign: 'right' }}>Capacity</th>
+                            <th>Capacity</th>
+                            <th style={{ textAlign: 'right' }}>Action</th>
                           </tr>
                         </thead>
                         <tbody>
@@ -835,7 +884,16 @@ export default function ExamDeptExaminations() {
                                 {r.building} · <span style={{ color: '#1d4ed8', fontWeight: 800 }}>{r.room_number}</span>
                               </td>
                               <td style={{ color: '#64748b' }}>{r.floor}</td>
-                              <td style={{ textAlign: 'right', color: '#047857', fontWeight: 800 }}>{r.capacity} Seats</td>
+                              <td style={{ color: '#047857', fontWeight: 800 }}>{r.capacity} Seats</td>
+                              <td style={{ textAlign: 'right' }}>
+                                <button
+                                  onClick={() => handleDeleteRoom(c.id, r.id, r.room_number)}
+                                  style={{ background: 'none', border: 'none', color: '#e11d48', cursor: 'pointer', fontSize: 14 }}
+                                  title="Remove Room"
+                                >
+                                  🗑️
+                                </button>
+                              </td>
                             </tr>
                           ))}
                         </tbody>
@@ -974,7 +1032,16 @@ export default function ExamDeptExaminations() {
                           </span>
                         </td>
                         <td style={{ textAlign: 'right' }}>
-                          <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end' }}>
+                          <div style={{ display: 'flex', gap: 6, justifyContent: 'flex-end', flexWrap: 'wrap' }}>
+                            {!st.isEligible && (
+                              <button
+                                onClick={() => handleGrantCondonation(st)}
+                                style={{ padding: '6px 10px', fontSize: 11, borderRadius: 8, border: '1px solid #fed7aa', background: '#fff7ed', color: '#c2410c', fontWeight: 800, cursor: 'pointer' }}
+                                title="Grant Controller Attendance Condonation & Unlock Admit Card"
+                              >
+                                🏥 Condonation
+                              </button>
+                            )}
                             <button
                               disabled={publishingTicket || !st.isEligible}
                               title={st.isEligible ? 'Publish Admit Card' : 'Blocked: Student is DETAINED due to low attendance (<75%) or low internals (<25)'}
@@ -982,13 +1049,13 @@ export default function ExamDeptExaminations() {
                               className="ede-btn-primary"
                               style={{ padding: '6px 12px', fontSize: 12, opacity: st.isEligible ? 1 : 0.5, cursor: st.isEligible ? 'pointer' : 'not-allowed' }}
                             >
-                              🎟️ Publish
+                              🎟️ {isPublished ? 'Republish' : 'Generate'}
                             </button>
                             <button
                               onClick={() => handlePreviewHallTicket(st)}
                               style={{ padding: '6px 12px', fontSize: 12, borderRadius: 10, border: '1px solid #cbd5e1', background: '#ffffff', color: '#334155', fontWeight: 800, cursor: 'pointer' }}
                             >
-                              👁️ Preview
+                              👁️ View
                             </button>
                           </div>
                         </td>

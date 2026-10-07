@@ -2,7 +2,13 @@ import React, { useState, useEffect } from 'react'
 import api from '../../api/client.js'
 
 export default function TopStudentsOverall({ departments }) {
-  const [selectedDept, setSelectedDept] = useState('')
+  const [selectedDept, setSelectedDept] = useState(() => localStorage.getItem('principal_selected_dept_id') || '')
+
+  useEffect(() => {
+    if (selectedDept !== null) {
+      localStorage.setItem('principal_selected_dept_id', selectedDept)
+    }
+  }, [selectedDept])
   const [toppers, setToppers] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')

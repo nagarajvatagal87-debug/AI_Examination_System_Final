@@ -8,9 +8,15 @@ export default function ExamDeptDashboard() {
   const { user } = useAuth()
   const [stats, setStats] = useState(null)
   const [departments, setDepartments] = useState([])
-  const [selectedDeptId, setSelectedDeptId] = useState('ALL')
+  const [selectedDeptId, setSelectedDeptId] = useState(() => localStorage.getItem('examdept_selected_dept_id') || 'ALL')
   const [subjects, setSubjects] = useState([])
   const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    if (selectedDeptId) {
+      localStorage.setItem('examdept_selected_dept_id', selectedDeptId)
+    }
+  }, [selectedDeptId])
 
   // Modals
   const [showScheduleModal, setShowScheduleModal] = useState(false)

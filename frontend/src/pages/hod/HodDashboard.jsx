@@ -2260,7 +2260,9 @@ function HodInternalApprovalSection() {
   }
 
   function handleMarkChange(studentId, field, value) {
-    const val = Math.max(0, Number(value) || 0)
+    let maxLimit = 15
+    if (field === 'internal3' || field === 'assignment') maxLimit = 10
+    const val = Math.min(maxLimit, Math.max(0, Number(value) || 0))
     setRoster((prev) =>
       prev.map((r) => {
         if (r.studentId !== studentId) return r

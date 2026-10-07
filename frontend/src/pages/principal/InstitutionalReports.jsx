@@ -3,7 +3,13 @@ import api from '../../api/client.js'
 
 export default function InstitutionalReports({ departments }) {
   const [reportType, setReportType] = useState('student_roster')
-  const [selectedDept, setSelectedDept] = useState('')
+  const [selectedDept, setSelectedDept] = useState(() => localStorage.getItem('principal_selected_dept_id') || '')
+
+  useEffect(() => {
+    if (selectedDept !== null) {
+      localStorage.setItem('principal_selected_dept_id', selectedDept)
+    }
+  }, [selectedDept])
   const [reportData, setReportData] = useState(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')

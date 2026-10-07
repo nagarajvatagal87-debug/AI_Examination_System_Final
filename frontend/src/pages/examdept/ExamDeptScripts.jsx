@@ -6,7 +6,13 @@ export default function ExamDeptScripts() {
   const [scripts, setScripts] = useState([])
   const [exams, setExams] = useState([])
   const [departments, setDepartments] = useState([])
-  const [selectedDeptId, setSelectedDeptId] = useState('ALL')
+  const [selectedDeptId, setSelectedDeptId] = useState(() => localStorage.getItem('examdept_selected_dept_id') || 'ALL')
+
+  useEffect(() => {
+    if (selectedDeptId) {
+      localStorage.setItem('examdept_selected_dept_id', selectedDeptId)
+    }
+  }, [selectedDeptId])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const [filterExam, setFilterExam] = useState('ALL')

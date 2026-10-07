@@ -1,5 +1,31 @@
 [
   {
+    "id": "audit-1791377928426-ew80di",
+    "user_id": "9bd0b575-f801-4c0c-b67b-033184a22e79",
+    "user_role": "examdept",
+    "action": "REVALUATION_DECISION_FINALIZED",
+    "entity_type": "revaluation_applications",
+    "entity_id": "app-102",
+    "old_value": "Original: 62",
+    "new_value": "Revised: 98, Decision: INCREASED",
+    "reason": "",
+    "department_id": null,
+    "created_at": "2026-10-07T12:58:48.426Z"
+  },
+  {
+    "id": "audit-1791377892486-oc1mp4",
+    "user_id": "9bd0b575-f801-4c0c-b67b-033184a22e79",
+    "user_role": "examdept",
+    "action": "REVALUATION_DECISION_FINALIZED",
+    "entity_type": "revaluation_applications",
+    "entity_id": "app-101",
+    "old_value": "Original: 58",
+    "new_value": "Revised: 70, Decision: INCREASED",
+    "reason": "",
+    "department_id": null,
+    "created_at": "2026-10-07T12:58:12.486Z"
+  },
+  {
     "id": "audit-1791142446825-h1652w",
     "user_id": "85947c37-dfc9-442b-9918-72b4124492ff",
     "user_role": "issuer",

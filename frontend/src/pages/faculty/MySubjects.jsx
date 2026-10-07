@@ -223,9 +223,12 @@ export default function MySubjects() {
   }
 
   function updateInternalScore(studentId, field, val) {
+    let maxLimit = 15
+    if (field === 'assignment' || field === 'project' || field === 'internal3') maxLimit = 10
+    const numVal = Math.min(maxLimit, Math.max(0, Number(val) || 0))
     const next = { ...internalInput }
     if (!next[studentId]) next[studentId] = { internal1: 0, internal2: 0, assignment: 0, project: 0 }
-    next[studentId][field] = Number(val) || 0
+    next[studentId][field] = numVal
     setInternalInput(next)
   }
 

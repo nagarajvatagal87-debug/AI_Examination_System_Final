@@ -278,10 +278,41 @@ async function getAllHallTickets() {
   return dbTickets.length > 0 ? dbTickets : memoryHallTickets;
 }
 
+async function deleteExamCentre(centreId) {
+  const idx = memoryCentres.findIndex((c) => c.id === centreId);
+  if (idx !== -1) {
+    memoryCentres.splice(idx, 1);
+    saveCentresToDisk();
+  }
+  try {
+    await supabaseAdmin.from("exam_centres").delete().eq("id", centreId);
+  } catch (e) {}
+  return { success: true, centreId };
+}
+
+async function deleteRoomFromCentre(centreId, roomId) {
+  const centre = memoryCentres.find((c) => c.id === centreId);
+  if (centre && Array.isArray(centre.rooms)) {
+    const rIdx = centre.rooms.findIndex((r) => r.id === roomId);
+    if (rIdx !== -1) {
+      centre.rooms.splice(rIdx, 1);
+      const sumCap = centre.rooms.reduce((acc, r) => acc + (Number(r.capacity) || 0), 0);
+      centre.capacity = sumCap;
+      saveCentresToDisk();
+    }
+  }
+  try {
+    await supabaseAdmin.from("exam_rooms").delete().eq("id", roomId);
+  } catch (e) {}
+  return { success: true, centreId, roomId };
+}
+
 module.exports = {
   getExamCentres,
   createExamCentre,
   addRoomToCentre,
+  deleteExamCentre,
+  deleteRoomFromCentre,
   allocateStudentToRoom,
   generateAndPublishHallTicket,
   getStudentHallTicket,

@@ -50,14 +50,14 @@
   "f1c125fa-ca62-44a8-9e88-1c96c0fa9358:85947c37-dfc9-442b-9918-72b4124492ff": {
     "subject_id": "f1c125fa-ca62-44a8-9e88-1c96c0fa9358",
     "student_id": "85947c37-dfc9-442b-9918-72b4124492ff",
-    "internal1_marks": 50,
+    "internal1_marks": 14,
     "internal2_marks": 10,
     "internal3_marks": 10,
     "assignment_marks": 10,
-    "total_internal_marks": 80,
+    "total_internal_marks": 44,
     "is_eligible": true,
     "status": "draft",
-    "updated_at": "2026-10-04T19:11:17.151Z"
+    "updated_at": "2026-10-05T23:20:00.000Z"
   },
   "f1c125fa-ca62-44a8-9e88-1c96c0fa9358:6f47f01e-41a4-4728-be8b-f7f733a9e69f": {
     "subject_id": "f1c125fa-ca62-44a8-9e88-1c96c0fa9358",

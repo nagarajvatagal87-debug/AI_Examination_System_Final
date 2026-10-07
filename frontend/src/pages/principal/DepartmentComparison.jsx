@@ -7,7 +7,13 @@ export default function DepartmentComparison({ departments }) {
   const [error, setError] = useState('')
   const [academicYear, setAcademicYear] = useState('2025–2026')
   const [semester, setSemester] = useState('')
-  const [selectedDept, setSelectedDept] = useState('')
+  const [selectedDept, setSelectedDept] = useState(() => localStorage.getItem('principal_selected_dept_id') || '')
+
+  useEffect(() => {
+    if (selectedDept !== null) {
+      localStorage.setItem('principal_selected_dept_id', selectedDept)
+    }
+  }, [selectedDept])
 
   function loadComparison() {
     setLoading(true)

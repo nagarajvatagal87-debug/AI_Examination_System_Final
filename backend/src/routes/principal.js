@@ -108,14 +108,15 @@ function deduplicateDepartments(rawDepartments = [], allProfiles = [], allSubjec
   map.forEach((entry) => {
     const ids = Array.from(entry.db_ids);
 
-    const staff = allProfiles.filter(p => (ids.includes(p.department_id) || ids.length === 0) && p.role === "faculty");
-    const students = allProfiles.filter(p => (ids.includes(p.department_id) || ids.length === 0) && p.role === "student");
+    const staff = allProfiles.filter(p => p.role === "faculty" && ids.length > 0 && ids.includes(p.department_id));
+    const students = allProfiles.filter(p => p.role === "student" && ids.length > 0 && ids.includes(p.department_id));
     const subs = allSubjects.filter(s => ids.includes(s.department_id));
     const info = publicInfo.find(pi => ids.includes(pi.department_id));
 
     entry.teacher_count = staff.length;
     entry.student_count = students.length;
     entry.active_subjects = subs.length;
+
     if (info) {
       entry.placement_percentage = info.placement_percentage ?? null;
       entry.highest_package = info.highest_package ?? null;
@@ -344,10 +345,31 @@ router.get("/analytics", async (req, res) => {
       { label: 'Pass / Re-appear (< 7.0 CGPA)', count: `${mainResults.filter(r => (r.total_marks / r.max_marks) < 0.7).length} Students`, color: '#f87171' },
     ] : [];
 
+    let internalCompletion = null;
+    if (totalStudents > 0) {
+      try {
+        const { data: dbInternalMarks } = await supabaseAdmin.from("internal_marks").select("student_id");
+        const { getSubjectInternalMarks } = require("../services/internalMarksStore");
+        const { data: allSubjects } = await supabaseAdmin.from("subjects").select("id");
+        let evaluatedCount = (dbInternalMarks || []).length;
+        if (evaluatedCount === 0 && allSubjects && allSubjects.length > 0) {
+          for (const sub of allSubjects) {
+            const roster = await getSubjectInternalMarks(sub.id);
+            evaluatedCount += (roster || []).filter(r => r.totalInternal > 0).length;
+          }
+        }
+        const maxExpected = totalStudents * Math.max(1, (allSubjects || []).length);
+        const calcPct = Math.round((evaluatedCount / maxExpected) * 100);
+        internalCompletion = calcPct > 0 ? `${Math.min(100, calcPct)}%` : '0%';
+      } catch (e) {
+        internalCompletion = 'N/A';
+      }
+    }
+
     res.json({
       overallPassRate,
       averageCgpa,
-      internalCompletion: totalStudents > 0 ? "100%" : null,
+      internalCompletion,
       mainExamCompletion: exams && exams.length > 0 ? `${Math.round((exams.filter(e => e.status === 'published').length / exams.length) * 100)}%` : null,
       grievanceResolutionRate,
       facultyEvalCompletion,

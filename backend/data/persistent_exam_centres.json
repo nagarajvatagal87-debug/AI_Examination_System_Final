@@ -5,49 +5,9 @@
       "name": "DSATM Main Academic Block Examination Centre",
       "code": "CENTRE-101",
       "address": "Kanakapura Road, Udayapura, Bengaluru - 560082",
-      "capacity": 600,
+      "capacity": 40,
       "status": "ACTIVE",
       "rooms": [
-        {
-          "id": "room-101",
-          "building": "Block A",
-          "floor": "1st Floor",
-          "room_number": "LH-101",
-          "capacity": 40,
-          "status": "ACTIVE"
-        },
-        {
-          "id": "room-102",
-          "building": "Block A",
-          "floor": "1st Floor",
-          "room_number": "LH-102",
-          "capacity": 40,
-          "status": "ACTIVE"
-        },
-        {
-          "id": "room-201",
-          "building": "Block A",
-          "floor": "2nd Floor",
-          "room_number": "LH-201",
-          "capacity": 40,
-          "status": "ACTIVE"
-        },
-        {
-          "id": "room-202",
-          "building": "Block A",
-          "floor": "2nd Floor",
-          "room_number": "LH-202",
-          "capacity": 40,
-          "status": "ACTIVE"
-        },
-        {
-          "id": "room-301",
-          "building": "Block B",
-          "floor": "3rd Floor",
-          "room_number": "CS-LAB-1",
-          "capacity": 60,
-          "status": "ACTIVE"
-        },
         {
           "id": "room-1790844273736-jri",
           "building": "Block A",

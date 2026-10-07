@@ -1,0 +1,74 @@
+{
+  "config": {
+    "revaluation_fee_per_subject": 500,
+    "late_fee": 200,
+    "start_date": "2026-09-01",
+    "deadline": "2026-10-31",
+    "late_deadline": "2026-11-10",
+    "max_subjects_allowed": 4,
+    "eligible_paper_types": [
+      "main"
+    ]
+  },
+  "applications": [
+    {
+      "id": "app-101",
+      "application_no": "REV-2026-8801",
+      "student_id": "st-mca-01",
+      "student_name": "Ananya Sharma",
+      "student_usn": "1DS23MCA001",
+      "exam_id": "exam-deep-learning",
+      "subject_id": "sub-dl",
+      "subject_name": "Deep Learning & AI Applications",
+      "subject_code": "22MCA31",
+      "original_marks": 58,
+      "revised_marks": 70,
+      "final_marks": 70,
+      "fee_amount": 500,
+      "fee_paid": 500,
+      "payment_status": "SUCCESS",
+      "status": "COMPLETED",
+      "created_at": "2026-10-07T12:47:38.896Z",
+      "decision": "INCREASED",
+      "evaluator_id": "9bd0b575-f801-4c0c-b67b-033184a22e79",
+      "remarks": "AI Optical Scanner detected 8 marks recount omission on Question 1(b) and 2(a). Approved by Chief Examiner.",
+      "updated_at": "2026-10-07T12:58:11.692Z"
+    },
+    {
+      "id": "app-102",
+      "application_no": "REV-2026-8802",
+      "student_id": "st-mca-02",
+      "student_name": "Rajesh Kumar",
+      "student_usn": "1DS23MCA002",
+      "exam_id": "exam-dbms",
+      "subject_id": "sub-dbms",
+      "subject_name": "Database Management Systems",
+      "subject_code": "22MCA32",
+      "original_marks": 62,
+      "revised_marks": 98,
+      "final_marks": 98,
+      "fee_amount": 500,
+      "fee_paid": 0,
+      "payment_status": "SUCCESS",
+      "status": "COMPLETED",
+      "created_at": "2026-10-07T12:47:38.896Z",
+      "decision": "INCREASED",
+      "evaluator_id": "9bd0b575-f801-4c0c-b67b-033184a22e79",
+      "remarks": "AI Optical Scanner detected 8 marks recount omission on Question 1(b) and 2(a). Approved by Chief Examiner.",
+      "updated_at": "2026-10-07T12:58:48.118Z"
+    }
+  ],
+  "payments": [
+    {
+      "payment_id": "pay-1791377906309-31ywg",
+      "student_id": "9bd0b575-f801-4c0c-b67b-033184a22e79",
+      "amount": 500,
+      "currency": "INR",
+      "gateway": "DSATM-Razorpay-Sandbox",
+      "transaction_reference": "TXN-DSATM-1791377906309",
+      "status": "SUCCESS",
+      "created_at": "2026-10-07T12:58:26.309Z",
+      "paid_at": "2026-10-07T12:58:26.309Z"
+    }
+  ]
+}
