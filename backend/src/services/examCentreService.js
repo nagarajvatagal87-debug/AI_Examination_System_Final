@@ -182,10 +182,10 @@ async function allocateStudentToRoom({ examId, studentId, centreId, roomId }) {
 /**
  * Generate & Publish Hall Ticket for a student
  */
-async function generateAndPublishHallTicket({ studentId, examId, status = "PUBLISHED", authorId }) {
+async function generateAndPublishHallTicket({ studentId, examId, status = "PUBLISHED", authorId, timetable }) {
   const { data: student } = await supabaseAdmin
     .from("profiles")
-    .select("id, full_name, registration_no, semester, department_id, departments(name)")
+    .select("id, full_name, registration_no, semester, department_id, departments!profiles_department_fk(name)")
     .eq("id", studentId)
     .maybeSingle();
 
@@ -221,6 +221,7 @@ async function generateAndPublishHallTicket({ studentId, examId, status = "PUBLI
     centre_name: alloc.centre_name,
     room_number: alloc.room_number,
     seat_number: alloc.seat_number,
+    timetable: timetable || null,
     status, // "NOT_GENERATED", "GENERATED", "VERIFIED", "PUBLISHED"
     created_at: new Date().toISOString(),
     published_at: status === "PUBLISHED" ? new Date().toISOString() : null,

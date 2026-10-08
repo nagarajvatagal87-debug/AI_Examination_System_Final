@@ -86,7 +86,7 @@ async function getDepartmentFacultyList(departmentId) {
   try {
     let query = supabaseAdmin
       .from("profiles")
-      .select("id, full_name, email, department_id, departments(name)")
+      .select("id, full_name, email, department_id, departments!profiles_department_fk(name)")
       .eq("role", "faculty");
 
     if (departmentId) {

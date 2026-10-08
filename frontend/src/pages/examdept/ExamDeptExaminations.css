@@ -345,3 +345,75 @@
   text-align: center !important;
   width: 60px !important;
 }
+
+/* ============================================================
+   OFFICIAL SINGLE-PAGE & BATCH ADMIT CARD PRINT STYLESHEET (@media print)
+   ============================================================ */
+.ticket-date-input,
+.ticket-time-input {
+  box-sizing: border-box;
+  transition: all 0.2s ease;
+}
+
+.ticket-date-input:focus,
+.ticket-time-input:focus {
+  border-color: #2563eb !important;
+  outline: none !important;
+  box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.2) !important;
+}
+
+@media print {
+  body * {
+    visibility: hidden !important;
+  }
+
+  .printable-ticket-sheet,
+  .printable-ticket-sheet * {
+    visibility: visible !important;
+  }
+
+  .printable-ticket-sheet {
+    position: relative !important;
+    left: 0 !important;
+    top: 0 !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    margin: 0 0 24px 0 !important;
+    padding: 24px 30px !important;
+    border: 2px solid #000000 !important;
+    box-shadow: none !important;
+    background: #ffffff !important;
+    color: #000000 !important;
+    font-size: 11pt !important;
+    page-break-after: always !important;
+    break-after: page !important;
+  }
+
+  .printable-ticket-sheet:last-child {
+    page-break-after: auto !important;
+    break-after: auto !important;
+  }
+
+  .ticket-date-input,
+  .ticket-time-input {
+    border: none !important;
+    background: transparent !important;
+    box-shadow: none !important;
+    outline: none !important;
+    color: #000000 !important;
+    font-family: inherit !important;
+    font-size: inherit !important;
+    font-weight: inherit !important;
+    text-align: center !important;
+    width: 100% !important;
+    padding: 0 !important;
+    -webkit-appearance: none !important;
+    -moz-appearance: none !important;
+    appearance: none !important;
+  }
+
+  @page {
+    size: A4 portrait;
+    margin: 8mm 10mm;
+  }
+}

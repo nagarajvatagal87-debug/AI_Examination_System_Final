@@ -38,46 +38,7 @@ try {
 }
 
 if (memoryApplications.length === 0) {
-  memoryApplications.push(
-    {
-      id: "app-101",
-      application_no: "REV-2026-8801",
-      student_id: "st-mca-01",
-      student_name: "Ananya Sharma",
-      student_usn: "1DS23MCA001",
-      exam_id: "exam-deep-learning",
-      subject_id: "sub-dl",
-      subject_name: "Deep Learning & AI Applications",
-      subject_code: "22MCA31",
-      original_marks: 58,
-      revised_marks: null,
-      final_marks: 58,
-      fee_amount: 500,
-      fee_paid: 500,
-      payment_status: "SUCCESS", // Paid! Ready for AI Optical Scanner
-      status: "SUBMITTED",
-      created_at: new Date().toISOString(),
-    },
-    {
-      id: "app-102",
-      application_no: "REV-2026-8802",
-      student_id: "st-mca-02",
-      student_name: "Rajesh Kumar",
-      student_usn: "1DS23MCA002",
-      exam_id: "exam-dbms",
-      subject_id: "sub-dbms",
-      subject_name: "Database Management Systems",
-      subject_code: "22MCA32",
-      original_marks: 62,
-      revised_marks: null,
-      final_marks: 62,
-      fee_amount: 500,
-      fee_paid: 0,
-      payment_status: "PENDING", // Pending payment
-      status: "PENDING_PAYMENT",
-      created_at: new Date().toISOString(),
-    }
-  );
+  // Real database applications only — no dummy seeding
 }
 
 function saveRevalToDisk() {
@@ -97,7 +58,16 @@ function getRevaluationConfig() {
 }
 
 function updateRevaluationConfig(newConfig) {
-  revalConfig = { ...revalConfig, ...newConfig };
+  const fee = newConfig.revaluation_fee !== undefined
+    ? Number(newConfig.revaluation_fee)
+    : (newConfig.revaluation_fee_per_subject !== undefined ? Number(newConfig.revaluation_fee_per_subject) : revalConfig.revaluation_fee_per_subject);
+
+  revalConfig = {
+    ...revalConfig,
+    ...newConfig,
+    revaluation_fee: fee,
+    revaluation_fee_per_subject: fee,
+  };
   saveRevalToDisk();
   return revalConfig;
 }
@@ -148,17 +118,27 @@ async function createRevaluationApplication({ studentId, examId, subjectId, subj
 
   const appId = `reval-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`;
 
+  const { data: student } = await supabaseAdmin
+    .from("profiles")
+    .select("full_name, registration_no")
+    .eq("id", studentId)
+    .maybeSingle();
+
   const newApp = {
     id: appId,
     application_no: `REV-2026-${Math.floor(1000 + Math.random() * 9000)}`,
     student_id: studentId,
+    student_name: student?.full_name || "Nagaraj",
+    student_usn: student?.registration_no || "1DT25MC036",
     exam_id: examId,
     subject_id: subjectId,
     subject_name: subjectName || "Subject",
     original_marks: Number(originalMarks) || 0,
     revised_marks: null,
     final_marks: Number(originalMarks) || 0,
+    fee_amount: revalConfig.revaluation_fee_per_subject,
     fee_paid: revalConfig.revaluation_fee_per_subject,
+    payment_status: "SUCCESS",
     payment_id: paymentId || null,
     application_type: applicationType, // "REVALUATION" or "RETOTALING"
     status: "SUBMITTED", // SUBMITTED -> ASSIGNED -> IN_EVALUATION -> EVALUATED -> APPROVED -> REJECTED -> COMPLETED

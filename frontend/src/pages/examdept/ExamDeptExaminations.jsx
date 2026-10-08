@@ -61,6 +61,7 @@ export default function ExamDeptExaminations() {
   const [loadingRoster, setLoadingRoster] = useState(false)
   const [showTicketPreviewModal, setShowTicketPreviewModal] = useState(false)
   const [previewTicketData, setPreviewTicketData] = useState(null)
+  const [showAllTicketsModal, setShowAllTicketsModal] = useState(false)
 
   const navigate = useNavigate()
 
@@ -238,10 +239,19 @@ export default function ExamDeptExaminations() {
     setTicketMsg(`🎟️ Generating and publishing admit card for ${studentObj.fullName} (${studentObj.registrationNo})...`)
     try {
       const targetExam = filteredExams[0] || exams[0] || { id: 'exam-default' }
+      const enrolledBreakdown = Array.isArray(studentObj.subjectBreakdown) ? studentObj.subjectBreakdown : [];
+      const timetable = enrolledBreakdown.map((sub) => ({
+        subjectCode: sub.subjectCode || sub.code || 'SUB',
+        subjectName: sub.subjectName || sub.name || 'Registered Subject',
+        examDate: sub.date || '20/07/2026',
+        timeSlot: sub.time || '2:00 PM - 5:00 PM'
+      }));
+
       await api.post('/examdept/generate-hall-ticket', {
         studentId: studentObj.studentId,
         examId: targetExam.id,
-        status: 'PUBLISHED'
+        status: 'PUBLISHED',
+        timetable
       })
       setTicketMsg(`✅ Official Hall Ticket published successfully for ${studentObj.fullName} (${studentObj.registrationNo})! Visible on Student Dashboard.`)
       loadHallTicketsData()
@@ -263,10 +273,19 @@ export default function ExamDeptExaminations() {
       const targetExam = filteredExams[0] || exams[0] || { id: 'exam-default' }
       let count = 0
       for (const st of eligibleStudents) {
+        const enrolledBreakdown = Array.isArray(st.subjectBreakdown) ? st.subjectBreakdown : [];
+        const timetable = enrolledBreakdown.map((sub) => ({
+          subjectCode: sub.subjectCode || sub.code || 'SUB',
+          subjectName: sub.subjectName || sub.name || 'Registered Subject',
+          examDate: sub.date || '20/07/2026',
+          timeSlot: sub.time || '2:00 PM - 5:00 PM'
+        }));
+
         await api.post('/examdept/generate-hall-ticket', {
           studentId: st.studentId,
           examId: targetExam.id,
-          status: 'PUBLISHED'
+          status: 'PUBLISHED',
+          timetable
         })
         count++
       }
@@ -282,23 +301,25 @@ export default function ExamDeptExaminations() {
   function handlePreviewHallTicket(studentObj) {
     const existingTicket = publishedHallTickets.find((ht) => ht.student_id === studentObj.studentId)
     
-    const subjectsList = studentObj.subjectBreakdown?.map((sub) => ({
-      code: sub.subjectCode || 'SUB',
-      name: sub.subjectName || 'Registered Subject',
+    // Render ONLY the candidate's exact enrolled subjects
+    const enrolledBreakdown = Array.isArray(studentObj.subjectBreakdown) ? studentObj.subjectBreakdown : [];
+    const subjectsList = enrolledBreakdown.map((sub) => ({
+      code: sub.subjectCode || sub.code || 'SUB',
+      name: sub.subjectName || sub.name || 'Registered Subject',
       date: sub.date || '20/07/2026',
       time: sub.time || '2:00 PM - 5:00 PM'
-    })) || [];
+    }));
 
     setPreviewTicketData({
       institution: "DAYANANDA SAGAR ACADEMY OF TECHNOLOGY & MANAGEMENT",
-      subtitle: "(An Autonomous Institution Affiliated to Visvesvaraya Technological University, Belagavi)",
+      subtitle: "(An Autonomous Institution Affiliated to Visvesvaraya Technological University, Belagavi & Approved by AICTE, New Delhi)",
       exam_session: "Semester End Examinations: July - August 2026",
-      sem_category: "(PG EVEN SEM)",
+      sem_category: "(PG EVEN SEMESTER)",
       student_name: studentObj.fullName,
       registration_no: studentObj.registrationNo,
-      department_name: studentObj.departmentName ? studentObj.departmentName.toUpperCase() : "DEPARTMENT OF MASTER OF COMPUTER APPLICATIONS",
+      department_name: studentObj.departmentName ? studentObj.departmentName.toUpperCase() : "DEPARTMENT OF MASTER OF COMPUTER APPLICATIONS (MCA)",
       program: studentObj.departmentName?.includes("MCA") ? "MCA" : (studentObj.departmentName || "MCA"),
-      semester: studentObj.semester || "1/2",
+      semester: studentObj.semester || "3rd Sem",
       academic_year: "2025–2026",
       attendance_pct: studentObj.attendancePercentage || 85.0,
       is_eligible: studentObj.isEligible,
@@ -309,6 +330,139 @@ export default function ExamDeptExaminations() {
       status: existingTicket?.status || "PUBLISHED",
     })
     setShowTicketPreviewModal(true)
+  }
+
+  function handleTicketSubjectDateChange(index, newDate) {
+    if (!previewTicketData || !previewTicketData.subjects) return;
+    const updated = [...previewTicketData.subjects];
+    updated[index] = { ...updated[index], date: newDate };
+    setPreviewTicketData({ ...previewTicketData, subjects: updated });
+
+    if (previewTicketData.registration_no) {
+      setDeptStudentRoster((prev) =>
+        prev.map((st) => {
+          if (st.registrationNo === previewTicketData.registration_no) {
+            const subs = [...(st.subjectBreakdown || [])];
+            if (subs[index]) {
+              subs[index] = { ...subs[index], date: newDate };
+            }
+            return { ...st, subjectBreakdown: subs };
+          }
+          return st;
+        })
+      );
+    }
+  }
+
+  function handleTicketSubjectTimeChange(index, newTime) {
+    if (!previewTicketData || !previewTicketData.subjects) return;
+    const updated = [...previewTicketData.subjects];
+    updated[index] = { ...updated[index], time: newTime };
+    setPreviewTicketData({ ...previewTicketData, subjects: updated });
+
+    if (previewTicketData.registration_no) {
+      setDeptStudentRoster((prev) =>
+        prev.map((st) => {
+          if (st.registrationNo === previewTicketData.registration_no) {
+            const subs = [...(st.subjectBreakdown || [])];
+            if (subs[index]) {
+              subs[index] = { ...subs[index], time: newTime };
+            }
+            return { ...st, subjectBreakdown: subs };
+          }
+          return st;
+        })
+      );
+    }
+  }
+
+  function handleRosterSubjectDateChange(studentIdx, subIdx, newDate) {
+    setDeptStudentRoster((prev) => {
+      const updated = [...prev];
+      const st = { ...updated[studentIdx] };
+      const subs = [...(st.subjectBreakdown || [])];
+      subs[subIdx] = { ...subs[subIdx], date: newDate };
+      st.subjectBreakdown = subs;
+      updated[studentIdx] = st;
+      return updated;
+    });
+  }
+
+  function handleRosterSubjectTimeChange(studentIdx, subIdx, newTime) {
+    setDeptStudentRoster((prev) => {
+      const updated = [...prev];
+      const st = { ...updated[studentIdx] };
+      const subs = [...(st.subjectBreakdown || [])];
+      subs[subIdx] = { ...subs[subIdx], time: newTime };
+      st.subjectBreakdown = subs;
+      updated[studentIdx] = st;
+      return updated;
+    });
+  }
+
+  async function handleSaveAndPublishSingleTicket() {
+    if (!previewTicketData) return;
+    const targetStudent = deptStudentRoster.find(s => s.registrationNo === previewTicketData.registration_no) || { studentId: previewTicketData.student_id, fullName: previewTicketData.student_name, registrationNo: previewTicketData.registration_no };
+    const timetable = (previewTicketData.subjects || []).map((sub) => ({
+      subjectCode: sub.code || sub.subjectCode || 'SUB',
+      subjectName: sub.name || sub.subjectName || 'Registered Subject',
+      examDate: sub.date || '20/07/2026',
+      timeSlot: sub.time || '2:00 PM - 5:00 PM'
+    }));
+
+    setPublishingTicket(true);
+    setTicketMsg(`💾 Saving edited dates & publishing hall ticket for ${previewTicketData.student_name}...`);
+    try {
+      const targetExam = filteredExams[0] || exams[0] || { id: 'exam-default' };
+      await api.post('/examdept/generate-hall-ticket', {
+        studentId: targetStudent.studentId || previewTicketData.student_id,
+        examId: targetExam.id,
+        status: 'PUBLISHED',
+        timetable
+      });
+      setTicketMsg(`✅ Saved edited dates & published official hall ticket for ${previewTicketData.student_name}! Visible on Student Dashboard.`);
+      loadHallTicketsData();
+    } catch (err) {
+      setTicketMsg(`❌ Failed to save hall ticket: ${err.response?.data?.error || err.message}`);
+    } finally {
+      setPublishingTicket(false);
+    }
+  }
+
+  async function handleSaveAndPublishAllWithEditedDates() {
+    const eligibleStudents = deptStudentRoster.filter((s) => s.isEligible);
+    if (eligibleStudents.length === 0) {
+      return setTicketMsg('⚠️ No eligible students found to publish.');
+    }
+    setPublishingTicket(true);
+    setTicketMsg(`💾 Saving edited dates & publishing hall tickets for ${eligibleStudents.length} eligible students...`);
+    try {
+      const targetExam = filteredExams[0] || exams[0] || { id: 'exam-default' };
+      let count = 0;
+      for (const st of eligibleStudents) {
+        const enrolledBreakdown = Array.isArray(st.subjectBreakdown) ? st.subjectBreakdown : [];
+        const timetable = enrolledBreakdown.map((sub) => ({
+          subjectCode: sub.subjectCode || sub.code || 'SUB',
+          subjectName: sub.subjectName || sub.name || 'Registered Subject',
+          examDate: sub.date || '20/07/2026',
+          timeSlot: sub.time || '2:00 PM - 5:00 PM'
+        }));
+
+        await api.post('/examdept/generate-hall-ticket', {
+          studentId: st.studentId,
+          examId: targetExam.id,
+          status: 'PUBLISHED',
+          timetable
+        });
+        count++;
+      }
+      setTicketMsg(`✅ Saved edited dates & published official hall tickets for ${count} student(s)! Updated on Student Dashboard.`);
+      loadHallTicketsData();
+    } catch (err) {
+      setTicketMsg(`❌ Save & publish error: ${err.response?.data?.error || err.message}`);
+    } finally {
+      setPublishingTicket(false);
+    }
   }
 
   async function handleCreate() {
@@ -925,14 +1079,25 @@ export default function ExamDeptExaminations() {
               </p>
             </div>
 
-            <button
-              disabled={publishingTicket || loadingRoster}
-              onClick={handlePublishDepartmentHallTickets}
-              className="ede-btn-primary"
-              style={{ padding: '12px 22px', fontSize: 13, fontWeight: 800 }}
-            >
-              {publishingTicket ? '⏳ Publishing Admit Cards...' : `🎟️ Publish All Hall Tickets for ${selectedDeptId === 'ALL' ? 'All Depts' : activeDeptObj?.name || 'Dept'}`}
-            </button>
+            <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', alignItems: 'center' }}>
+              <button
+                disabled={publishingTicket || loadingRoster || deptStudentRoster.length === 0}
+                onClick={() => setShowAllTicketsModal(true)}
+                className="ede-btn-emerald"
+                style={{ padding: '12px 20px', fontSize: 13, fontWeight: 800 }}
+                title="View scrollable list of all student hall tickets and print batch PDF"
+              >
+                📜 View & Print All Hall Tickets (Scrollable)
+              </button>
+              <button
+                disabled={publishingTicket || loadingRoster}
+                onClick={handlePublishDepartmentHallTickets}
+                className="ede-btn-primary"
+                style={{ padding: '12px 22px', fontSize: 13, fontWeight: 800 }}
+              >
+                {publishingTicket ? '⏳ Publishing Admit Cards...' : `🎟️ Publish All Hall Tickets for ${selectedDeptId === 'ALL' ? 'All Depts' : activeDeptObj?.name || 'Dept'}`}
+              </button>
+            </div>
           </div>
 
           {loadingRoster ? (
@@ -1079,120 +1244,180 @@ export default function ExamDeptExaminations() {
             </div>
 
             {/* Printable VTU Official Admission Ticket Sheet */}
-            <div style={{ background: '#ffffff', color: '#000000', padding: '36px 40px', borderRadius: 4, fontFamily: 'Times New Roman, Georgia, serif', border: '2px solid #000000', marginBottom: 20, boxShadow: '0 8px 24px rgba(0,0,0,0.12)' }}>
+            <div className="printable-ticket-sheet" style={{ background: '#ffffff', color: '#000000', padding: '36px 40px', borderRadius: 4, fontFamily: 'Times New Roman, Georgia, serif', border: '2px solid #000000', marginBottom: 20, boxShadow: '0 8px 24px rgba(0,0,0,0.12)' }}>
               
-              {/* Top Header with Emblem Logo */}
-              <div style={{ display: 'grid', gridTemplateColumns: '80px 1fr', gap: 16, alignItems: 'center', borderBottom: '2px solid #000000', paddingBottom: 12, marginBottom: 16 }}>
-                <div style={{ width: 72, height: 72, border: '2px solid #000000', borderRadius: '50%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', textAlign: 'center', fontSize: 9, fontWeight: 'bold' }}>
-                  <span>DSATM</span>
-                  <span style={{ fontSize: 8 }}>EMBLEM</span>
+              {/* Top Header with Dual Emblem Logos (DSATM Left + VTU Right) */}
+              <div style={{ display: 'grid', gridTemplateColumns: '80px 1fr 80px', gap: 12, alignItems: 'center', borderBottom: '2px solid #000000', paddingBottom: 14, marginBottom: 18 }}>
+                <div style={{ textAlign: 'center' }}>
+                  <img src="/dsi-logo.png" alt="DSATM Logo" style={{ width: 72, height: 72, objectFit: 'contain' }} />
                 </div>
                 <div style={{ textAlign: 'center' }}>
-                  <div style={{ fontSize: 17, fontWeight: 'bold', textTransform: 'uppercase', letterSpacing: '0.2px' }}>
+                  <div style={{ fontSize: 18, fontWeight: 900, textTransform: 'uppercase', letterSpacing: '0.3px', fontFamily: 'serif', lineHeight: '1.25', color: '#000000' }}>
                     DAYANANDA SAGAR ACADEMY OF TECHNOLOGY & MANAGEMENT
                   </div>
-                  <div style={{ fontSize: 11, fontStyle: 'italic', marginTop: 2 }}>
-                    (An Autonomous Institution Affiliated to Visvesvaraya Technological University, Belagavi)
+                  <div style={{ fontSize: 11, fontStyle: 'normal', fontWeight: 'bold', color: '#1e293b', marginTop: 4, lineHeight: '1.3' }}>
+                    (An Autonomous Institution Affiliated to Visvesvaraya Technological University, Belagavi & Approved by AICTE, New Delhi)
                   </div>
-                  <div style={{ fontSize: 15, fontWeight: 'bold', marginTop: 6, textTransform: 'uppercase' }}>
-                    Admission Ticket
+                  <div style={{ fontSize: 17, fontWeight: 900, marginTop: 8, textTransform: 'uppercase', letterSpacing: '0.8px', color: '#000000', textDecoration: 'underline' }}>
+                    OFFICIAL ADMISSION TICKET / HALL TICKET
                   </div>
-                  <div style={{ fontSize: 13, fontWeight: 'bold', marginTop: 2 }}>
-                    Semester End Examinations: July - August 2026
+                  <div style={{ fontSize: 13, fontWeight: 800, marginTop: 4, color: '#000000' }}>
+                    Semester End Main Examinations: July - August 2026
                   </div>
-                  <div style={{ fontSize: 12, fontWeight: 'bold', marginTop: 2 }}>
-                    {previewTicketData.sem_category || "(PG EVEN SEM)"}
+                  <div style={{ fontSize: 12, fontWeight: 800, marginTop: 2, color: '#1e3a8a' }}>
+                    {previewTicketData.sem_category || "(PG EVEN SEMESTER)"}
                   </div>
+                </div>
+                <div style={{ textAlign: 'center' }}>
+                  <img src="/vtu-logo.png" alt="VTU Emblem" style={{ width: 70, height: 70, objectFit: 'contain' }} />
                 </div>
               </div>
 
-              {/* Student Metadata Box & Photo */}
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 110px', gap: 16, marginBottom: 16, border: '1px solid #000000', padding: 12 }}>
-                <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13, fontFamily: 'serif' }}>
+              {/* Student Metadata Box & Photo Frame */}
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 130px', gap: 16, marginBottom: 16, border: '1px solid #000000', padding: 12 }}>
+                <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12, fontFamily: 'serif' }}>
                   <tbody>
                     <tr>
-                      <td style={{ fontWeight: 'bold', width: 190, padding: '3px 0' }}>NAME OF THE STUDENT</td>
+                      <td style={{ fontWeight: 'bold', width: 170, padding: '3px 0' }}>CANDIDATE NAME</td>
                       <td style={{ fontWeight: 'bold' }}>: {previewTicketData.student_name}</td>
                     </tr>
                     <tr>
-                      <td style={{ fontWeight: 'bold', padding: '3px 0' }}>USN</td>
-                      <td style={{ fontWeight: 'bold' }}>: {previewTicketData.registration_no}</td>
+                      <td style={{ fontWeight: 'bold', padding: '3px 0' }}>USN / REG NO</td>
+                      <td style={{ fontWeight: 'bold', fontSize: 13, color: '#1e3a8a' }}>: {previewTicketData.registration_no}</td>
                     </tr>
                     <tr>
-                      <td style={{ fontWeight: 'bold', padding: '3px 0' }}>Department</td>
+                      <td style={{ fontWeight: 'bold', padding: '3px 0' }}>DEPARTMENT</td>
                       <td style={{ fontWeight: 'bold' }}>: {previewTicketData.department_name}</td>
                     </tr>
                     <tr>
-                      <td style={{ fontWeight: 'bold', padding: '3px 0' }}>PROGRAM</td>
+                      <td style={{ fontWeight: 'bold', padding: '3px 0' }}>DEGREE / PROGRAM</td>
                       <td style={{ fontWeight: 'bold' }}>: {previewTicketData.program || 'MCA'}</td>
                     </tr>
                     <tr>
                       <td style={{ fontWeight: 'bold', padding: '3px 0' }}>SEMESTER</td>
-                      <td style={{ fontWeight: 'bold' }}>: {previewTicketData.semester || '1/2'}</td>
+                      <td style={{ fontWeight: 'bold' }}>: {previewTicketData.semester || '3rd Sem'}</td>
+                    </tr>
+                    <tr>
+                      <td style={{ fontWeight: 'bold', padding: '3px 0' }}>EXAMINATION CENTRE</td>
+                      <td style={{ fontWeight: 'bold', color: '#047857' }}>: {previewTicketData.centre_name} ({previewTicketData.room_number})</td>
                     </tr>
                   </tbody>
                 </table>
 
-                {/* Passport Photo Frame */}
-                <div style={{ border: '1px solid #000000', height: 125, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', background: '#f8fafc', padding: 4 }}>
-                  <span style={{ fontSize: 26 }}>👤</span>
-                  <span style={{ fontSize: 9, fontWeight: 'bold', marginTop: 4, color: '#475569', textAlign: 'center' }}>
-                    STUDENT PHOTO<br/>{previewTicketData.registration_no}
+                {/* Candidate Photo Frame */}
+                <div style={{ border: '1px solid #000000', height: 135, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', background: '#fafafa', padding: 6, textAlign: 'center' }}>
+                  <div style={{ width: 60, height: 60, borderRadius: '50%', background: '#e2e8f0', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 30, marginBottom: 4 }}>
+                    👤
+                  </div>
+                  <span style={{ fontSize: 9, fontWeight: 'bold', color: '#0f172a', lineHeight: '1.2' }}>
+                    CANDIDATE PHOTO<br/>
+                    <span style={{ fontSize: 8, fontFamily: 'monospace', color: '#475569' }}>{previewTicketData.registration_no}</span>
                   </span>
+                  {/* Barcode Representation */}
+                  <div style={{ marginTop: 4, letterSpacing: '2px', fontSize: 8, fontFamily: 'monospace', background: '#000', color: '#fff', padding: '1px 4px' }}>
+                    |||| || ||| ||||
+                  </div>
                 </div>
               </div>
 
-              {/* Course Roster Table (5 Columns Grid) */}
+              {/* Course Roster Table */}
               <div style={{ marginBottom: 20 }}>
+                <div style={{ fontSize: 11, fontWeight: 'bold', marginBottom: 6, textTransform: 'uppercase', letterSpacing: '0.3px' }}>
+                  📋 REGISTERED COURSES FOR MAIN EXAMINATION
+                </div>
                 <table style={{ width: '100%', borderCollapse: 'collapse', border: '1px solid #000000', fontSize: 11, fontFamily: 'serif' }}>
                   <thead>
-                    <tr style={{ background: '#f8fafc', borderBottom: '1px solid #000000' }}>
-                      <th style={{ borderRight: '1px solid #000000', padding: '8px 10px', textAlign: 'center', width: '16%', fontWeight: 'bold' }}>COURSE CODE</th>
-                      <th style={{ borderRight: '1px solid #000000', padding: '8px 10px', textAlign: 'left', width: '44%', fontWeight: 'bold' }}>COURSE TITLE</th>
-                      <th style={{ borderRight: '1px solid #000000', padding: '8px 10px', textAlign: 'center', width: '14%', fontWeight: 'bold' }}>DATE</th>
-                      <th style={{ borderRight: '1px solid #000000', padding: '8px 10px', textAlign: 'center', width: '14%', fontWeight: 'bold' }}>TIME</th>
-                      <th style={{ padding: '8px 10px', textAlign: 'center', width: '12%', fontWeight: 'bold' }}>INVIGILATOR SIGNATURE</th>
+                    <tr style={{ background: '#f1f5f9', borderBottom: '1px solid #000000' }}>
+                      <th style={{ borderRight: '1px solid #000000', padding: '8px 6px', textAlign: 'center', width: '15%', fontWeight: 'bold' }}>COURSE CODE</th>
+                      <th style={{ borderRight: '1px solid #000000', padding: '8px 8px', textAlign: 'left', width: '37%', fontWeight: 'bold' }}>COURSE TITLE</th>
+                      <th style={{ borderRight: '1px solid #000000', padding: '8px 6px', textAlign: 'center', width: '18%', fontWeight: 'bold' }}>DATE</th>
+                      <th style={{ borderRight: '1px solid #000000', padding: '8px 6px', textAlign: 'center', width: '18%', fontWeight: 'bold' }}>TIME SLOT</th>
+                      <th style={{ padding: '8px 6px', textAlign: 'center', width: '12%', fontWeight: 'bold' }}>INVIGILATOR SIGNATURE</th>
                     </tr>
                   </thead>
                   <tbody>
-                    {previewTicketData.subjects?.map((sub, sIdx) => (
-                      <tr key={sIdx} style={{ borderBottom: '1px solid #000000' }}>
-                        <td style={{ borderRight: '1px solid #000000', padding: '7px 10px', textAlign: 'center', fontWeight: 'bold' }}>{sub.code}</td>
-                        <td style={{ borderRight: '1px solid #000000', padding: '7px 10px', textTransform: 'uppercase', fontWeight: '600' }}>{sub.name}</td>
-                        <td style={{ borderRight: '1px solid #000000', padding: '7px 10px', textAlign: 'center' }}>{sub.date || '20/07/2026'}</td>
-                        <td style={{ borderRight: '1px solid #000000', padding: '7px 10px', textAlign: 'center', fontSize: 10 }}>{sub.time || '2PM - 5 PM'}</td>
-                        <td style={{ padding: '7px 10px', textAlign: 'center' }}></td>
+                    {previewTicketData.subjects && previewTicketData.subjects.length > 0 ? (
+                      previewTicketData.subjects.map((sub, sIdx) => (
+                        <tr key={sIdx} style={{ borderBottom: '1px solid #000000' }}>
+                          <td style={{ borderRight: '1px solid #000000', padding: '6px 8px', textAlign: 'center', fontWeight: 'bold', color: '#1e3a8a' }}>{sub.code}</td>
+                          <td style={{ borderRight: '1px solid #000000', padding: '6px 8px', textTransform: 'uppercase', fontWeight: '600' }}>{sub.name}</td>
+                          <td style={{ borderRight: '1px solid #000000', padding: '4px 4px', textAlign: 'center' }}>
+                            <input
+                              type="text"
+                              className="ticket-date-input"
+                              value={sub.date || '20/07/2026'}
+                              onChange={(e) => handleTicketSubjectDateChange(sIdx, e.target.value)}
+                              style={{
+                                width: '100%',
+                                textAlign: 'center',
+                                border: 'none',
+                                background: 'transparent',
+                                padding: '2px 0',
+                                fontSize: '11px',
+                                fontFamily: 'inherit',
+                                fontWeight: 'bold',
+                                color: '#000000',
+                                outline: 'none',
+                                boxShadow: 'none'
+                              }}
+                              title="Click to edit exam date manually"
+                            />
+                          </td>
+                          <td style={{ borderRight: '1px solid #000000', padding: '4px 4px', textAlign: 'center' }}>
+                            <input
+                              type="text"
+                              className="ticket-time-input"
+                              value={sub.time || '2:00 PM - 5:00 PM'}
+                              onChange={(e) => handleTicketSubjectTimeChange(sIdx, e.target.value)}
+                              style={{
+                                width: '100%',
+                                textAlign: 'center',
+                                border: 'none',
+                                background: 'transparent',
+                                padding: '2px 0',
+                                fontSize: '10px',
+                                fontFamily: 'inherit',
+                                fontWeight: '600',
+                                color: '#000000',
+                                outline: 'none',
+                                boxShadow: 'none'
+                              }}
+                              title="Click to edit time slot manually"
+                            />
+                          </td>
+                          <td style={{ padding: '6px 8px', textAlign: 'center' }}></td>
+                        </tr>
+                      ))
+                    ) : (
+                      <tr>
+                        <td colSpan={5} style={{ padding: 12, textAlign: 'center', color: '#64748b' }}>No registered courses found</td>
                       </tr>
-                    ))}
+                    )}
                   </tbody>
                 </table>
               </div>
 
               {/* Signatures & Controller Seal Block */}
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1.3fr 1fr', gap: 16, marginTop: 40, alignItems: 'flex-end', fontFamily: 'serif', fontSize: 11 }}>
-                {/* Left: Student Signature */}
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1.3fr 1fr', gap: 16, marginTop: 36, alignItems: 'flex-end', fontFamily: 'serif', fontSize: 11 }}>
+                {/* Left: Student Signature (MANUAL ON EXAM DAY) */}
                 <div style={{ textAlign: 'center' }}>
-                  <div style={{ fontFamily: 'cursive', fontSize: 15, color: '#0f172a', marginBottom: 2, fontStyle: 'italic' }}>
-                    {previewTicketData.student_name?.split(' ')[0]}
-                  </div>
+                  <div style={{ height: 32 }}></div>
                   <div style={{ borderTop: '1px solid #000000', paddingTop: 4, fontWeight: 'bold' }}>
-                    SIGNATURE OF STUDENT
+                    SIGNATURE OF CANDIDATE
+                  </div>
+                  <div style={{ fontSize: 9, color: '#475569', fontStyle: 'italic', marginTop: 2 }}>
+                    (To be signed manually on Exam Day)
                   </div>
                 </div>
 
-                {/* Center: COE Signature & Stamp */}
+                {/* Center: COE Signature */}
                 <div style={{ textAlign: 'center' }}>
                   <div style={{ fontFamily: 'cursive', fontSize: 14, color: '#1e3a8a', marginBottom: 2, fontStyle: 'italic', fontWeight: 'bold' }}>
                     Nagaraj. C
                   </div>
                   <div style={{ borderTop: '1px solid #000000', paddingTop: 4 }}>
                     <div style={{ fontWeight: 'bold', fontSize: 11 }}>SIGNATURE OF COE</div>
-                    <div style={{ fontWeight: 'bold', fontSize: 11, color: '#1e293b' }}>Controller of Examinations</div>
-                    <div style={{ fontSize: 9, color: '#334155', marginTop: 2, lineHeight: '1.2' }}>
-                      Dayananda Sagar Academy of Technology & Management<br/>
-                      Opp. Art of Living, Udayapura,<br/>
-                      Kanakapura Road, Bengaluru-560082
-                    </div>
+                    <div style={{ fontWeight: '600', fontSize: 10, color: '#334155', marginTop: 2 }}>Controller of Examinations</div>
                   </div>
                 </div>
 
@@ -1202,12 +1427,8 @@ export default function ExamDeptExaminations() {
                     R.S.S
                   </div>
                   <div style={{ borderTop: '1px solid #000000', paddingTop: 4 }}>
-                    <div style={{ fontWeight: 'bold', fontSize: 11 }}>Signature of Principal</div>
-                    <div style={{ fontSize: 9, color: '#334155', marginTop: 2, lineHeight: '1.2' }}>
-                      Dayananda Sagar Academy of Technology & Management<br/>
-                      Udayapura, Kanakapura Road<br/>
-                      Opp. Art of Living, Bengaluru - 560 082
-                    </div>
+                    <div style={{ fontWeight: 'bold', fontSize: 11 }}>SIGNATURE OF PRINCIPAL</div>
+                    <div style={{ fontWeight: '600', fontSize: 10, color: '#334155', marginTop: 2 }}>Principal</div>
                   </div>
                 </div>
               </div>
@@ -1217,16 +1438,261 @@ export default function ExamDeptExaminations() {
             {/* Modal Actions */}
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <span style={{ fontSize: 12, color: '#64748b', fontWeight: 600 }}>
-                Official Admission Ticket format generated for <strong>{previewTicketData.student_name} ({previewTicketData.registration_no})</strong>.
+                Official Admission Ticket for <strong>{previewTicketData.student_name} ({previewTicketData.registration_no})</strong>.
               </span>
-              <button
-                onClick={() => window.print()}
-                className="ede-btn-emerald"
-                style={{ padding: '10px 20px', fontSize: 13 }}
-              >
-                📥 Print Official Admission Ticket PDF
-              </button>
+              <div style={{ display: 'flex', gap: 10 }}>
+                <button
+                  disabled={publishingTicket}
+                  onClick={handleSaveAndPublishSingleTicket}
+                  className="ede-btn-primary"
+                  style={{ padding: '10px 18px', fontSize: 13 }}
+                >
+                  {publishingTicket ? '⏳ Saving...' : '💾 Save Changes & Publish'}
+                </button>
+                <button
+                  onClick={() => window.print()}
+                  className="ede-btn-emerald"
+                  style={{ padding: '10px 18px', fontSize: 13 }}
+                >
+                  📥 Print Official Admission Ticket PDF
+                </button>
+              </div>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* OFFICIAL BATCH HALL TICKETS PREVIEW MODAL — SCROLLABLE ALL TICKETS */}
+      {showAllTicketsModal && (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(15,23,42,0.75)', backdropFilter: 'blur(8px)', zIndex: 100, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24, overflowY: 'auto' }}>
+          <div className="glass-panel" style={{ width: '100%', maxWidth: 960, maxHeight: '94vh', overflowY: 'auto', margin: 'auto', padding: 32, border: '1px solid #bfdbfe' }}>
+            
+            {/* Header Bar */}
+            <div style={{ position: 'sticky', top: -32, background: '#ffffff', zIndex: 10, margin: '-32px -32px 24px -32px', padding: '16px 32px', borderBottom: '2px solid #e2e8f0', display: 'flex', justifyContent: 'space-between', alignItems: 'center', boxShadow: '0 4px 12px rgba(0,0,0,0.05)' }}>
+              <div>
+                <h3 style={{ fontSize: 18, margin: 0, color: '#0f172a', fontWeight: 800 }}>📜 Batch Official Hall Tickets ({deptStudentRoster.filter(s => s.isEligible).length} Eligible Candidates)</h3>
+                <span style={{ fontSize: 12, color: '#64748b' }}>Scroll down to view/edit all hall tickets. Click Save or Print to generate full A4 PDF document.</span>
+              </div>
+              <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
+                <button
+                  disabled={publishingTicket}
+                  onClick={handleSaveAndPublishAllWithEditedDates}
+                  className="ede-btn-primary"
+                  style={{ padding: '8px 16px', fontSize: 13 }}
+                >
+                  {publishingTicket ? '⏳ Saving...' : '💾 Save All Changes & Publish'}
+                </button>
+                <button
+                  onClick={() => window.print()}
+                  className="ede-btn-emerald"
+                  style={{ padding: '8px 16px', fontSize: 13 }}
+                >
+                  📥 Print / Download All Hall Tickets (PDF)
+                </button>
+                <button onClick={() => setShowAllTicketsModal(false)} style={{ background: 'none', border: 'none', color: '#64748b', fontSize: 24, cursor: 'pointer' }}>✕</button>
+              </div>
+            </div>
+
+            {/* Roster of Hall Tickets Stacked Vertically */}
+            {deptStudentRoster.filter(s => s.isEligible).length === 0 ? (
+              <div style={{ padding: 40, textAlign: 'center', color: '#64748b' }}>
+                No eligible candidates found for hall ticket generation.
+              </div>
+            ) : (
+              deptStudentRoster.filter(s => s.isEligible).map((st, stIdx) => {
+                const existingTicket = publishedHallTickets.find((ht) => ht.student_id === st.studentId);
+                const enrolledSubs = Array.isArray(st.subjectBreakdown) ? st.subjectBreakdown : [];
+
+                return (
+                  <div key={st.studentId || stIdx} className="printable-ticket-sheet" style={{ background: '#ffffff', color: '#000000', padding: '36px 40px', borderRadius: 4, fontFamily: 'Times New Roman, Georgia, serif', border: '2px solid #000000', marginBottom: 32, boxShadow: '0 8px 24px rgba(0,0,0,0.12)' }}>
+                    
+                    {/* Header */}
+                    <div style={{ display: 'grid', gridTemplateColumns: '80px 1fr 80px', gap: 12, alignItems: 'center', borderBottom: '2px solid #000000', paddingBottom: 14, marginBottom: 18 }}>
+                      <div style={{ textAlign: 'center' }}>
+                        <img src="/dsi-logo.png" alt="DSATM Logo" style={{ width: 72, height: 72, objectFit: 'contain' }} />
+                      </div>
+                      <div style={{ textAlign: 'center' }}>
+                        <div style={{ fontSize: 18, fontWeight: 900, textTransform: 'uppercase', letterSpacing: '0.3px', fontFamily: 'serif', lineHeight: '1.25', color: '#000000' }}>
+                          DAYANANDA SAGAR ACADEMY OF TECHNOLOGY & MANAGEMENT
+                        </div>
+                        <div style={{ fontSize: 11, fontStyle: 'normal', fontWeight: 'bold', color: '#1e293b', marginTop: 4, lineHeight: '1.3' }}>
+                          (An Autonomous Institution Affiliated to Visvesvaraya Technological University, Belagavi & Approved by AICTE, New Delhi)
+                        </div>
+                        <div style={{ fontSize: 17, fontWeight: 900, marginTop: 8, textTransform: 'uppercase', letterSpacing: '0.8px', color: '#000000', textDecoration: 'underline' }}>
+                          OFFICIAL ADMISSION TICKET / HALL TICKET
+                        </div>
+                        <div style={{ fontSize: 13, fontWeight: 800, marginTop: 4, color: '#000000' }}>
+                          Semester End Main Examinations: July - August 2026
+                        </div>
+                        <div style={{ fontSize: 12, fontWeight: 800, marginTop: 2, color: '#1e3a8a' }}>
+                          (PG EVEN SEMESTER)
+                        </div>
+                      </div>
+                      <div style={{ textAlign: 'center' }}>
+                        <img src="/vtu-logo.png" alt="VTU Emblem" style={{ width: 70, height: 70, objectFit: 'contain' }} />
+                      </div>
+                    </div>
+
+                    {/* Student Metadata */}
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 130px', gap: 16, marginBottom: 16, border: '1px solid #000000', padding: 12 }}>
+                      <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12, fontFamily: 'serif' }}>
+                        <tbody>
+                          <tr>
+                            <td style={{ fontWeight: 'bold', width: 170, padding: '3px 0' }}>CANDIDATE NAME</td>
+                            <td style={{ fontWeight: 'bold' }}>: {st.fullName}</td>
+                          </tr>
+                          <tr>
+                            <td style={{ fontWeight: 'bold', padding: '3px 0' }}>USN / REG NO</td>
+                            <td style={{ fontWeight: 'bold', fontSize: 13, color: '#1e3a8a' }}>: {st.registrationNo}</td>
+                          </tr>
+                          <tr>
+                            <td style={{ fontWeight: 'bold', padding: '3px 0' }}>DEPARTMENT</td>
+                            <td style={{ fontWeight: 'bold' }}>: {st.departmentName ? st.departmentName.toUpperCase() : "DEPARTMENT OF MASTER OF COMPUTER APPLICATIONS (MCA)"}</td>
+                          </tr>
+                          <tr>
+                            <td style={{ fontWeight: 'bold', padding: '3px 0' }}>DEGREE / PROGRAM</td>
+                            <td style={{ fontWeight: 'bold' }}>: {st.departmentName?.includes("MCA") ? "MCA" : (st.departmentName || "MCA")}</td>
+                          </tr>
+                          <tr>
+                            <td style={{ fontWeight: 'bold', padding: '3px 0' }}>SEMESTER</td>
+                            <td style={{ fontWeight: 'bold' }}>: {st.semester || '3rd Sem'}</td>
+                          </tr>
+                          <tr>
+                            <td style={{ fontWeight: 'bold', padding: '3px 0' }}>EXAMINATION CENTRE</td>
+                            <td style={{ fontWeight: 'bold', color: '#047857' }}>: {existingTicket?.centre_name || centres[0]?.name || "DSATM Main Academic Block Examination Centre"} ({existingTicket?.room_number || "LH-101"})</td>
+                          </tr>
+                        </tbody>
+                      </table>
+
+                      {/* Candidate Photo */}
+                      <div style={{ border: '1px solid #000000', height: 135, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', background: '#fafafa', padding: 6, textAlign: 'center' }}>
+                        <div style={{ width: 60, height: 60, borderRadius: '50%', background: '#e2e8f0', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 30, marginBottom: 4 }}>
+                          👤
+                        </div>
+                        <span style={{ fontSize: 9, fontWeight: 'bold', color: '#0f172a', lineHeight: '1.2' }}>
+                          CANDIDATE PHOTO<br/>
+                          <span style={{ fontSize: 8, fontFamily: 'monospace', color: '#475569' }}>{st.registrationNo}</span>
+                        </span>
+                        <div style={{ marginTop: 4, letterSpacing: '2px', fontSize: 8, fontFamily: 'monospace', background: '#000', color: '#fff', padding: '1px 4px' }}>
+                          |||| || ||| ||||
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Course Roster Table */}
+                    <div style={{ marginBottom: 20 }}>
+                      <div style={{ fontSize: 11, fontWeight: 'bold', marginBottom: 6, textTransform: 'uppercase', letterSpacing: '0.3px' }}>
+                        📋 REGISTERED COURSES FOR MAIN EXAMINATION
+                      </div>
+                      <table style={{ width: '100%', borderCollapse: 'collapse', border: '1px solid #000000', fontSize: 11, fontFamily: 'serif' }}>
+                        <thead>
+                          <tr style={{ background: '#f1f5f9', borderBottom: '1px solid #000000' }}>
+                            <th style={{ borderRight: '1px solid #000000', padding: '8px 6px', textAlign: 'center', width: '15%', fontWeight: 'bold' }}>COURSE CODE</th>
+                            <th style={{ borderRight: '1px solid #000000', padding: '8px 8px', textAlign: 'left', width: '37%', fontWeight: 'bold' }}>COURSE TITLE</th>
+                            <th style={{ borderRight: '1px solid #000000', padding: '8px 6px', textAlign: 'center', width: '18%', fontWeight: 'bold' }}>DATE</th>
+                            <th style={{ borderRight: '1px solid #000000', padding: '8px 6px', textAlign: 'center', width: '18%', fontWeight: 'bold' }}>TIME SLOT</th>
+                            <th style={{ padding: '8px 6px', textAlign: 'center', width: '12%', fontWeight: 'bold' }}>INVIGILATOR SIGNATURE</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {enrolledSubs.length > 0 ? (
+                            enrolledSubs.map((sub, sIdx) => (
+                              <tr key={sIdx} style={{ borderBottom: '1px solid #000000' }}>
+                                <td style={{ borderRight: '1px solid #000000', padding: '6px 8px', textAlign: 'center', fontWeight: 'bold', color: '#1e3a8a' }}>{sub.subjectCode || sub.code || 'SUB'}</td>
+                                <td style={{ borderRight: '1px solid #000000', padding: '6px 8px', textTransform: 'uppercase', fontWeight: '600' }}>{sub.subjectName || sub.name || 'Subject'}</td>
+                                <td style={{ borderRight: '1px solid #000000', padding: '4px 4px', textAlign: 'center' }}>
+                                  <input
+                                    type="text"
+                                    className="ticket-date-input"
+                                    value={sub.date || '20/07/2026'}
+                                    onChange={(e) => handleRosterSubjectDateChange(stIdx, sIdx, e.target.value)}
+                                    style={{
+                                      width: '100%',
+                                      textAlign: 'center',
+                                      border: 'none',
+                                      background: 'transparent',
+                                      padding: '2px 0',
+                                      fontSize: '11px',
+                                      fontFamily: 'inherit',
+                                      fontWeight: 'bold',
+                                      color: '#000000',
+                                      outline: 'none',
+                                      boxShadow: 'none'
+                                    }}
+                                    title="Click to edit exam date"
+                                  />
+                                </td>
+                                <td style={{ borderRight: '1px solid #000000', padding: '4px 4px', textAlign: 'center' }}>
+                                  <input
+                                    type="text"
+                                    className="ticket-time-input"
+                                    value={sub.time || '2:00 PM - 5:00 PM'}
+                                    onChange={(e) => handleRosterSubjectTimeChange(stIdx, sIdx, e.target.value)}
+                                    style={{
+                                      width: '100%',
+                                      textAlign: 'center',
+                                      border: 'none',
+                                      background: 'transparent',
+                                      padding: '2px 0',
+                                      fontSize: '10px',
+                                      fontFamily: 'inherit',
+                                      fontWeight: '600',
+                                      color: '#000000',
+                                      outline: 'none',
+                                      boxShadow: 'none'
+                                    }}
+                                    title="Click to edit time slot"
+                                  />
+                                </td>
+                                <td style={{ padding: '6px 8px', textAlign: 'center' }}></td>
+                              </tr>
+                            ))
+                          ) : (
+                            <tr>
+                              <td colSpan={5} style={{ padding: 12, textAlign: 'center', color: '#64748b' }}>No registered courses found</td>
+                            </tr>
+                          )}
+                        </tbody>
+                      </table>
+                    </div>
+
+                    {/* Signatures */}
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1.3fr 1fr', gap: 16, marginTop: 36, alignItems: 'flex-end', fontFamily: 'serif', fontSize: 11 }}>
+                      <div style={{ textAlign: 'center' }}>
+                        <div style={{ height: 32 }}></div>
+                        <div style={{ borderTop: '1px solid #000000', paddingTop: 4, fontWeight: 'bold' }}>
+                          SIGNATURE OF CANDIDATE
+                        </div>
+                        <div style={{ fontSize: 9, color: '#475569', fontStyle: 'italic', marginTop: 2 }}>
+                          (To be signed manually on Exam Day)
+                        </div>
+                      </div>
+
+                      <div style={{ textAlign: 'center' }}>
+                        <div style={{ fontFamily: 'cursive', fontSize: 14, color: '#1e3a8a', marginBottom: 2, fontStyle: 'italic', fontWeight: 'bold' }}>
+                          Nagaraj. C
+                        </div>
+                        <div style={{ borderTop: '1px solid #000000', paddingTop: 4 }}>
+                          <div style={{ fontWeight: 'bold', fontSize: 11 }}>SIGNATURE OF COE</div>
+                          <div style={{ fontWeight: '600', fontSize: 10, color: '#334155', marginTop: 2 }}>Controller of Examinations</div>
+                        </div>
+                      </div>
+
+                      <div style={{ textAlign: 'center' }}>
+                        <div style={{ fontFamily: 'cursive', fontSize: 14, color: '#0f172a', marginBottom: 2, fontStyle: 'italic', fontWeight: 'bold' }}>
+                          R.S.S
+                        </div>
+                        <div style={{ borderTop: '1px solid #000000', paddingTop: 4 }}>
+                          <div style={{ fontWeight: 'bold', fontSize: 11 }}>SIGNATURE OF PRINCIPAL</div>
+                          <div style={{ fontWeight: '600', fontSize: 10, color: '#334155', marginTop: 2 }}>Principal</div>
+                        </div>
+                      </div>
+                    </div>
+
+                  </div>
+                );
+              })
+            )}
           </div>
         </div>
       )}

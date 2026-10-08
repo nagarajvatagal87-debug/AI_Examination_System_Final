@@ -378,22 +378,29 @@ export default function ExamDeptDashboard() {
                     <td style={{ fontWeight: 800, color: '#1d4ed8' }}>{st.registrationNo}</td>
                     <td style={{ fontWeight: 700, color: '#0f172a' }}>{st.fullName}</td>
                     <td>
-                      <span
-                        onClick={() => st.departmentId && setSelectedDeptId(st.departmentId)}
-                        title="Click to filter dashboard by this department"
-                        style={{
-                          padding: '3px 8px',
-                          borderRadius: 6,
-                          fontSize: 11,
-                          fontWeight: 700,
-                          background: '#eff6ff',
-                          color: '#1d4ed8',
-                          border: '1px solid #bfdbfe',
-                          cursor: 'pointer'
-                        }}
-                      >
-                        🏛️ {st.departmentName || 'Master of Computer Applications'}
-                      </span>
+                      {(() => {
+                        const deptObj = departments.find((d) => d.id === st.departmentId);
+                        const isUuid = st.departmentName && st.departmentName.length > 20 && st.departmentName.includes('-');
+                        const resolvedDeptName = deptObj?.name || (!isUuid && st.departmentName ? st.departmentName : 'Master of Computer Applications');
+                        return (
+                          <span
+                            onClick={() => st.departmentId && setSelectedDeptId(st.departmentId)}
+                            title="Click to filter dashboard by this department"
+                            style={{
+                              padding: '3px 8px',
+                              borderRadius: 6,
+                              fontSize: 11,
+                              fontWeight: 700,
+                              background: '#eff6ff',
+                              color: '#1d4ed8',
+                              border: '1px solid #bfdbfe',
+                              cursor: 'pointer'
+                            }}
+                          >
+                            🏛️ {resolvedDeptName}
+                          </span>
+                        );
+                      })()}
                     </td>
                     <td style={{ color: '#475569' }}>{st.semester}</td>
                     <td style={{ fontWeight: 900, color: st.avgInternal50 >= 25 ? '#059669' : '#e11d48' }}>

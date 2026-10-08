@@ -240,7 +240,7 @@ router.post("/events/:id/register", async (req, res) => {
     // Fetch full profile info for registration
     const { data: prof } = await supabaseAdmin
       .from("profiles")
-      .select("id, full_name, registration_no, semester, section, department_id, departments(name)")
+      .select("id, full_name, registration_no, semester, section, department_id, departments!profiles_department_fk(name)")
       .eq("id", studentId)
       .maybeSingle();
 

@@ -267,13 +267,27 @@ export default function ExamDeptRevaluation() {
                             </button>
                           </div>
                         ) : app.status !== 'COMPLETED' && app.status !== 'APPROVED' ? (
-                          <button
-                            className="edd-action-btn green"
-                            style={{ fontSize: 11, padding: '6px 12px', background: 'linear-gradient(135deg, #059669 0%, #10b981 100%)', color: '#fff', border: 'none', fontWeight: 800, cursor: 'pointer', borderRadius: 8 }}
-                            onClick={() => handleStartScanner(app)}
-                          >
-                            🤖 AI Scanner & Re-evaluate
-                          </button>
+                          <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+                            <button
+                              className="edd-action-btn blue"
+                              style={{ fontSize: 11, padding: '6px 10px', background: '#2563eb', color: '#fff', border: 'none', fontWeight: 800, cursor: 'pointer', borderRadius: 8 }}
+                              onClick={() => {
+                                setSelectedApp(app)
+                                setNewMarks(app.original_marks || '')
+                                setDecisionType('INCREASED')
+                                setReason('Paper re-evaluation verified by Chief Examiner.')
+                              }}
+                            >
+                              ✍️ Enter Marks
+                            </button>
+                            <button
+                              className="edd-action-btn green"
+                              style={{ fontSize: 11, padding: '6px 10px', background: 'linear-gradient(135deg, #059669 0%, #10b981 100%)', color: '#fff', border: 'none', fontWeight: 800, cursor: 'pointer', borderRadius: 8 }}
+                              onClick={() => handleStartScanner(app)}
+                            >
+                              🤖 AI Scanner
+                            </button>
+                          </div>
                         ) : (
                           <span style={{ fontSize: 12, color: '#059669', fontWeight: 800 }}>✅ Result Finalized</span>
                         )}

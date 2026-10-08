@@ -5,7 +5,7 @@
       "name": "DSATM Main Academic Block Examination Centre",
       "code": "CENTRE-101",
       "address": "Kanakapura Road, Udayapura, Bengaluru - 560082",
-      "capacity": 40,
+      "capacity": 80,
       "status": "ACTIVE",
       "rooms": [
         {
@@ -15,10 +15,77 @@
           "room_number": "404",
           "capacity": 40,
           "status": "ACTIVE"
+        },
+        {
+          "id": "room-1791485088041-ou9",
+          "building": "Block M",
+          "floor": "4tt Floor",
+          "room_number": "405",
+          "capacity": 40,
+          "status": "ACTIVE"
         }
       ]
     }
   ],
   "allocations": [],
-  "hallTickets": []
+  "hallTickets": [
+    {
+      "id": "ht-2f8a07f0-05ab-4e74-88ae-466313528840-exam-default",
+      "student_id": "2f8a07f0-05ab-4e74-88ae-466313528840",
+      "exam_id": "exam-default",
+      "institution": "DAYANANDA SAGAR ACADEMY OF TECHNOLOGY AND MANAGEMENT",
+      "student_name": "Bhavani Danayya Masaguppimath",
+      "registration_no": "1DT25MC010",
+      "department_name": "MCA",
+      "semester": "3rd Sem",
+      "academic_year": "2025–2026",
+      "exam_title": "Main Examination 2026",
+      "subject_code": "MMC321",
+      "subject_name": "Main Examination Subject",
+      "exam_date": "Scheduled",
+      "exam_time": "09:30 AM - 12:30 PM",
+      "centre_name": "DSATM Main Academic Block Examination Centre",
+      "room_number": "404",
+      "seat_number": "SEAT-01",
+      "status": "PUBLISHED",
+      "created_at": "2026-10-08T19:07:44.069Z",
+      "published_at": "2026-10-08T19:07:44.069Z"
+    },
+    {
+      "id": "ht-85947c37-dfc9-442b-9918-72b4124492ff-exam-default",
+      "student_id": "85947c37-dfc9-442b-9918-72b4124492ff",
+      "exam_id": "exam-default",
+      "institution": "DAYANANDA SAGAR ACADEMY OF TECHNOLOGY AND MANAGEMENT",
+      "student_name": "Nagaraj",
+      "registration_no": "1DT25MC036",
+      "department_name": "MCA",
+      "semester": "3rd Sem",
+      "academic_year": "2025–2026",
+      "exam_title": "Main Examination 2026",
+      "subject_code": "MMC321",
+      "subject_name": "Main Examination Subject",
+      "exam_date": "Scheduled",
+      "exam_time": "09:30 AM - 12:30 PM",
+      "centre_name": "DSATM Main Academic Block Examination Centre",
+      "room_number": "404",
+      "seat_number": "SEAT-01",
+      "timetable": [
+        {
+          "subjectCode": "MMC335",
+          "subjectName": "Devops",
+          "examDate": "20/12/2026",
+          "timeSlot": "2:00 PM - 5:00 PM"
+        },
+        {
+          "subjectCode": "MMC321",
+          "subjectName": "Deep Learning",
+          "examDate": "20/12/2026",
+          "timeSlot": "2:00 PM - 5:00 PM"
+        }
+      ],
+      "status": "PUBLISHED",
+      "created_at": "2026-10-08T19:12:20.005Z",
+      "published_at": "2026-10-08T19:12:20.005Z"
+    }
+  ]
 }

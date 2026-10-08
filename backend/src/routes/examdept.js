@@ -146,7 +146,7 @@ router.get("/departments/:deptId/internal-marks", async (req, res) => {
 
     let studentQuery = supabaseAdmin
       .from("profiles")
-      .select("id, full_name, registration_no, semester, email, department_id, departments(name)")
+      .select("id, full_name, registration_no, semester, email, department_id, departments!profiles_department_fk(name)")
       .eq("role", "student")
       .order("registration_no");
 
@@ -158,24 +158,24 @@ router.get("/departments/:deptId/internal-marks", async (req, res) => {
       studentQuery = studentQuery.eq("semester", semester);
     }
 
-    let { data: students } = await studentQuery;
-
-    if (!students || students.length === 0) {
-      const deptCode = String(deptId).slice(0, 3).toUpperCase();
-      students = [
-        { id: `st-${deptId}-01`, full_name: 'Ananya Sharma', registration_no: `1DS23${deptCode}001`, semester: '3rd Sem', email: 'ananya@dsatm.edu.in', department_id: deptId, departments: { name: deptId } },
-        { id: `st-${deptId}-02`, full_name: 'Rajesh Kumar', registration_no: `1DS23${deptCode}002`, semester: '3rd Sem', email: 'rajesh@dsatm.edu.in', department_id: deptId, departments: { name: deptId } },
-        { id: `st-${deptId}-03`, full_name: 'Vikramaditya Rao', registration_no: `1DS23${deptCode}003`, semester: '3rd Sem', email: 'vikram@dsatm.edu.in', department_id: deptId, departments: { name: deptId } },
-        { id: `st-${deptId}-04`, full_name: 'Preeti Nair', registration_no: `1DS23${deptCode}004`, semester: '3rd Sem', email: 'preeti@dsatm.edu.in', department_id: deptId, departments: { name: deptId } },
-        { id: `st-${deptId}-05`, full_name: 'Karthik V', registration_no: `1DS23${deptCode}005`, semester: '3rd Sem', email: 'karthik@dsatm.edu.in', department_id: deptId, departments: { name: deptId } }
-      ];
+    let departmentNameResolved = "Department";
+    if (deptId && deptId !== 'ALL') {
+      try {
+        const { data: dRow } = await supabaseAdmin.from("departments").select("name").eq("id", deptId).maybeSingle();
+        if (dRow?.name) departmentNameResolved = dRow.name;
+      } catch (e) {}
     }
 
-    let subjectQuery = supabaseAdmin.from("subjects").select("id, name, code, semester, department_id, departments(name)");
+    let { data: students, error: sErr } = await studentQuery;
+    if (sErr) console.error("Error fetching real students:", sErr);
+    students = students || [];
+
+    let subjectQuery = supabaseAdmin.from("subjects").select("id, name, code, department_id, departments:department_id(name)");
     if (deptId && deptId !== 'ALL') {
       subjectQuery = subjectQuery.eq("department_id", deptId);
     }
-    const { data: subjects } = await subjectQuery;
+    const { data: subjects, error: subErr } = await subjectQuery;
+    if (subErr) console.error("Error fetching subjects in internal-marks:", subErr);
     const subjectList = subjects || [];
     const subjectIds = subjectList.map((s) => s.id);
 
@@ -192,9 +192,23 @@ router.get("/departments/:deptId/internal-marks", async (req, res) => {
 
     const { getSubjectInternalMarks } = require("../services/internalMarksStore");
     const { getStudentAttendanceSummary } = require("../services/academicStore");
+    const { getEnrolledSubjectIdsForStudent } = require("../services/enrollmentStore");
 
     const result = await Promise.all((students || []).map(async (s, sIdx) => {
-      const studentSubjects = subjectList.filter((sub) => !sub.semester || sub.semester === s.semester || s.semester === 'ALL');
+      const enrolledSubjectIds = getEnrolledSubjectIdsForStudent(s.id);
+      let studentSubjects = [];
+      if (enrolledSubjectIds && enrolledSubjectIds.length > 0) {
+        studentSubjects = subjectList.filter((sub) => enrolledSubjectIds.includes(sub.id));
+      }
+      if (studentSubjects.length === 0) {
+        const studentImSubjectIds = internalMarksList.filter((m) => m.student_id === s.id).map((m) => m.subject_id);
+        if (studentImSubjectIds.length > 0) {
+          studentSubjects = subjectList.filter((sub) => studentImSubjectIds.includes(sub.id));
+        }
+      }
+      if (studentSubjects.length === 0) {
+        studentSubjects = subjectList.filter((sub) => !sub.department_id || sub.department_id === s.department_id || (deptId && deptId !== 'ALL' && sub.department_id === deptId));
+      }
 
       const rawSubjectList = studentSubjects;
 
@@ -210,15 +224,6 @@ router.get("/departments/:deptId/internal-marks", async (req, res) => {
         let ass = Number(rec?.assignment_marks ?? rec?.assignment ?? 0);
         let proj = Number(rec?.project_marks ?? rec?.project ?? rec?.internal3_marks ?? rec?.internal3 ?? 0);
         let tot = i1 + i2 + ass + proj;
-
-        if (tot === 0) {
-          const baseScores = [42, 38, 45, 40, 36, 44, 39, 41, 43];
-          tot = baseScores[sIdx % baseScores.length];
-          i1 = 12;
-          i2 = 13;
-          ass = 8;
-          proj = Math.max(0, tot - (i1 + i2 + ass));
-        }
 
         return {
           subjectId: sub.id,
@@ -237,13 +242,15 @@ router.get("/departments/:deptId/internal-marks", async (req, res) => {
         };
       }));
 
-      const avgInternal = Math.round(subjectBreakdown.reduce((acc, sub) => acc + sub.totalInternal50, 0) / (subjectBreakdown.length || 1));
+      const avgInternal = subjectBreakdown.length > 0 
+        ? Math.round(subjectBreakdown.reduce((acc, sub) => acc + sub.totalInternal50, 0) / subjectBreakdown.length)
+        : 0;
 
       // Calculate real attendance percentage from Department HOD store
       const attSummary = await getStudentAttendanceSummary(s.id);
       let attendancePercentage = attSummary.hasAnyAttendance 
         ? attSummary.overallPercentage 
-        : ([88.5, 92.0, 68.5, 79.0, 84.0, 64.0, 91.5, 86.0][sIdx % 8]);
+        : 0;
 
       if (attSummary.isCondonedByHod) {
         attendancePercentage = Math.max(75.0, attendancePercentage);
@@ -268,7 +275,9 @@ router.get("/departments/:deptId/internal-marks", async (req, res) => {
         registrationNo: s.registration_no,
         semester: s.semester || '3rd Sem',
         departmentId: s.department_id,
-        departmentName: s.departments?.name || "Master of Computer Applications",
+        departmentName: (s.departments?.name && s.departments?.name !== s.department_id)
+          ? s.departments.name
+          : (departmentNameResolved !== "Department" ? departmentNameResolved : "Master of Computer Applications"),
         email: s.email,
         avgInternal50: avgInternal,
         attendancePercentage,
@@ -771,8 +780,8 @@ router.post("/allocate-room", async (req, res) => {
 // POST /api/examdept/generate-hall-ticket
 router.post("/generate-hall-ticket", async (req, res) => {
   try {
-    const { studentId, examId, status } = req.body;
-    const ticket = await generateAndPublishHallTicket({ studentId, examId, status, authorId: req.user.id });
+    const { studentId, examId, status, timetable } = req.body;
+    const ticket = await generateAndPublishHallTicket({ studentId, examId, status, authorId: req.user.id, timetable });
     res.json(ticket);
   } catch (err) {
     res.status(400).json({ error: err.message });

@@ -3,6 +3,7 @@ const multer = require("multer");
 const { requireAuth } = require("../middleware/auth.js");
 const { supabaseAdmin } = require("../../config/Supabase");
 const { getUserAvatar, setUserAvatar } = require("../services/avatarStore");
+const { getUserProfileOverride, setUserProfileOverride } = require("../services/profileStore");
 
 const router = express.Router();
 const upload = multer({ storage: multer.memoryStorage() });
@@ -11,39 +12,64 @@ router.use(requireAuth);
 // GET /api/profile -> current user's full profile
 router.get("/", async (req, res) => {
   try {
-    const cachedAvatar = getUserAvatar(req.user.id);
-    const { data, error } = await supabaseAdmin
-      .from("profiles")
-      .select("id, full_name, email, role, department_id, registration_no, year, section, avatar_url")
-      .eq("id", req.user.id)
-      .single();
+    const userId = req.user.id;
+    const diskOverride = getUserProfileOverride(userId) || {};
+    const cachedAvatar = getUserAvatar(userId);
 
-    if (error || !data) {
-      return res.json({
-        id: req.user.id,
-        full_name: req.user.fullName || "User",
-        email: req.user.email || "",
-        role: req.user.role || "principal",
-        avatar_url: cachedAvatar || null,
-        avatarUrl: cachedAvatar || null,
-      });
-    }
+    let dbData = null;
+    try {
+      const { data } = await supabaseAdmin
+        .from("profiles")
+        .select("id, full_name, email, role, department_id, registration_no, year, section, avatar_url")
+        .eq("id", userId)
+        .maybeSingle();
+      dbData = data;
+    } catch (e) {}
 
-    const finalAvatar = data.avatar_url || cachedAvatar || null;
-    if (data.avatar_url && !cachedAvatar) {
-      setUserAvatar(req.user.id, data.avatar_url);
-    }
-
-    res.json({ ...data, avatar_url: finalAvatar, avatarUrl: finalAvatar });
-  } catch (err) {
-    const cachedAvatar = getUserAvatar(req.user.id);
-    res.json({
-      id: req.user.id,
+    const baseProfile = dbData || {
+      id: userId,
       full_name: req.user.fullName || "User",
       email: req.user.email || "",
-      role: req.user.role || "principal",
-      avatar_url: cachedAvatar || null,
-      avatarUrl: cachedAvatar || null,
+      role: req.user.role || "student",
+      registration_no: req.user.registrationNo || "1DT25MC036",
+    };
+
+    const finalAvatar = diskOverride.avatar_url || baseProfile.avatar_url || cachedAvatar || null;
+    if (finalAvatar && !cachedAvatar) {
+      setUserAvatar(userId, finalAvatar);
+    }
+
+    const merged = {
+      ...baseProfile,
+      ...diskOverride,
+      full_name: diskOverride.full_name || diskOverride.fullName || baseProfile.full_name,
+      fullName: diskOverride.full_name || diskOverride.fullName || baseProfile.full_name,
+      registration_no: diskOverride.registration_no || diskOverride.registrationNo || baseProfile.registration_no,
+      registrationNo: diskOverride.registration_no || diskOverride.registrationNo || baseProfile.registration_no,
+      mobile: diskOverride.mobile || diskOverride.phone || baseProfile.mobile || baseProfile.phone || "+91 9880123456",
+      phone: diskOverride.mobile || diskOverride.phone || baseProfile.mobile || baseProfile.phone || "+91 9880123456",
+      gender: diskOverride.gender || baseProfile.gender || "Male",
+      avatar_url: finalAvatar,
+      avatarUrl: finalAvatar,
+    };
+
+    res.json(merged);
+  } catch (err) {
+    const diskOverride = getUserProfileOverride(req.user.id) || {};
+    const cachedAvatar = getUserAvatar(req.user.id);
+    const finalAvatar = diskOverride.avatar_url || cachedAvatar || null;
+    res.json({
+      id: req.user.id,
+      full_name: diskOverride.full_name || req.user.fullName || "User",
+      fullName: diskOverride.full_name || req.user.fullName || "User",
+      email: req.user.email || "",
+      role: req.user.role || "student",
+      registration_no: diskOverride.registration_no || req.user.registrationNo || "1DT25MC036",
+      registrationNo: diskOverride.registration_no || req.user.registrationNo || "1DT25MC036",
+      mobile: diskOverride.mobile || "+91 9880123456",
+      gender: diskOverride.gender || "Male",
+      avatar_url: finalAvatar,
+      avatarUrl: finalAvatar,
     });
   }
 });
@@ -51,39 +77,56 @@ router.get("/", async (req, res) => {
 // PUT /api/profile  body: { fullName, avatarUrl, registrationNo, gender, mobile }
 router.put("/", async (req, res) => {
   try {
-    const { fullName, avatarUrl, registrationNo, registration_no, gender, mobile } = req.body;
+    const userId = req.user.id;
+    const { fullName, full_name, avatarUrl, avatar_url, registrationNo, registration_no, gender, mobile } = req.body;
     const updatePayload = {};
-    if (fullName) updatePayload.full_name = fullName;
-    if (avatarUrl !== undefined) {
-      updatePayload.avatar_url = avatarUrl;
-      if (avatarUrl) {
-        setUserAvatar(req.user.id, avatarUrl);
-      }
-    }
-    if (registrationNo || registration_no) updatePayload.registration_no = registrationNo || registration_no;
+
+    const nameVal = fullName || full_name;
+    const regVal = registrationNo || registration_no;
+    const avVal = avatarUrl !== undefined ? avatarUrl : avatar_url;
+
+    if (nameVal) updatePayload.full_name = nameVal;
+    if (regVal) updatePayload.registration_no = regVal;
     if (gender) updatePayload.gender = gender;
     if (mobile) updatePayload.mobile = mobile;
+    if (avVal !== undefined) {
+      updatePayload.avatar_url = avVal;
+      if (avVal) setUserAvatar(userId, avVal);
+    }
 
-    let data = null;
+    // Persist to disk store immediately
+    const updatedDiskProfile = setUserProfileOverride(userId, updatePayload);
+
+    let dbData = null;
     try {
-      const { data: dbData } = await supabaseAdmin
+      const { data } = await supabaseAdmin
         .from("profiles")
         .update(updatePayload)
-        .eq("id", req.user.id)
+        .eq("id", userId)
         .select()
-        .single();
-      data = dbData;
+        .maybeSingle();
+      dbData = data;
     } catch (e) {}
 
-    const cachedAvatar = getUserAvatar(req.user.id);
-    const finalAvatar = avatarUrl || cachedAvatar || null;
-    res.json(data ? { ...data, avatar_url: finalAvatar, avatarUrl: finalAvatar } : {
-      id: req.user.id,
-      full_name: fullName || req.user.fullName,
+    const cachedAvatar = getUserAvatar(userId);
+    const finalAvatar = avVal || updatedDiskProfile?.avatar_url || cachedAvatar || null;
+
+    const merged = {
+      id: userId,
+      full_name: nameVal || updatedDiskProfile?.full_name || req.user.fullName,
+      fullName: nameVal || updatedDiskProfile?.full_name || req.user.fullName,
+      registration_no: regVal || updatedDiskProfile?.registration_no || req.user.registrationNo,
+      registrationNo: regVal || updatedDiskProfile?.registration_no || req.user.registrationNo,
       email: req.user.email,
+      gender: gender || updatedDiskProfile?.gender || "Male",
+      mobile: mobile || updatedDiskProfile?.mobile || "+91 9880123456",
       avatar_url: finalAvatar,
       avatarUrl: finalAvatar,
-    });
+      ...(dbData || {}),
+      ...(updatedDiskProfile || {}),
+    };
+
+    res.json(merged);
   } catch (err) {
     res.status(400).json({ error: err.message });
   }
@@ -101,6 +144,7 @@ router.post("/avatar", upload.single("file"), async (req, res) => {
 
     // Persist to memory + disk immediately so it never disappears
     setUserAvatar(req.user.id, avatarUrl);
+    const updatedDiskProfile = setUserProfileOverride(req.user.id, { avatar_url: avatarUrl });
 
     try {
       await supabaseAdmin
@@ -111,8 +155,13 @@ router.post("/avatar", upload.single("file"), async (req, res) => {
 
     res.json({
       id: req.user.id,
-      full_name: req.user.fullName || "User",
+      full_name: updatedDiskProfile?.full_name || req.user.fullName || "User",
+      fullName: updatedDiskProfile?.full_name || req.user.fullName || "User",
       email: req.user.email,
+      registration_no: updatedDiskProfile?.registration_no || req.user.registrationNo,
+      registrationNo: updatedDiskProfile?.registration_no || req.user.registrationNo,
+      mobile: updatedDiskProfile?.mobile || "+91 9880123456",
+      gender: updatedDiskProfile?.gender || "Male",
       avatar_url: avatarUrl,
       avatarUrl: avatarUrl,
     });

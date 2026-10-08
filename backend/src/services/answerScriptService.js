@@ -82,7 +82,7 @@ async function getScriptTrackingSummary({ examId, departmentId, status }) {
   try {
     let query = supabaseAdmin
       .from("answer_script_tracking")
-      .select("*, profiles:student_id(full_name, registration_no, department_id, departments(name))")
+      .select("*, profiles:student_id(full_name, registration_no, department_id, departments!profiles_department_fk(name))")
       .order("created_at", { ascending: false });
 
     if (examId) query = query.eq("exam_id", examId);

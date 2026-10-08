@@ -20,21 +20,24 @@ export default function ProfileSettings({ mode = 'profile', onProfileUpdated }) 
     api.get('/profile')
       .then((res) => {
         setProfile(res.data)
-        if (res.data.full_name) setFullName(res.data.full_name)
-        if (res.data.registration_no) setRegistrationNo(res.data.registration_no)
-        else if (user?.registrationNo) setRegistrationNo(user.registrationNo)
-        if (res.data.avatar_url && updateUser) {
-          updateUser({ avatarUrl: res.data.avatar_url })
+        const nameVal = res.data.full_name || res.data.fullName || user?.fullName || ''
+        const regVal = res.data.registration_no || res.data.registrationNo || user?.registrationNo || ''
+        const avVal = res.data.avatar_url || res.data.avatarUrl || null
+
+        if (nameVal) setFullName(nameVal)
+        if (regVal) setRegistrationNo(regVal)
+
+        if (updateUser && (nameVal || regVal || avVal)) {
+          updateUser({ fullName: nameVal, registrationNo: regVal, avatarUrl: avVal })
         }
-        if (res.data.mobile || res.data.phone) {
-          const ph = res.data.mobile || res.data.phone
-          setMobile(ph)
-          localStorage.setItem('student_mobile', ph)
-        }
-        if (res.data.gender) {
-          setGender(res.data.gender)
-          localStorage.setItem('student_gender', res.data.gender)
-        }
+
+        const ph = res.data.mobile || res.data.phone || localStorage.getItem('student_mobile') || '+91 9880123456'
+        setMobile(ph)
+        localStorage.setItem('student_mobile', ph)
+
+        const gen = res.data.gender || localStorage.getItem('student_gender') || 'Male'
+        setGender(gen)
+        localStorage.setItem('student_gender', gen)
       })
       .catch(() => {
         const isStudent = user?.role === 'student'

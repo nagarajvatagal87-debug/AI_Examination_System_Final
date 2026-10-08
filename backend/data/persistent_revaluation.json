@@ -8,67 +8,49 @@
     "max_subjects_allowed": 4,
     "eligible_paper_types": [
       "main"
-    ]
+    ],
+    "revaluation_fee": 700
   },
   "applications": [
     {
-      "id": "app-101",
-      "application_no": "REV-2026-8801",
-      "student_id": "st-mca-01",
-      "student_name": "Ananya Sharma",
-      "student_usn": "1DS23MCA001",
-      "exam_id": "exam-deep-learning",
-      "subject_id": "sub-dl",
+      "id": "reval-1791488571346-dxzp",
+      "application_no": "REV-2026-1600",
+      "student_id": "85947c37-dfc9-442b-9918-72b4124492ff",
+      "student_name": "Nagaraj",
+      "student_usn": "1DT25MC036",
+      "exam_id": "exam-dl-301",
+      "subject_id": "sub-dl-301",
       "subject_name": "Deep Learning & AI Applications",
-      "subject_code": "22MCA31",
       "original_marks": 58,
-      "revised_marks": 70,
-      "final_marks": 70,
+      "revised_marks": 66,
+      "final_marks": 66,
       "fee_amount": 500,
       "fee_paid": 500,
       "payment_status": "SUCCESS",
+      "payment_id": "pay-1791488571102-ajdap",
+      "application_type": "REVALUATION",
       "status": "COMPLETED",
-      "created_at": "2026-10-07T12:47:38.896Z",
-      "decision": "INCREASED",
-      "evaluator_id": "9bd0b575-f801-4c0c-b67b-033184a22e79",
+      "evaluator_id": "cc050361-9a8c-4a66-9a02-b28db4a2a454",
       "remarks": "AI Optical Scanner detected 8 marks recount omission on Question 1(b) and 2(a). Approved by Chief Examiner.",
-      "updated_at": "2026-10-07T12:58:11.692Z"
-    },
-    {
-      "id": "app-102",
-      "application_no": "REV-2026-8802",
-      "student_id": "st-mca-02",
-      "student_name": "Rajesh Kumar",
-      "student_usn": "1DS23MCA002",
-      "exam_id": "exam-dbms",
-      "subject_id": "sub-dbms",
-      "subject_name": "Database Management Systems",
-      "subject_code": "22MCA32",
-      "original_marks": 62,
-      "revised_marks": 98,
-      "final_marks": 98,
-      "fee_amount": 500,
-      "fee_paid": 0,
-      "payment_status": "SUCCESS",
-      "status": "COMPLETED",
-      "created_at": "2026-10-07T12:47:38.896Z",
       "decision": "INCREASED",
-      "evaluator_id": "9bd0b575-f801-4c0c-b67b-033184a22e79",
-      "remarks": "AI Optical Scanner detected 8 marks recount omission on Question 1(b) and 2(a). Approved by Chief Examiner.",
-      "updated_at": "2026-10-07T12:58:48.118Z"
+      "created_at": "2026-10-08T19:42:51.467Z",
+      "updated_at": "2026-10-08T19:45:56.848Z"
     }
   ],
   "payments": [
     {
-      "payment_id": "pay-1791377906309-31ywg",
-      "student_id": "9bd0b575-f801-4c0c-b67b-033184a22e79",
+      "payment_id": "pay-1791488571102-ajdap",
+      "student_id": "85947c37-dfc9-442b-9918-72b4124492ff",
+      "exam_id": "exam-dl-301",
+      "subject_id": "sub-dl-301",
+      "subject_name": "Deep Learning & AI Applications",
       "amount": 500,
       "currency": "INR",
       "gateway": "DSATM-Razorpay-Sandbox",
-      "transaction_reference": "TXN-DSATM-1791377906309",
+      "transaction_reference": "TXN-DSATM-1791488571102",
       "status": "SUCCESS",
-      "created_at": "2026-10-07T12:58:26.309Z",
-      "paid_at": "2026-10-07T12:58:26.309Z"
+      "created_at": "2026-10-08T19:42:51.102Z",
+      "paid_at": "2026-10-08T19:42:51.102Z"
     }
   ]
 }
