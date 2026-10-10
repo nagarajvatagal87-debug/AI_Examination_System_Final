@@ -1,0 +1,38 @@
+services:
+  # Node.js Express Backend Service
+  - type: web
+    name: ai-examination-backend
+    env: node
+    rootDir: backend
+    buildCommand: npm install
+    startCommand: npm start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 4000
+      - key: SUPABASE_URL
+        value: https://kjpdpldfbjjsuqzbbgns.supabase.co
+      - key: SUPABASE_SERVICE_ROLE_KEY
+        sync: false
+      - key: FRONTEND_ORIGIN
+        sync: false
+      - key: AI_SERVICE_URL
+        sync: false
+
+  # Python FastAPI AI Service
+  - type: web
+    name: ai-examination-ai-service
+    env: python
+    rootDir: ai-service
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT
+    envVars:
+      - key: GROQ_API_KEY
+        sync: false
+      - key: GCP_VISION_CREDENTIALS_JSON
+        sync: false
+      - key: SUPABASE_URL
+        value: https://kjpdpldfbjjsuqzbbgns.supabase.co
+      - key: SUPABASE_SERVICE_ROLE_KEY
+        sync: false
