@@ -185,7 +185,7 @@ async function allocateStudentToRoom({ examId, studentId, centreId, roomId }) {
 async function generateAndPublishHallTicket({ studentId, examId, status = "PUBLISHED", authorId, timetable }) {
   const { data: student } = await supabaseAdmin
     .from("profiles")
-    .select("id, full_name, registration_no, semester, department_id, departments!profiles_department_fk(name)")
+    .select("id, full_name, registration_no, email, semester, department_id, departments!profiles_department_fk(name)")
     .eq("id", studentId)
     .maybeSingle();
 
@@ -195,13 +195,79 @@ async function generateAndPublishHallTicket({ studentId, examId, status = "PUBLI
     .eq("id", examId)
     .maybeSingle();
 
-  const alloc = memoryAllocations.find((a) => a.student_id === studentId && a.exam_id === examId) || {
-    centre_name: memoryCentres[0].name,
-    room_number: memoryCentres[0].rooms[0].room_number,
-    seat_number: "SEAT-01",
-  };
+  let alloc = memoryAllocations.find((a) => a.student_id === studentId && (a.exam_id === examId || !examId));
+  if (!alloc) {
+    const activeCentre = memoryCentres[0];
+    const activeRoom = activeCentre?.rooms?.[0];
+    alloc = {
+      centre_name: activeCentre?.name || "DSATM Main Academic Block Examination Centre",
+      room_number: activeRoom ? `Room ${activeRoom.room_number} (${activeRoom.building || 'Block A'}, ${activeRoom.floor || '1st Floor'})` : "LH-101 (1st Floor)",
+      seat_number: "SEAT-01",
+    };
+  }
 
   const ticketId = `ht-${studentId}-${examId}`;
+
+function resolveSubjectIdFromEntry(entry) {
+  if (!entry) return null;
+  if (entry.subjectId) return entry.subjectId;
+  if (entry.subject_id) return entry.subject_id;
+  const code = String(entry.subjectCode || entry.code || "").toUpperCase();
+  const name = String(entry.subjectName || entry.name || "").toLowerCase();
+
+  if (code.includes("MMC335") || name.includes("devops")) return "004df87a-c02a-4296-bed5-51d8bd0fe371";
+  if (code.includes("MMC333") || name.includes("web development")) return "b76fa471-11e9-4b91-9281-93200ff8d6e7";
+  if (code.includes("MMC312") || name.includes("ethical hacking")) return "9d4b7294-a0d0-4c39-acb3-93e01d818cb3";
+  if (code.includes("MMC321") || name.includes("deep learning")) return "f1c125fa-ca62-44a8-9e88-1c96c0fa9358";
+  if (code.includes("MMC316") || name.includes("software design")) return "711130b8-e26e-424b-800e-957637a05662";
+
+  return null;
+}
+
+  // Requirement: Filter timetable strictly to student's enrolled/registered subjects
+  const { getEnrolledSubjectIdsForStudent } = require("./enrollmentStore");
+  const enrolledSubjectIds = getEnrolledSubjectIdsForStudent(studentId);
+
+  let resolvedTimetable = timetable;
+  if (!resolvedTimetable || resolvedTimetable.length === 0) {
+    try {
+      const { getExamSchedules } = require("./examScheduleStore");
+      let pubSchedules = await getExamSchedules({
+        departmentId: student?.department_id,
+        semester: student?.semester,
+        status: "PUBLISHED",
+      });
+
+      if (enrolledSubjectIds && enrolledSubjectIds.length > 0) {
+        const filteredByEnrollment = pubSchedules.filter((sc) =>
+          enrolledSubjectIds.includes(sc.subjectId) || enrolledSubjectIds.includes(sc.subject_id)
+        );
+        if (filteredByEnrollment.length > 0) {
+          pubSchedules = filteredByEnrollment;
+        }
+      }
+
+      if (pubSchedules.length > 0) {
+        resolvedTimetable = pubSchedules.map((sc) => ({
+          subjectId: sc.subjectId || sc.subject_id,
+          subjectCode: sc.subjectCode,
+          subjectName: sc.subjectName,
+          examDate: sc.examDate,
+          timeSlot: `${sc.startTime} - ${sc.endTime}`,
+        }));
+      }
+    } catch (e) {}
+  }
+
+  if (enrolledSubjectIds && enrolledSubjectIds.length > 0 && Array.isArray(resolvedTimetable)) {
+    const filteredRows = resolvedTimetable.filter((entry) => {
+      const subId = resolveSubjectIdFromEntry(entry);
+      return subId ? enrolledSubjectIds.includes(subId) : false;
+    });
+    if (filteredRows.length > 0) {
+      resolvedTimetable = filteredRows;
+    }
+  }
 
   const hallTicket = {
     id: ticketId,
@@ -210,18 +276,18 @@ async function generateAndPublishHallTicket({ studentId, examId, status = "PUBLI
     institution: "DAYANANDA SAGAR ACADEMY OF TECHNOLOGY AND MANAGEMENT",
     student_name: student?.full_name || "Student",
     registration_no: student?.registration_no || "1DS23MCA001",
-    department_name: student?.departments?.name || "Department",
+    department_name: student?.departments?.name || "Department of Master of Computer Applications (MCA)",
     semester: student?.semester || "3rd Sem",
     academic_year: "2025–2026",
-    exam_title: exam?.title || "Main Examination 2026",
+    exam_title: exam?.title || "Main Semester Examination 2026",
     subject_code: exam?.subjects?.code || "MMC321",
     subject_name: exam?.subjects?.name || "Main Examination Subject",
-    exam_date: exam?.created_at ? new Date(exam.created_at).toLocaleDateString() : "Scheduled",
+    exam_date: exam?.created_at ? new Date(exam.created_at).toLocaleDateString("en-GB") : "Scheduled",
     exam_time: "09:30 AM - 12:30 PM",
     centre_name: alloc.centre_name,
     room_number: alloc.room_number,
     seat_number: alloc.seat_number,
-    timetable: timetable || null,
+    timetable: resolvedTimetable || null,
     status, // "NOT_GENERATED", "GENERATED", "VERIFIED", "PUBLISHED"
     created_at: new Date().toISOString(),
     published_at: status === "PUBLISHED" ? new Date().toISOString() : null,
@@ -243,10 +309,78 @@ async function generateAndPublishHallTicket({ studentId, examId, status = "PUBLI
     action: "HALL_TICKET_PUBLISHED",
     entityType: "hall_tickets",
     entityId: ticketId,
-    newValue: `Student: ${hallTicket.student_name} (${hallTicket.registration_no})`,
+    newValue: `Student: ${hallTicket.student_name} (${hallTicket.registration_no}), Status: ${status}`,
   });
 
-  return hallTicket;
+  // Requirement 8B & 8C: Email Student upon Hall Ticket Publication
+  let studentEmailResult = null;
+  if (status === "PUBLISHED") {
+    const studentEmail = student?.email;
+    const studentName = student?.full_name || hallTicket.student_name;
+    const regNo = student?.registration_no || hallTicket.registration_no;
+    const deptName = hallTicket.department_name;
+    const sem = hallTicket.semester;
+
+    if (!studentEmail || !studentEmail.includes("@")) {
+      const warnMsg = `⚠️ Warning: Student ${studentName} (${regNo}) has no valid registered email in database. Hall ticket published, but email notification skipped.`;
+      console.warn(`[NOTIF WARNING] ${warnMsg}`);
+      hallTicket.emailWarning = warnMsg;
+      studentEmailResult = { warning: warnMsg };
+    } else {
+      const notifKey = `notif-ht-${studentId}-${examId}`;
+      const { createNotificationLog, isDuplicateNotifSent } = require("./notificationLogStore");
+      const { sendEmail, notify } = require("./notification.service");
+
+      if (isDuplicateNotifSent(studentEmail, "HALL_TICKET_PUBLISHED", notifKey)) {
+        console.log(`[NOTIF IDEMPOTENT] Student hall ticket email already sent to ${studentEmail} for ${regNo}.`);
+        studentEmailResult = { skipped: true, recipient: studentEmail };
+      } else {
+        const portalUrl = process.env.FRONTEND_ORIGIN || "http://localhost:5173";
+        const emailSubject = `Your Main Examination Hall Ticket Is Now Available`;
+        const emailBody = `Dear ${studentName},\n\n` +
+          `Your Official Main Examination Admission Ticket / Hall Ticket for ${deptName} (${sem}) has been published by the Examination Control Authority.\n\n` +
+          `📌 Candidate Name: ${studentName}\n` +
+          `🎟️ Register No / USN: ${regNo}\n` +
+          `🏛️ Department: ${deptName}\n` +
+          `🎓 Semester: ${sem}\n` +
+          `📍 Examination Centre: ${hallTicket.centre_name} (${hallTicket.room_number})\n` +
+          `🪑 Seat Number: ${hallTicket.seat_number}\n\n` +
+          `Please log in to your Student LMS Portal to view and download your official Admission Ticket PDF:\n` +
+          `${portalUrl}/student\n\n` +
+          `Best of luck for your examinations!\n\n` +
+          `Regards,\n` +
+          `DSATM Examination Control Authority`;
+
+        let delStatus = "SENT";
+        let failReason = null;
+
+        try {
+          await sendEmail(studentEmail, emailSubject, emailBody);
+          await notify(studentId, "hall_ticket_published", emailSubject, emailBody, examId);
+        } catch (err) {
+          delStatus = "FAILED";
+          failReason = err.message;
+        }
+
+        await createNotificationLog({
+          id: notifKey,
+          student_id: studentId,
+          channel: "EMAIL",
+          notification_type: "HALL_TICKET_PUBLISHED",
+          recipient: studentEmail,
+          subject: emailSubject,
+          message: emailBody,
+          status: delStatus,
+          failure_reason: failReason,
+          associated_id: notifKey,
+        });
+
+        studentEmailResult = { recipient: studentEmail, status: delStatus, failureReason: failReason };
+      }
+    }
+  }
+
+  return { hallTicket, studentEmailNotification: studentEmailResult };
 }
 
 /**
@@ -264,10 +398,33 @@ async function getStudentHallTicket(studentId) {
     dbTicket = data;
   } catch (e) {}
 
-  if (dbTicket) return dbTicket;
+  let ticket = dbTicket || memoryHallTickets.find((ht) => ht.student_id === studentId && ht.status === "PUBLISHED");
+  if (!ticket) return null;
 
-  const memory = memoryHallTickets.find((ht) => ht.student_id === studentId && ht.status === "PUBLISHED");
-  return memory || null;
+  const { getEnrolledSubjectIdsForStudent } = require("./enrollmentStore");
+  const enrolledSubjectIds = getEnrolledSubjectIdsForStudent(studentId);
+
+  if ((!ticket.timetable || ticket.timetable.length === 0) && enrolledSubjectIds.length > 0) {
+    try {
+      const { getExamSchedules } = require("./examScheduleStore");
+      let pubSchedules = await getExamSchedules({ status: "PUBLISHED" });
+      const filteredByEnrollment = pubSchedules.filter((sc) => {
+        const sId = resolveSubjectIdFromEntry(sc);
+        return sId ? enrolledSubjectIds.includes(sId) : false;
+      });
+      if (filteredByEnrollment.length > 0) {
+        ticket.timetable = filteredByEnrollment.map((sc) => ({
+          subjectId: sc.subjectId || sc.subject_id,
+          subjectCode: sc.subjectCode || sc.code,
+          subjectName: sc.subjectName || sc.name,
+          examDate: sc.examDate || sc.date,
+          timeSlot: `${sc.startTime || '09:30 AM'} - ${sc.endTime || '12:30 PM'}`,
+        }));
+      }
+    } catch (e) {}
+  }
+
+  return ticket;
 }
 
 async function getAllHallTickets() {
@@ -308,6 +465,14 @@ async function deleteRoomFromCentre(centreId, roomId) {
   return { success: true, centreId, roomId };
 }
 
+function resetStudentHallTicket(studentId) {
+  if (!studentId) return;
+  const filtered = memoryHallTickets.filter((ht) => ht.student_id !== studentId && ht.studentId !== studentId);
+  memoryHallTickets.length = 0;
+  memoryHallTickets.push(...filtered);
+  saveCentresToDisk();
+}
+
 module.exports = {
   getExamCentres,
   createExamCentre,
@@ -318,5 +483,6 @@ module.exports = {
   generateAndPublishHallTicket,
   getStudentHallTicket,
   getAllHallTickets,
+  resetStudentHallTicket,
 };
 

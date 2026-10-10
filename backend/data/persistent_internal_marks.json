@@ -9,7 +9,7 @@
     "total_internal_marks": 0,
     "is_eligible": false,
     "status": "draft",
-    "updated_at": "2026-10-04T18:39:47.024Z"
+    "updated_at": "2026-10-10T12:04:35.239Z"
   },
   "f1c125fa-ca62-44a8-9e88-1c96c0fa9358:2aaf1dd3-7b24-45a0-b432-ed0b5266816b": {
     "subject_id": "f1c125fa-ca62-44a8-9e88-1c96c0fa9358",
@@ -21,19 +21,19 @@
     "total_internal_marks": 0,
     "is_eligible": false,
     "status": "draft",
-    "updated_at": "2026-10-04T18:39:47.024Z"
+    "updated_at": "2026-10-10T12:04:35.239Z"
   },
   "f1c125fa-ca62-44a8-9e88-1c96c0fa9358:00256413-ddb4-4582-bd05-cb35f6333e85": {
     "subject_id": "f1c125fa-ca62-44a8-9e88-1c96c0fa9358",
     "student_id": "00256413-ddb4-4582-bd05-cb35f6333e85",
-    "internal1_marks": 15,
-    "internal2_marks": 14,
-    "internal3_marks": 10,
-    "assignment_marks": 8,
-    "total_internal_marks": 47,
-    "is_eligible": true,
+    "internal1_marks": 0,
+    "internal2_marks": 0,
+    "internal3_marks": 0,
+    "assignment_marks": 0,
+    "total_internal_marks": 0,
+    "is_eligible": false,
     "status": "draft",
-    "updated_at": "2026-10-04T18:39:47.024Z"
+    "updated_at": "2026-10-10T12:04:35.239Z"
   },
   "f1c125fa-ca62-44a8-9e88-1c96c0fa9358:35decdb3-3b0c-49de-8ea3-af777faedf77": {
     "subject_id": "f1c125fa-ca62-44a8-9e88-1c96c0fa9358",
@@ -45,19 +45,19 @@
     "total_internal_marks": 0,
     "is_eligible": false,
     "status": "draft",
-    "updated_at": "2026-10-04T18:39:47.024Z"
+    "updated_at": "2026-10-10T12:04:35.239Z"
   },
   "f1c125fa-ca62-44a8-9e88-1c96c0fa9358:85947c37-dfc9-442b-9918-72b4124492ff": {
     "subject_id": "f1c125fa-ca62-44a8-9e88-1c96c0fa9358",
     "student_id": "85947c37-dfc9-442b-9918-72b4124492ff",
     "internal1_marks": 14,
-    "internal2_marks": 10,
+    "internal2_marks": 12,
     "internal3_marks": 10,
     "assignment_marks": 10,
-    "total_internal_marks": 44,
+    "total_internal_marks": 46,
     "is_eligible": true,
     "status": "draft",
-    "updated_at": "2026-10-05T23:20:00.000Z"
+    "updated_at": "2026-10-10T12:04:35.239Z"
   },
   "f1c125fa-ca62-44a8-9e88-1c96c0fa9358:6f47f01e-41a4-4728-be8b-f7f733a9e69f": {
     "subject_id": "f1c125fa-ca62-44a8-9e88-1c96c0fa9358",
@@ -69,7 +69,7 @@
     "total_internal_marks": 0,
     "is_eligible": false,
     "status": "draft",
-    "updated_at": "2026-10-04T18:39:47.024Z"
+    "updated_at": "2026-10-10T12:04:35.239Z"
   },
   "f1c125fa-ca62-44a8-9e88-1c96c0fa9358:f9a2ed7e-b209-4ae1-a090-2771f46759ca": {
     "subject_id": "f1c125fa-ca62-44a8-9e88-1c96c0fa9358",
@@ -81,7 +81,7 @@
     "total_internal_marks": 0,
     "is_eligible": false,
     "status": "draft",
-    "updated_at": "2026-10-04T18:39:47.024Z"
+    "updated_at": "2026-10-10T12:04:35.239Z"
   },
   "f1c125fa-ca62-44a8-9e88-1c96c0fa9358:8cdf0ffc-ec96-4e11-bebd-cb41ea33de61": {
     "subject_id": "f1c125fa-ca62-44a8-9e88-1c96c0fa9358",
@@ -93,7 +93,7 @@
     "total_internal_marks": 0,
     "is_eligible": false,
     "status": "draft",
-    "updated_at": "2026-10-04T18:39:47.024Z"
+    "updated_at": "2026-10-10T12:04:35.239Z"
   },
   "f1c125fa-ca62-44a8-9e88-1c96c0fa9358:726035a1-0968-40b0-ae11-f1ab41eb4385": {
     "subject_id": "f1c125fa-ca62-44a8-9e88-1c96c0fa9358",
@@ -105,7 +105,7 @@
     "total_internal_marks": 0,
     "is_eligible": false,
     "status": "draft",
-    "updated_at": "2026-10-04T18:39:47.024Z"
+    "updated_at": "2026-10-10T12:04:35.239Z"
   },
   "f1c125fa-ca62-44a8-9e88-1c96c0fa9358:39cbf29b-98aa-4dee-a63d-c2e43f4bf8d1": {
     "subject_id": "f1c125fa-ca62-44a8-9e88-1c96c0fa9358",
@@ -117,7 +117,7 @@
     "total_internal_marks": 0,
     "is_eligible": false,
     "status": "draft",
-    "updated_at": "2026-10-04T18:39:47.024Z"
+    "updated_at": "2026-10-10T12:04:35.239Z"
   },
   "f1c125fa-ca62-44a8-9e88-1c96c0fa9358:f559dc23-19fd-4e83-b327-96dbd81a48bc": {
     "subject_id": "f1c125fa-ca62-44a8-9e88-1c96c0fa9358",
@@ -129,7 +129,7 @@
     "total_internal_marks": 0,
     "is_eligible": false,
     "status": "draft",
-    "updated_at": "2026-10-04T18:39:47.024Z"
+    "updated_at": "2026-10-10T12:04:35.239Z"
   },
   "f1c125fa-ca62-44a8-9e88-1c96c0fa9358:993e925b-4425-4c23-886a-bf750057d461": {
     "subject_id": "f1c125fa-ca62-44a8-9e88-1c96c0fa9358",
@@ -141,7 +141,7 @@
     "total_internal_marks": 0,
     "is_eligible": false,
     "status": "draft",
-    "updated_at": "2026-10-04T18:39:47.024Z"
+    "updated_at": "2026-10-10T12:04:35.239Z"
   },
   "f1c125fa-ca62-44a8-9e88-1c96c0fa9358:50b4e425-470f-4def-9b32-b2abdedf8207": {
     "subject_id": "f1c125fa-ca62-44a8-9e88-1c96c0fa9358",
@@ -153,6 +153,6 @@
     "total_internal_marks": 0,
     "is_eligible": false,
     "status": "draft",
-    "updated_at": "2026-10-04T18:39:47.024Z"
+    "updated_at": "2026-10-10T12:04:35.239Z"
   }
 }

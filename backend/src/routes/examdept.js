@@ -16,63 +16,80 @@ const { getRevaluationConfig, updateRevaluationConfig, getRevaluationApplication
 const router = express.Router();
 const upload = multer({ storage: multer.memoryStorage() });
 
+const {
+  getExamSchedules, createExamSchedule, updateExamSchedule, publishExamSchedule, cancelExamSchedule, deleteExamSchedule
+} = require("../services/examScheduleStore");
+const { INSTITUTIONAL_POLICY, calculateEligibility } = require("../services/institutionalPolicy");
+
 router.use(requireAuth, requireRole("examdept"));
 
-// GET /api/examdept/exams -> all Main exams across all departments
+// GET /api/examdept/exams -> all Main exams across departments
 router.get("/exams", async (req, res) => {
-  const { data, error } = await supabaseAdmin
-    .from("exams")
-    .select("id, title, total_marks, status, created_at, subject_id, subjects(name, department_id, departments(name))")
-    .eq("type", "main")
-    .order("created_at", { ascending: false });
-  if (error) return res.status(500).json({ error: error.message });
-  res.json(data || []);
+  try {
+    const { departmentId, semester, status } = req.query;
+    const schedules = await getExamSchedules({ departmentId, semester, status });
+    res.json(schedules);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 });
 
-// POST /api/examdept/exams  body: { subjectId, title, totalMarks }
+// GET /api/examdept/subjects -> Get all subjects across departments
+router.get("/subjects", async (req, res) => {
+  try {
+    const { departmentId } = req.query;
+    let query = supabaseAdmin
+      .from("subjects")
+      .select("id, name, code, department_id, departments:department_id(name)");
+
+    if (departmentId && departmentId !== "ALL") {
+      query = query.eq("department_id", departmentId);
+    }
+
+    const { data: subjects, error } = await query;
+    if (error) throw error;
+    res.json(subjects || []);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// POST /api/examdept/exams -> Create a main exam schedule (with validation, conflict checking & MCA HOD notif)
 router.post("/exams", async (req, res) => {
   try {
-    const { subjectId, title, totalMarks, academicYear, semester } = req.body;
-    if (!subjectId || !title) return res.status(400).json({ error: "subjectId and title are required" });
+    const result = await createExamSchedule(req.body, req.user);
+    res.status(201).json(result);
+  } catch (err) {
+    res.status(400).json({ error: err.message });
+  }
+});
 
-    const { data: exam, error } = await supabaseAdmin
-      .from("exams")
-      .insert({
-        subject_id: subjectId,
-        type: "main",
-        title,
-        total_marks: totalMarks || 100,
-        status: "draft",
-        created_by: req.user.id,
-      })
-      .select("id, title, total_marks, status, created_at, subject_id, subjects(name, department_id, departments(name))")
-      .single();
+// PUT /api/examdept/exams/:id -> Update draft or existing exam schedule
+router.put("/exams/:id", async (req, res) => {
+  try {
+    const result = await updateExamSchedule(req.params.id, req.body, req.user);
+    res.json(result);
+  } catch (err) {
+    res.status(400).json({ error: err.message });
+  }
+});
 
-    if (error) throw error;
+// POST /api/examdept/exams/:id/publish -> Publish official exam schedule (triggers MCA HOD notification)
+router.post("/exams/:id/publish", async (req, res) => {
+  try {
+    const result = await publishExamSchedule(req.params.id, req.user);
+    res.json(result);
+  } catch (err) {
+    res.status(400).json({ error: err.message });
+  }
+});
 
-    await logAuditEvent({
-      userId: req.user.id,
-      userRole: "examdept",
-      action: "MAIN_EXAM_CREATED",
-      entityType: "exams",
-      entityId: exam.id,
-      newValue: exam.title,
-    });
-
-    // Auto-create entry in shared Academic Calendar
-    try {
-      await createAcademicCalendarEvent({
-        title: `Main Exam: ${exam.title}`,
-        event_type: "Main Examination",
-        department_id: exam.subjects?.department_id || null,
-        subject_id: subjectId,
-        semester: semester || "3rd Sem",
-        visibility: "all",
-        description: `Main Examination for ${exam.subjects?.name || "Subject"}`
-      });
-    } catch (e) {}
-
-    res.status(201).json(exam);
+// POST /api/examdept/exams/:id/cancel -> Cancel an exam schedule with audit trail
+router.post("/exams/:id/cancel", async (req, res) => {
+  try {
+    const { reason } = req.body;
+    const result = await cancelExamSchedule(req.params.id, reason, req.user);
+    res.json(result);
   } catch (err) {
     res.status(400).json({ error: err.message });
   }
@@ -81,19 +98,8 @@ router.post("/exams", async (req, res) => {
 // DELETE /api/examdept/exams/:id -> Delete a scheduled main exam
 router.delete("/exams/:id", async (req, res) => {
   try {
-    const { id } = req.params;
-    const { error } = await supabaseAdmin.from("exams").delete().eq("id", id);
-    if (error) throw error;
-
-    await logAuditEvent({
-      userId: req.user.id,
-      userRole: "examdept",
-      action: "MAIN_EXAM_DELETED",
-      entityType: "exams",
-      entityId: id,
-    });
-
-    res.json({ success: true, message: "Exam removed successfully." });
+    const result = await deleteExamSchedule(req.params.id, req.user);
+    res.json(result);
   } catch (err) {
     res.status(400).json({ error: err.message });
   }
@@ -213,17 +219,29 @@ router.get("/departments/:deptId/internal-marks", async (req, res) => {
       const rawSubjectList = studentSubjects;
 
       const subjectBreakdown = await Promise.all(rawSubjectList.map(async (sub) => {
+        const storeRecs = await getSubjectInternalMarks(sub.id);
+        const storeRec = storeRecs.find((m) => m.student_id === s.id);
         let rec = internalMarksList.find((m) => m.student_id === s.id && m.subject_id === sub.id);
-        if (!rec) {
-          const storeRecs = await getSubjectInternalMarks(sub.id);
-          rec = storeRecs.find((m) => m.student_id === s.id) || {};
+
+        if (!rec || (storeRec && (storeRec.total_internal_marks || storeRec.totalInternal || 0) > (rec.total_internal_marks || 0))) {
+          rec = storeRec || rec || {};
         }
+
+        const hasEnteredMarks = Boolean(
+          (storeRec && (storeRec.internal1_marks !== undefined || storeRec.internal1 !== undefined || storeRec.total_internal_marks !== undefined)) ||
+          (rec && (rec.internal1_marks !== undefined || rec.internal1 !== undefined || rec.total_internal_marks !== undefined || rec.status))
+        );
 
         let i1 = Number(rec?.internal1_marks ?? rec?.internal1 ?? 0);
         let i2 = Number(rec?.internal2_marks ?? rec?.internal2 ?? 0);
         let ass = Number(rec?.assignment_marks ?? rec?.assignment ?? 0);
         let proj = Number(rec?.project_marks ?? rec?.project ?? rec?.internal3_marks ?? rec?.internal3 ?? 0);
         let tot = i1 + i2 + ass + proj;
+
+        let markStatus = "PENDING_FACULTY_ENTRY";
+        if (hasEnteredMarks) {
+          markStatus = rec?.status || storeRec?.status || "SUBMITTED_TO_HOD";
+        }
 
         return {
           subjectId: sub.id,
@@ -236,38 +254,28 @@ router.get("/departments/:deptId/internal-marks", async (req, res) => {
           assignment: ass,
           project: proj,
           totalInternal50: tot,
-          isEligible: tot >= 25,
-          eligibilityReason: tot >= 25 ? "Eligible" : "Internal Marks below cutoff (25/50)",
-          status: rec?.status || 'APPROVED_BY_HOD',
+          hasEnteredMarks,
+          isEligible: hasEnteredMarks ? tot >= 25 : false,
+          eligibilityReason: !hasEnteredMarks ? "Pending Faculty Entry" : (tot >= 25 ? "Eligible" : "Internal Marks below cutoff (25/50)"),
+          status: markStatus,
         };
       }));
 
-      const avgInternal = subjectBreakdown.length > 0 
-        ? Math.round(subjectBreakdown.reduce((acc, sub) => acc + sub.totalInternal50, 0) / subjectBreakdown.length)
-        : 0;
+      const subjectsWithMarks = subjectBreakdown.filter((sb) => sb.hasEnteredMarks);
+      const avgInternal = subjectsWithMarks.length > 0 
+        ? Math.round(subjectsWithMarks.reduce((acc, sub) => acc + sub.totalInternal50, 0) / subjectsWithMarks.length)
+        : (subjectBreakdown.length > 0 ? Math.round(subjectBreakdown.reduce((acc, sub) => acc + sub.totalInternal50, 0) / subjectBreakdown.length) : 0);
 
       // Calculate real attendance percentage from Department HOD store
       const attSummary = await getStudentAttendanceSummary(s.id);
       let attendancePercentage = attSummary.hasAnyAttendance 
         ? attSummary.overallPercentage 
-        : 0;
+        : INSTITUTIONAL_POLICY.DEFAULT_UNRECORDED_ATTENDANCE_PCT;
 
-      if (attSummary.isCondonedByHod) {
-        attendancePercentage = Math.max(75.0, attendancePercentage);
-      }
+      const elig = calculateEligibility(attendancePercentage, avgInternal, attSummary.isCondonedByHod);
 
-      const isAttendanceEligible = attendancePercentage >= 75.0 || attSummary.isCondonedByHod;
-      const isInternalEligible = avgInternal >= 25;
-      const isEligible = isAttendanceEligible && isInternalEligible;
-
-      let eligibilityStatus = "ELIGIBLE";
-      if (!isAttendanceEligible && !isInternalEligible) {
-        eligibilityStatus = `DETAINED (Att ${attendancePercentage}% < 75% & Marks ${avgInternal}/50 < 25)`;
-      } else if (!isAttendanceEligible) {
-        eligibilityStatus = `DETAINED (Low Attendance: ${attendancePercentage}% < 75%)`;
-      } else if (!isInternalEligible) {
-        eligibilityStatus = `DETAINED (Low Internals: ${avgInternal}/50 < 25)`;
-      }
+      const allApproved = subjectBreakdown.length > 0 && subjectBreakdown.every((sb) => sb.status === 'APPROVED_BY_HOD' || sb.status === 'approved_by_hod');
+      const hodApprovalStatus = allApproved ? "APPROVED_BY_HOD" : (subjectBreakdown.some((sb) => sb.hasEnteredMarks) ? "SUBMITTED_TO_HOD" : "PENDING_FACULTY_ENTRY");
 
       return {
         studentId: s.id,
@@ -280,13 +288,14 @@ router.get("/departments/:deptId/internal-marks", async (req, res) => {
           : (departmentNameResolved !== "Department" ? departmentNameResolved : "Master of Computer Applications"),
         email: s.email,
         avgInternal50: avgInternal,
-        attendancePercentage,
-        isAttendanceEligible,
-        isInternalEligible,
-        isEligible,
-        eligibilityStatus,
+        hasAnyAttendance: attSummary.hasAnyAttendance,
+        attendancePercentage: attSummary.hasAnyAttendance ? attSummary.overallPercentage : null,
+        isAttendanceEligible: attSummary.hasAnyAttendance ? elig.isAttendanceEligible : true,
+        isInternalEligible: elig.isInternalEligible,
+        isEligible: elig.isEligible,
+        eligibilityStatus: elig.eligibilityStatus,
         isCondonedByHod: attSummary.isCondonedByHod || false,
-        hodApprovalStatus: "APPROVED_BY_HOD",
+        hodApprovalStatus,
         subjectBreakdown,
       };
     }));

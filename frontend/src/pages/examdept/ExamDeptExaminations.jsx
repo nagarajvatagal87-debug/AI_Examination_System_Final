@@ -17,9 +17,20 @@ export default function ExamDeptExaminations() {
     }
   }, [selectedDeptId])
   const [showCreate, setShowCreate] = useState(false)
+  const [editingExamId, setEditingExamId] = useState(null)
   const [subjectId, setSubjectId] = useState('')
   const [title, setTitle] = useState('Main Examination')
   const [totalMarks, setTotalMarks] = useState(100)
+  const [examDate, setExamDate] = useState('2026-07-20')
+  const [startTime, setStartTime] = useState('09:30 AM')
+  const [endTime, setEndTime] = useState('12:30 PM')
+  const [duration, setDuration] = useState('3 Hours')
+  const [semester, setSemester] = useState('3rd Sem')
+  const [academicYear, setAcademicYear] = useState('2025-2026')
+  const [sessionName, setSessionName] = useState('Semester End Examinations: July - August 2026')
+  const [selectedCentreId, setSelectedCentreId] = useState('')
+  const [selectedRoomId, setSelectedRoomId] = useState('')
+  const [scheduleStatus, setScheduleStatus] = useState('DRAFT')
   const [msg, setMsg] = useState('')
 
   // Manual Exam Centre & Room State
@@ -232,28 +243,36 @@ export default function ExamDeptExaminations() {
   }
 
   async function handlePublishIndividualHallTicket(studentObj) {
-    if (!studentObj.isEligible) {
-      return setTicketMsg(`⚠️ Cannot publish hall ticket: ${studentObj.fullName} (${studentObj.registrationNo}) is NOT ELIGIBLE due to low internal score (${studentObj.avgInternal50}/50).`)
-    }
     setPublishingTicket(true)
-    setTicketMsg(`🎟️ Generating and publishing admit card for ${studentObj.fullName} (${studentObj.registrationNo})...`)
+    setTicketMsg(`🎟️ Generating & publishing admit card for ${studentObj.fullName} (${studentObj.registrationNo})...`)
     try {
       const targetExam = filteredExams[0] || exams[0] || { id: 'exam-default' }
       const enrolledBreakdown = Array.isArray(studentObj.subjectBreakdown) ? studentObj.subjectBreakdown : [];
-      const timetable = enrolledBreakdown.map((sub) => ({
-        subjectCode: sub.subjectCode || sub.code || 'SUB',
-        subjectName: sub.subjectName || sub.name || 'Registered Subject',
-        examDate: sub.date || '20/07/2026',
-        timeSlot: sub.time || '2:00 PM - 5:00 PM'
-      }));
+      const timetable = enrolledBreakdown.map((sub) => {
+        const match = exams.find((ex) => (ex.subjectId === sub.subjectId || ex.subject_id === sub.subjectId) && (ex.status === 'PUBLISHED' || ex.status === 'SCHEDULED')) || exams.find((ex) => ex.subjectId === sub.subjectId || ex.subject_id === sub.subjectId);
+        return {
+          subjectCode: sub.subjectCode || sub.code || match?.subjectCode || 'SUB',
+          subjectName: sub.subjectName || sub.name || match?.subjectName || 'Registered Subject',
+          examDate: match?.examDate || sub.date || '2026-07-20',
+          timeSlot: match ? `${match.startTime} - ${match.endTime}` : (sub.time || '09:30 AM - 12:30 PM')
+        };
+      });
 
-      await api.post('/examdept/generate-hall-ticket', {
+      const res = await api.post('/examdept/generate-hall-ticket', {
         studentId: studentObj.studentId,
         examId: targetExam.id,
         status: 'PUBLISHED',
         timetable
       })
-      setTicketMsg(`✅ Official Hall Ticket published successfully for ${studentObj.fullName} (${studentObj.registrationNo})! Visible on Student Dashboard.`)
+
+      let notifMsg = '';
+      if (res.data?.studentEmailNotification?.warning) {
+        notifMsg = ` (${res.data.studentEmailNotification.warning})`;
+      } else if (res.data?.studentEmailNotification?.recipient) {
+        notifMsg = ` (📧 Email sent to ${res.data.studentEmailNotification.recipient})`;
+      }
+
+      setTicketMsg(`✅ Official Hall Ticket published successfully for ${studentObj.fullName} (${studentObj.registrationNo})!${notifMsg}`)
       loadHallTicketsData()
     } catch (err) {
       setTicketMsg(`❌ Failed to publish hall ticket: ${err.response?.data?.error || err.message}`)
@@ -263,33 +282,37 @@ export default function ExamDeptExaminations() {
   }
 
   async function handlePublishDepartmentHallTickets() {
-    const eligibleStudents = deptStudentRoster.filter((s) => s.isEligible)
-    if (eligibleStudents.length === 0) {
-      return setTicketMsg('⚠️ No eligible students found for this department filter.')
+    if (deptStudentRoster.length === 0) {
+      return setTicketMsg('⚠️ No candidate students found for this department filter.')
     }
     setPublishingTicket(true)
-    setTicketMsg(`🎟️ Batch generating & publishing hall tickets for ${eligibleStudents.length} eligible students in department...`)
+    setTicketMsg(`🎟️ Batch generating & publishing hall tickets for ${deptStudentRoster.length} candidate students in department...`)
     try {
       const targetExam = filteredExams[0] || exams[0] || { id: 'exam-default' }
       let count = 0
-      for (const st of eligibleStudents) {
+      let emailNotifCount = 0
+      for (const st of deptStudentRoster) {
         const enrolledBreakdown = Array.isArray(st.subjectBreakdown) ? st.subjectBreakdown : [];
-        const timetable = enrolledBreakdown.map((sub) => ({
-          subjectCode: sub.subjectCode || sub.code || 'SUB',
-          subjectName: sub.subjectName || sub.name || 'Registered Subject',
-          examDate: sub.date || '20/07/2026',
-          timeSlot: sub.time || '2:00 PM - 5:00 PM'
-        }));
+        const timetable = enrolledBreakdown.map((sub) => {
+          const match = exams.find((ex) => (ex.subjectId === sub.subjectId || ex.subject_id === sub.subjectId) && (ex.status === 'PUBLISHED' || ex.status === 'SCHEDULED')) || exams.find((ex) => ex.subjectId === sub.subjectId || ex.subject_id === sub.subjectId);
+          return {
+            subjectCode: sub.subjectCode || sub.code || match?.subjectCode || 'SUB',
+            subjectName: sub.subjectName || sub.name || match?.subjectName || 'Registered Subject',
+            examDate: match?.examDate || sub.date || '2026-07-20',
+            timeSlot: match ? `${match.startTime} - ${match.endTime}` : (sub.time || '09:30 AM - 12:30 PM')
+          };
+        });
 
-        await api.post('/examdept/generate-hall-ticket', {
+        const res = await api.post('/examdept/generate-hall-ticket', {
           studentId: st.studentId,
           examId: targetExam.id,
           status: 'PUBLISHED',
           timetable
         })
         count++
+        if (res.data?.studentEmailNotification?.recipient) emailNotifCount++
       }
-      setTicketMsg(`✅ Successfully published official hall tickets for ${count} eligible student(s)! Visible on Student Dashboard.`)
+      setTicketMsg(`✅ Successfully published official hall tickets for ${count} student(s)! (📧 ${emailNotifCount} student notification emails dispatched).`)
       loadHallTicketsData()
     } catch (err) {
       setTicketMsg(`❌ Batch publish error: ${err.response?.data?.error || err.message}`)
@@ -301,14 +324,17 @@ export default function ExamDeptExaminations() {
   function handlePreviewHallTicket(studentObj) {
     const existingTicket = publishedHallTickets.find((ht) => ht.student_id === studentObj.studentId)
     
-    // Render ONLY the candidate's exact enrolled subjects
+    // Render candidate's enrolled subjects linked to published DB main exam schedules
     const enrolledBreakdown = Array.isArray(studentObj.subjectBreakdown) ? studentObj.subjectBreakdown : [];
-    const subjectsList = enrolledBreakdown.map((sub) => ({
-      code: sub.subjectCode || sub.code || 'SUB',
-      name: sub.subjectName || sub.name || 'Registered Subject',
-      date: sub.date || '20/07/2026',
-      time: sub.time || '2:00 PM - 5:00 PM'
-    }));
+    const subjectsList = enrolledBreakdown.map((sub) => {
+      const match = exams.find((ex) => (ex.subjectId === sub.subjectId || ex.subject_id === sub.subjectId) && (ex.status === 'PUBLISHED' || ex.status === 'SCHEDULED')) || exams.find((ex) => ex.subjectId === sub.subjectId || ex.subject_id === sub.subjectId);
+      return {
+        code: sub.subjectCode || sub.code || match?.subjectCode || 'SUB',
+        name: sub.subjectName || sub.name || match?.subjectName || 'Registered Subject',
+        date: match?.examDate || sub.date || '2026-07-20',
+        time: match ? `${match.startTime} - ${match.endTime}` : (sub.time || '09:30 AM - 12:30 PM')
+      };
+    });
 
     setPreviewTicketData({
       institution: "DAYANANDA SAGAR ACADEMY OF TECHNOLOGY & MANAGEMENT",
@@ -465,15 +491,100 @@ export default function ExamDeptExaminations() {
     }
   }
 
-  async function handleCreate() {
-    if (!subjectId || !title) return setMsg('Subject and title are required.')
+  async function handleSaveSchedule(statusToSet = scheduleStatus) {
+    if (!subjectId || !title || !examDate || !startTime || !endTime) {
+      return setMsg('❌ Subject, Title, Date, Start Time, and End Time are required.')
+    }
+    const selSubject = subjects.find((s) => s.id === subjectId) || {}
+    const selCentre = centres.find((c) => c.id === selectedCentreId) || centres[0] || {}
+    const selRoom = (selCentre.rooms || []).find((r) => r.id === selectedRoomId) || (selCentre.rooms || [])[0] || {}
+
+    const payload = {
+      subjectId,
+      subjectName: selSubject.name || 'Subject',
+      subjectCode: selSubject.code || 'SUB',
+      departmentId: selSubject.department_id || selSubject.departments?.id || selectedDeptId,
+      departmentName: selSubject.departments?.name || 'Department',
+      title,
+      examDate,
+      startTime,
+      endTime,
+      duration,
+      semester,
+      academicYear,
+      sessionName,
+      totalMarks: Number(totalMarks) || 100,
+      centreId: selCentre.id || 'centre-main',
+      centreName: selCentre.name || 'DSATM Main Academic Block Examination Centre',
+      roomId: selRoom.id || 'room-lh101',
+      roomName: selRoom.roomNumber ? `Hall ${selRoom.roomNumber} (${selRoom.building || 'Block A'})` : 'Hall LH-101 (1st Floor)',
+      status: statusToSet,
+    }
+
     try {
-      await api.post('/examdept/exams', { subjectId, title, totalMarks: Number(totalMarks) })
-      setMsg('Main examination created successfully!')
+      if (editingExamId) {
+        const res = await api.put(`/examdept/exams/${editingExamId}`, payload)
+        let notifMsg = ''
+        if (res.data?.hodNotification?.recipient) {
+          notifMsg = ` (📧 Email sent to MCA HOD ${res.data.hodNotification.recipient})`
+        }
+        setMsg(`✅ Schedule "${title}" updated successfully (${statusToSet})!${notifMsg}`)
+      } else {
+        const res = await api.post('/examdept/exams', payload)
+        let notifMsg = ''
+        if (res.data?.hodNotification?.recipient) {
+          notifMsg = ` (📧 Email sent to MCA HOD ${res.data.hodNotification.recipient})`
+        }
+        setMsg(`✅ Schedule "${title}" created successfully (${statusToSet})!${notifMsg}`)
+      }
       setShowCreate(false)
+      setEditingExamId(null)
       load()
     } catch (err) {
-      setMsg(err.response?.data?.error || 'Failed to create')
+      setMsg(`❌ ${err.response?.data?.error || err.message}`)
+    }
+  }
+
+  function handleEditExamSchedule(exam) {
+    setEditingExamId(exam.id)
+    setSubjectId(exam.subjectId || exam.subject_id || (subjects[0]?.id || ''))
+    setTitle(exam.title || 'Main Examination')
+    setTotalMarks(exam.totalMarks || exam.total_marks || 100)
+    setExamDate(exam.examDate || '2026-07-20')
+    setStartTime(exam.startTime || '09:30 AM')
+    setEndTime(exam.endTime || '12:30 PM')
+    setDuration(exam.duration || '3 Hours')
+    setSemester(exam.semester || '3rd Sem')
+    setAcademicYear(exam.academicYear || '2025-2026')
+    setSessionName(exam.sessionName || 'Semester End Examinations: July - August 2026')
+    setSelectedCentreId(exam.centreId || '')
+    setSelectedRoomId(exam.roomId || '')
+    setScheduleStatus(exam.status || 'DRAFT')
+    setShowCreate(true)
+  }
+
+  async function handlePublishExamSchedule(examId) {
+    try {
+      const res = await api.post(`/examdept/exams/${examId}/publish`)
+      let notifMsg = ''
+      if (res.data?.hodNotification?.recipient) {
+        notifMsg = ` (📧 Email sent to MCA HOD ${res.data.hodNotification.recipient})`
+      }
+      setMsg(`✅ Official Schedule published successfully!${notifMsg}`)
+      load()
+    } catch (err) {
+      setMsg(`❌ Publish failed: ${err.response?.data?.error || err.message}`)
+    }
+  }
+
+  async function handleCancelExamSchedule(examId) {
+    if (!window.confirm('Are you sure you want to cancel this published/scheduled examination? Affected students and HOD will be notified.')) return
+    try {
+      await api.post(`/examdept/exams/${examId}/cancel`)
+      setMsg('✅ Schedule cancelled successfully.')
+      load()
+    } catch (err) {
+      setMsg(`❌ Cancel failed: ${err.response?.data?.error || err.message}`)
     }
   }
 
@@ -668,90 +779,192 @@ export default function ExamDeptExaminations() {
         </div>
       )}
 
-      {/* CREATE MAIN EXAMINATION PANEL */}
+      {/* CREATE / EDIT MAIN EXAMINATION PANEL */}
       {showCreate && (
         <div className="ede-form-card">
-          <h3 style={{ margin: '0 0 16px 0', fontSize: 17, color: '#1d4ed8', fontWeight: 800 }}>📅 Schedule New Main Examination</h3>
+          <h3 style={{ margin: '0 0 16px 0', fontSize: 17, color: '#1d4ed8', fontWeight: 800 }}>
+            {editingExamId ? '✏️ Edit Main Examination Schedule' : '📅 Schedule New Main Examination'}
+          </h3>
           <div style={{ display: 'grid', gridTemplateColumns: '1.5fr 1.5fr 1fr', gap: 16, marginBottom: 16 }}>
             <div>
               <label style={{ display: 'block', fontSize: 12, color: '#475569', marginBottom: 6, fontWeight: 700 }}>Target Subject & Department</label>
               <select value={subjectId} onChange={(e) => setSubjectId(e.target.value)} className="ede-input">
-                {filteredSubjects.map((s) => <option key={s.id} value={s.id}>{s.departments?.name} — {s.name} ({s.code || 'CODE'})</option>)}
+                {filteredSubjects.map((s) => <option key={s.id} value={s.id}>{s.departments?.name || 'Dept'} — {s.name} ({s.code || 'CODE'})</option>)}
               </select>
             </div>
             <div>
               <label style={{ display: 'block', fontSize: 12, color: '#475569', marginBottom: 6, fontWeight: 700 }}>Main Exam Title</label>
-              <input value={title} onChange={(e) => setTitle(e.target.value)} className="ede-input" />
+              <input value={title} onChange={(e) => setTitle(e.target.value)} className="ede-input" placeholder="e.g. Main Examination Series" />
             </div>
             <div>
-              <label style={{ display: 'block', fontSize: 12, color: '#475569', marginBottom: 6, fontWeight: 700 }}>Total Marks (Main Raw)</label>
+              <label style={{ display: 'block', fontSize: 12, color: '#475569', marginBottom: 6, fontWeight: 700 }}>Total Raw Marks</label>
               <input type="number" value={totalMarks} onChange={(e) => setTotalMarks(e.target.value)} className="ede-input" />
             </div>
           </div>
-          <div style={{ display: 'flex', gap: 12, justifyContent: 'flex-end' }}>
-            <button type="button" onClick={() => setShowCreate(false)} style={{ padding: '9px 18px', borderRadius: 10, background: '#f1f5f9', color: '#475569', border: '1px solid #cbd5e1', cursor: 'pointer', fontWeight: 700 }}>Cancel</button>
-            <button className="ede-btn-primary" onClick={handleCreate}>
-              Create Exam Schedule
+
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr', gap: 16, marginBottom: 16 }}>
+            <div>
+              <label style={{ display: 'block', fontSize: 12, color: '#475569', marginBottom: 6, fontWeight: 700 }}>Exam Date</label>
+              <input type="date" value={examDate} onChange={(e) => setExamDate(e.target.value)} className="ede-input" />
+            </div>
+            <div>
+              <label style={{ display: 'block', fontSize: 12, color: '#475569', marginBottom: 6, fontWeight: 700 }}>Start Time</label>
+              <input type="text" value={startTime} onChange={(e) => setStartTime(e.target.value)} className="ede-input" placeholder="09:30 AM" />
+            </div>
+            <div>
+              <label style={{ display: 'block', fontSize: 12, color: '#475569', marginBottom: 6, fontWeight: 700 }}>End Time</label>
+              <input type="text" value={endTime} onChange={(e) => setEndTime(e.target.value)} className="ede-input" placeholder="12:30 PM" />
+            </div>
+            <div>
+              <label style={{ display: 'block', fontSize: 12, color: '#475569', marginBottom: 6, fontWeight: 700 }}>Duration</label>
+              <input type="text" value={duration} onChange={(e) => setDuration(e.target.value)} className="ede-input" placeholder="3 Hours" />
+            </div>
+          </div>
+
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1.5fr 1.5fr', gap: 16, marginBottom: 16 }}>
+            <div>
+              <label style={{ display: 'block', fontSize: 12, color: '#475569', marginBottom: 6, fontWeight: 700 }}>Semester</label>
+              <input value={semester} onChange={(e) => setSemester(e.target.value)} className="ede-input" placeholder="3rd Sem" />
+            </div>
+            <div>
+              <label style={{ display: 'block', fontSize: 12, color: '#475569', marginBottom: 6, fontWeight: 700 }}>Academic Year</label>
+              <input value={academicYear} onChange={(e) => setAcademicYear(e.target.value)} className="ede-input" placeholder="2025-2026" />
+            </div>
+            <div>
+              <label style={{ display: 'block', fontSize: 12, color: '#475569', marginBottom: 6, fontWeight: 700 }}>Examination Session</label>
+              <input value={sessionName} onChange={(e) => setSessionName(e.target.value)} className="ede-input" placeholder="Semester End Examinations: July - August 2026" />
+            </div>
+          </div>
+
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginBottom: 16 }}>
+            <div>
+              <label style={{ display: 'block', fontSize: 12, color: '#475569', marginBottom: 6, fontWeight: 700 }}>Examination Centre</label>
+              <select value={selectedCentreId} onChange={(e) => { setSelectedCentreId(e.target.value); setSelectedRoomId(''); }} className="ede-input">
+                <option value="">Default: DSATM Main Academic Block</option>
+                {centres.map((c) => <option key={c.id} value={c.id}>{c.name} ({c.code})</option>)}
+              </select>
+            </div>
+            <div>
+              <label style={{ display: 'block', fontSize: 12, color: '#475569', marginBottom: 6, fontWeight: 700 }}>Examination Hall / Room</label>
+              <select value={selectedRoomId} onChange={(e) => setSelectedRoomId(e.target.value)} className="ede-input">
+                <option value="">Default: Hall LH-101 (1st Floor)</option>
+                {((centres.find(c => c.id === selectedCentreId)?.rooms) || []).map((r) => (
+                  <option key={r.id} value={r.id}>Room {r.roomNumber} — {r.building} ({r.floor}) [Cap: {r.capacity}]</option>
+                ))}
+              </select>
+            </div>
+          </div>
+
+          <div style={{ display: 'flex', gap: 12, justifyContent: 'flex-end', flexWrap: 'wrap' }}>
+            <button type="button" onClick={() => { setShowCreate(false); setEditingExamId(null); }} style={{ padding: '9px 18px', borderRadius: 10, background: '#f1f5f9', color: '#475569', border: '1px solid #cbd5e1', cursor: 'pointer', fontWeight: 700 }}>Cancel</button>
+            <button type="button" onClick={() => handleSaveSchedule('DRAFT')} style={{ padding: '9px 18px', borderRadius: 10, background: '#fef3c7', color: '#b45309', border: '1px solid #fde68a', cursor: 'pointer', fontWeight: 700 }}>
+              💾 Save Draft
+            </button>
+            <button type="button" onClick={() => handleSaveSchedule('SCHEDULED')} style={{ padding: '9px 18px', borderRadius: 10, background: '#eff6ff', color: '#1d4ed8', border: '1px solid #bfdbfe', cursor: 'pointer', fontWeight: 700 }}>
+              📅 Validate & Schedule
+            </button>
+            <button className="ede-btn-primary" onClick={() => handleSaveSchedule('PUBLISHED')}>
+              📢 Validate & Publish Schedule
             </button>
           </div>
-          {msg && <p style={{ marginTop: 12, color: '#059669', fontWeight: 700, fontSize: 13 }}>{msg}</p>}
+          {msg && <p style={{ marginTop: 12, color: msg.includes('❌') ? '#dc2626' : '#059669', fontWeight: 700, fontSize: 13 }}>{msg}</p>}
         </div>
       )}
 
       {/* TAB 1: SCHEDULE & AI QUESTION PAPERS */}
       {activeTab === 'SCHEDULE' && (
         <div className="ede-cards-grid">
-          {filteredExams.map((e) => (
-            <div key={e.id} className="ede-card">
-              <div>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
-                  <span style={{ fontSize: 11, color: '#1d4ed8', fontWeight: 800, textTransform: 'uppercase', background: '#eff6ff', padding: '4px 10px', borderRadius: 8, border: '1px solid #bfdbfe' }}>
-                    {e.subjects?.departments?.name || 'Department'}
-                  </span>
-                  <span style={{ padding: '4px 12px', borderRadius: 8, fontSize: 11, fontWeight: 800, background: e.status === 'published' ? '#ecfdf5' : '#eff6ff', color: e.status === 'published' ? '#047857' : '#1d4ed8', border: `1px solid ${e.status === 'published' ? '#a7f3d0' : '#bfdbfe'}` }}>
-                    {e.status.toUpperCase()}
-                  </span>
+          {filteredExams.map((e) => {
+            const statusUpper = (e.status || 'SCHEDULED').toUpperCase();
+            const statusBg = statusUpper === 'PUBLISHED' ? '#ecfdf5' : statusUpper === 'DRAFT' ? '#fef3c7' : statusUpper === 'CANCELLED' ? '#fef2f2' : '#eff6ff';
+            const statusColor = statusUpper === 'PUBLISHED' ? '#047857' : statusUpper === 'DRAFT' ? '#b45309' : statusUpper === 'CANCELLED' ? '#dc2626' : '#1d4ed8';
+            const statusBorder = statusUpper === 'PUBLISHED' ? '#a7f3d0' : statusUpper === 'DRAFT' ? '#fde68a' : statusUpper === 'CANCELLED' ? '#fecaca' : '#bfdbfe';
+
+            return (
+              <div key={e.id} className="ede-card" style={{ display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
+                <div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
+                    <span style={{ fontSize: 11, color: '#1d4ed8', fontWeight: 800, textTransform: 'uppercase', background: '#eff6ff', padding: '4px 10px', borderRadius: 8, border: '1px solid #bfdbfe' }}>
+                      {e.departmentName || e.subjects?.departments?.name || 'Department'}
+                    </span>
+                    <span style={{ padding: '4px 12px', borderRadius: 8, fontSize: 11, fontWeight: 800, background: statusBg, color: statusColor, border: `1px solid ${statusBorder}` }}>
+                      {statusUpper}
+                    </span>
+                  </div>
+
+                  <h3 style={{ fontSize: 18, margin: '0 0 8px 0', color: '#0f172a', fontWeight: 800 }}>{e.title}</h3>
+                  <p style={{ fontSize: 13, color: '#475569', margin: '0 0 10px 0', fontWeight: 600 }}>
+                    Subject: <strong style={{ color: '#1d4ed8' }}>{e.subjectName || e.subjects?.name || 'Subject'}{e.subjectCode || e.subjects?.code ? ` (${e.subjectCode || e.subjects.code})` : ''}</strong>
+                  </p>
+
+                  <div style={{ fontSize: 12, color: '#334155', background: '#f8fafc', padding: '12px 14px', borderRadius: 10, marginBottom: 14, border: '1px solid #e2e8f0', display: 'flex', flexDirection: 'column', gap: 6 }}>
+                    <div>📅 Date: <strong>{e.examDate || '2026-07-20'}</strong> ({e.startTime || '09:30 AM'} – {e.endTime || '12:30 PM'})</div>
+                    <div>⏱️ Duration: <strong>{e.duration || '3 Hours'}</strong> | Semester: <strong>{e.semester || '3rd Sem'}</strong></div>
+                    <div>🏛️ Session: <strong>{e.sessionName || 'Semester End Examinations 2026'}</strong></div>
+                    <div>🏢 Centre: <strong>{e.centreName || 'DSATM Main Academic Block'}</strong></div>
+                    <div>🚪 Room: <strong>{e.roomName || 'Hall LH-101'}</strong></div>
+                    <div>💯 Weightage: <strong>{e.totalMarks || e.total_marks || 100} Marks Raw</strong></div>
+                  </div>
                 </div>
 
-                <h3 style={{ fontSize: 18, margin: '0 0 8px 0', color: '#0f172a', fontWeight: 800 }}>{e.title}</h3>
-                <p style={{ fontSize: 13, color: '#475569', margin: '0 0 14px 0', fontWeight: 600 }}>
-                  Subject: <strong style={{ color: '#1d4ed8' }}>{e.subjects?.name || 'Subject'}{e.subjects?.code ? ` (${e.subjects.code})` : ''}</strong>
-                </p>
-                <div style={{ fontSize: 12, color: '#475569', background: '#f8fafc', padding: '10px 14px', borderRadius: 10, marginBottom: 20, border: '1px solid #e2e8f0' }}>
-                  Evaluation Weightage: <strong style={{ color: '#0f172a' }}>{e.total_marks} Marks Raw</strong> (Scaled 50m + Internal 50m)
+                <div>
+                  <div style={{ display: 'flex', gap: 6, marginBottom: 8, flexWrap: 'wrap' }}>
+                    {statusUpper !== 'PUBLISHED' && (
+                      <button
+                        onClick={() => handlePublishExamSchedule(e.id)}
+                        style={{ flex: 1, padding: '7px 10px', borderRadius: 8, border: '1px solid #a7f3d0', background: '#ecfdf5', color: '#047857', fontSize: 11, fontWeight: 800, cursor: 'pointer' }}
+                      >
+                        📢 Publish
+                      </button>
+                    )}
+                    {statusUpper !== 'CANCELLED' && (
+                      <button
+                        onClick={() => handleCancelExamSchedule(e.id)}
+                        style={{ padding: '7px 10px', borderRadius: 8, border: '1px solid #fed7aa', background: '#fff7ed', color: '#c2410c', fontSize: 11, fontWeight: 800, cursor: 'pointer' }}
+                      >
+                        🚫 Cancel
+                      </button>
+                    )}
+                    <button
+                      onClick={() => handleEditExamSchedule(e)}
+                      style={{ padding: '7px 10px', borderRadius: 8, border: '1px solid #bfdbfe', background: '#eff6ff', color: '#1d4ed8', fontSize: 11, fontWeight: 800, cursor: 'pointer' }}
+                    >
+                      ✏️ Edit
+                    </button>
+                  </div>
+
+                  <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+                    <button
+                      onClick={() => handleOpenAiPaperModal(e)}
+                      style={{ flex: 1, padding: '8px 10px', borderRadius: 8, border: '1px solid #e9d5ff', background: '#faf5ff', color: '#7e22ce', fontSize: 11, fontWeight: 800, cursor: 'pointer', textAlign: 'center' }}
+                    >
+                      🤖 AI Paper
+                    </button>
+                    <button
+                      onClick={() => navigate(`/examdept/evaluation?examId=${e.id}`)}
+                      style={{ flex: 1, padding: '8px 10px', borderRadius: 8, border: '1px solid #bfdbfe', background: '#eff6ff', color: '#1d4ed8', fontSize: 11, fontWeight: 800, cursor: 'pointer', textAlign: 'center' }}
+                    >
+                      ⚙️ Evaluate
+                    </button>
+                    <button
+                      onClick={() => navigate(`/examdept/results?examId=${e.id}`)}
+                      className="ede-btn-emerald"
+                      style={{ flex: 1, padding: '8px 10px', fontSize: 11, textAlign: 'center' }}
+                    >
+                      📢 Results
+                    </button>
+                    <button
+                      onClick={() => handleDeleteExam(e.id, e.title)}
+                      title="Delete Exam Schedule"
+                      style={{ padding: '8px 10px', borderRadius: 8, border: '1px solid #fecaca', background: '#fef2f2', color: '#dc2626', fontSize: 11, fontWeight: 800, cursor: 'pointer', textAlign: 'center' }}
+                    >
+                      🗑️
+                    </button>
+                  </div>
                 </div>
               </div>
-
-              <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-                <button
-                  onClick={() => handleOpenAiPaperModal(e)}
-                  style={{ flex: 1, padding: '9px 10px', borderRadius: 10, border: '1px solid #e9d5ff', background: '#faf5ff', color: '#7e22ce', fontSize: 12, fontWeight: 800, cursor: 'pointer', textAlign: 'center' }}
-                >
-                  🤖 AI Paper
-                </button>
-                <button
-                  onClick={() => navigate(`/examdept/evaluation?examId=${e.id}`)}
-                  style={{ flex: 1, padding: '9px 10px', borderRadius: 10, border: '1px solid #bfdbfe', background: '#eff6ff', color: '#1d4ed8', fontSize: 12, fontWeight: 800, cursor: 'pointer', textAlign: 'center' }}
-                >
-                  ⚙️ Evaluate
-                </button>
-                <button
-                  onClick={() => navigate(`/examdept/results?examId=${e.id}`)}
-                  className="ede-btn-emerald"
-                  style={{ flex: 1, padding: '9px 10px', fontSize: 12, textAlign: 'center' }}
-                >
-                  📢 Results
-                </button>
-                <button
-                  onClick={() => handleDeleteExam(e.id, e.title)}
-                  title="Delete Exam Schedule"
-                  style={{ padding: '9px 12px', borderRadius: 10, border: '1px solid #fecaca', background: '#fef2f2', color: '#dc2626', fontSize: 12, fontWeight: 800, cursor: 'pointer', textAlign: 'center' }}
-                >
-                  🗑️
-                </button>
-              </div>
-            </div>
-          ))}
+            );
+          })}
           {filteredExams.length === 0 && (
             <div className="glass-panel" style={{ gridColumn: '1 / -1', padding: 40, textAlign: 'center', color: '#64748b' }}>
               <span style={{ fontSize: 40, display: 'block', marginBottom: 14 }}>📋</span>
@@ -1142,20 +1355,46 @@ export default function ExamDeptExaminations() {
                           <div style={{ color: '#64748b', fontSize: 11 }}>{st.semester}</div>
                         </td>
                         <td>
-                          <div style={{ fontWeight: 900, color: (st.attendancePercentage >= 75 || st.isCondonedByHod) ? '#047857' : '#dc2626', fontSize: 13 }}>
-                            {st.attendancePercentage ? `${st.attendancePercentage}%` : '85.0%'}
-                          </div>
-                          <span style={{ fontSize: 10, padding: '2px 6px', borderRadius: 4, background: (st.attendancePercentage >= 75 || st.isCondonedByHod) ? '#ecfdf5' : '#fef2f2', color: (st.attendancePercentage >= 75 || st.isCondonedByHod) ? '#047857' : '#dc2626', fontWeight: 800, border: `1px solid ${(st.attendancePercentage >= 75 || st.isCondonedByHod) ? '#a7f3d0' : '#fecaca'}` }}>
-                            {(st.attendancePercentage >= 75 || st.isCondonedByHod) ? '✅ ATTENDANCE OK' : '❌ LOW ATTENDANCE (<75%)'}
-                          </span>
+                          {st.hasAnyAttendance ? (
+                            <>
+                              <div style={{ fontWeight: 900, color: (st.attendancePercentage >= 75 || st.isCondonedByHod) ? '#047857' : '#dc2626', fontSize: 13 }}>
+                                {st.attendancePercentage}%
+                              </div>
+                              <span style={{ fontSize: 10, padding: '2px 6px', borderRadius: 4, background: (st.attendancePercentage >= 75 || st.isCondonedByHod) ? '#ecfdf5' : '#fef2f2', color: (st.attendancePercentage >= 75 || st.isCondonedByHod) ? '#047857' : '#dc2626', fontWeight: 800, border: `1px solid ${(st.attendancePercentage >= 75 || st.isCondonedByHod) ? '#a7f3d0' : '#fecaca'}` }}>
+                                {(st.attendancePercentage >= 75 || st.isCondonedByHod) ? '✅ ATTENDANCE OK' : '❌ LOW ATTENDANCE (<75%)'}
+                              </span>
+                            </>
+                          ) : (
+                            <>
+                              <div style={{ fontWeight: 800, color: '#d97706', fontSize: 12 }}>
+                                Pending Entry
+                              </div>
+                              <span style={{ fontSize: 10, padding: '2px 6px', borderRadius: 4, background: '#fffbeb', color: '#b45309', fontWeight: 800, border: '1px solid #fcd34d' }}>
+                                ⚠️ FACULTY PENDING
+                              </span>
+                            </>
+                          )}
                         </td>
                         <td>
-                          <div style={{ fontWeight: 900, color: st.avgInternal50 >= 25 ? '#047857' : '#e11d48', fontSize: 13 }}>
-                            {st.avgInternal50} / 50 Marks
-                          </div>
-                          <span style={{ fontSize: 10, padding: '2px 6px', borderRadius: 4, background: st.avgInternal50 >= 25 ? '#ecfdf5' : '#fff1f2', color: st.avgInternal50 >= 25 ? '#047857' : '#e11d48', fontWeight: 800, border: `1px solid ${st.avgInternal50 >= 25 ? '#a7f3d0' : '#fecdd3'}` }}>
-                            {st.avgInternal50 >= 25 ? '✅ INTERNALS OK' : '❌ MARKS LOW (<25)'}
-                          </span>
+                          {st.subjectBreakdown && st.subjectBreakdown.some((sb) => sb.hasEnteredMarks) ? (
+                            <>
+                              <div style={{ fontWeight: 900, color: st.avgInternal50 >= 25 ? '#047857' : '#e11d48', fontSize: 13 }}>
+                                {st.avgInternal50} / 50 Marks
+                              </div>
+                              <span style={{ fontSize: 10, padding: '2px 6px', borderRadius: 4, background: st.avgInternal50 >= 25 ? '#ecfdf5' : '#fff1f2', color: st.avgInternal50 >= 25 ? '#047857' : '#e11d48', fontWeight: 800, border: `1px solid ${st.avgInternal50 >= 25 ? '#a7f3d0' : '#fecdd3'}` }}>
+                                {st.avgInternal50 >= 25 ? '✅ INTERNALS OK' : '❌ MARKS LOW (<25)'}
+                              </span>
+                            </>
+                          ) : (
+                            <>
+                              <div style={{ fontWeight: 800, color: '#d97706', fontSize: 12 }}>
+                                Pending Entry
+                              </div>
+                              <span style={{ fontSize: 10, padding: '2px 6px', borderRadius: 4, background: '#fffbeb', color: '#b45309', fontWeight: 800, border: '1px solid #fcd34d' }}>
+                                ⚠️ FACULTY PENDING
+                              </span>
+                            </>
+                          )}
                         </td>
                         <td>
                           <span style={{

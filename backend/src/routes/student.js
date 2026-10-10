@@ -138,20 +138,50 @@ router.get("/examinations", async (req, res) => {
 
     let exams = [];
     try {
+      const { getExamSchedules } = require("../services/examScheduleStore");
+      const memoryExams = await getExamSchedules({ status: "PUBLISHED" });
+
       let query = supabaseAdmin
         .from("exams")
-        .select("id, title, type, date, subject_id, subjects(name, code, department_id)")
+        .select("id, title, type, date, status, subject_id, subjects(name, code, department_id)")
         .order("date", { ascending: true });
 
+      let dbExams = [];
       if (enrolledSubjIds.length > 0) {
-        query = query.in("subject_id", enrolledSubjIds);
+        let { data: subExams } = await supabaseAdmin
+          .from("exams")
+          .select("id, title, type, date, status, subject_id, subjects(name, code, department_id)")
+          .in("subject_id", enrolledSubjIds)
+          .order("date", { ascending: true });
+        if (subExams && subExams.length > 0) {
+          dbExams = subExams;
+        } else {
+          let { data: allExams } = await query;
+          dbExams = allExams || [];
+        }
+      } else {
+        let { data: allExams } = await query;
+        dbExams = allExams || [];
       }
 
-      const { data, error } = await query;
-      if (!error && data) exams = data;
+      const combinedMap = new Map();
+      (memoryExams || []).forEach((ex) => {
+        const s = (ex.status || "").toUpperCase();
+        if (s !== "DRAFT" && s !== "DRAFTING") {
+          combinedMap.set(ex.id, ex);
+        }
+      });
+      dbExams.forEach((ex) => {
+        const s = (ex.status || "").toUpperCase();
+        if (s !== "DRAFT" && s !== "DRAFTING") {
+          combinedMap.set(ex.id, ex);
+        }
+      });
+
+      exams = Array.from(combinedMap.values());
     } catch (e) {}
 
-    const visibleExams = (exams || []).filter((e) => !e.status || e.status === "PUBLISHED" || e.status === "APPROVED" || e.status === "published" || e.status === "approved");
+    const visibleExams = (exams || []).filter((e) => e.status !== "DRAFT" && e.status !== "draft");
     res.json(visibleExams);
   } catch (err) {
     res.json([]);
@@ -185,87 +215,111 @@ router.post("/complaints", async (req, res) => {
   }
 });
 
-// GET /api/student/hall-ticket -> admit card from DB examination schedule
+function resolveSubjectIdFromEntry(entry) {
+  if (!entry) return null;
+  if (entry.subjectId) return entry.subjectId;
+  if (entry.subject_id) return entry.subject_id;
+  const code = String(entry.subjectCode || entry.code || "").toUpperCase();
+  const name = String(entry.subjectName || entry.name || "").toLowerCase();
+
+  if (code.includes("MMC335") || name.includes("devops") || code.includes("22MCA31") || name.includes("cloud computing")) return "004df87a-c02a-4296-bed5-51d8bd0fe371";
+  if (code.includes("MMC333") || name.includes("web development")) return "b76fa471-11e9-4b91-9281-93200ff8d6e7";
+  if (code.includes("MMC312") || name.includes("ethical hacking")) return "9d4b7294-a0d0-4c39-acb3-93e01d818cb3";
+  if (code.includes("MMC321") || name.includes("deep learning")) return "f1c125fa-ca62-44a8-9e88-1c96c0fa9358";
+  if (code.includes("MMC316") || name.includes("software design")) return "711130b8-e26e-424b-800e-957637a05662";
+
+  return null;
+}
+
+// GET /api/student/hall-ticket -> admit card from official DB published schedule
 router.get("/hall-ticket", async (req, res) => {
   try {
-    const studentId = req.user.id;
+    const studentId = req.query.studentId || req.user?.id;
     const { getStudentHallTicket } = require("../services/examCentreService");
+    const { getExamSchedules } = require("../services/examScheduleStore");
     const publishedTicket = await getStudentHallTicket(studentId);
 
     const { data: student, error: studentError } = await supabaseAdmin
       .from("profiles")
       .select("id, full_name, registration_no, semester, department_id, avatar_url, departments!profiles_department_fk(name)")
       .eq("id", studentId)
-      .single();
+      .maybeSingle();
 
-    if (studentError) throw studentError;
+    const sem = student?.semester || "3rd Sem";
+    const deptName = student?.departments?.name ? student.departments.name.toUpperCase() : "DEPARTMENT OF MASTER OF COMPUTER APPLICATIONS (MCA)";
 
-    const deptId = student.department_id;
-    const deptName = student.departments?.name ? student.departments.name.toUpperCase() : "DEPARTMENT OF MASTER OF COMPUTER APPLICATIONS (MCA)";
-    const sem = student.semester || "3rd Sem";
-
+    const targetDeptId = student?.department_id || "37909cba-a75d-428e-9181-fddf9920fb0b";
     const { getEnrolledSubjectIdsForStudent } = require("../services/enrollmentStore");
-    const enrolledIds = getEnrolledSubjectIdsForStudent(studentId);
+    const enrolledSubIds = getEnrolledSubjectIdsForStudent(studentId);
 
-    const { data: subjects } = await supabaseAdmin
-      .from("subjects")
-      .select("id, name, code")
-      .eq("department_id", deptId);
+    let publishedExams = await getExamSchedules({ departmentId: targetDeptId, semester: sem, status: "PUBLISHED" });
+    if (!publishedExams || publishedExams.length === 0) {
+      publishedExams = await getExamSchedules({ status: "PUBLISHED" });
+    }
 
-    let activeSubjects = subjects || [];
-    if (enrolledIds && enrolledIds.length > 0) {
-      activeSubjects = activeSubjects.filter((sub) => enrolledIds.includes(sub.id));
+    if (publishedExams && publishedExams.length > 0 && enrolledSubIds && enrolledSubIds.length > 0) {
+      const filtered = publishedExams.filter((ex) => {
+        const sId = resolveSubjectIdFromEntry(ex);
+        return !sId || enrolledSubIds.includes(sId);
+      });
+      if (filtered.length > 0) publishedExams = filtered;
+    }
+
+    if (!publishedTicket || publishedTicket.status !== "PUBLISHED") {
+      return res.json({
+        generated: false,
+        published: false,
+        message: "No Official Main Examination Hall Ticket has been published for your account yet.",
+        studentName: student?.full_name || publishedTicket?.student_name || "Student Candidate",
+        registrationNo: student?.registration_no || publishedTicket?.registration_no || "USN Pending",
+        schedule: publishedExams,
+        timetable: publishedExams.map((sc, idx) => ({
+          slNo: idx + 1,
+          subjectCode: sc.subjectCode || sc.code || `SUB30${idx + 1}`,
+          subjectName: sc.subjectName || sc.name || "Main Exam Subject",
+          examDate: sc.examDate || sc.date || "Scheduled",
+          timeSlot: `${sc.startTime || "09:30 AM"} - ${sc.endTime || "12:30 PM"}`,
+        })),
+      });
     }
 
     let finalTimetable = [];
-    if (publishedTicket && Array.isArray(publishedTicket.timetable) && publishedTicket.timetable.length > 0) {
-      finalTimetable = publishedTicket.timetable.map((r, idx) => ({
+    let sourceTimetable = Array.isArray(publishedTicket.timetable) && publishedTicket.timetable.length > 0 ? publishedTicket.timetable : publishedExams;
+
+    if (Array.isArray(sourceTimetable) && sourceTimetable.length > 0) {
+      let filteredRows = sourceTimetable;
+      if (enrolledSubIds && enrolledSubIds.length > 0) {
+        filteredRows = filteredRows.filter((r) => {
+          const sId = resolveSubjectIdFromEntry(r);
+          return sId ? enrolledSubIds.includes(sId) : true;
+        });
+      }
+      finalTimetable = filteredRows.map((r, idx) => ({
         slNo: idx + 1,
         subjectCode: r.subjectCode || r.code || `SUB30${idx + 1}`,
         subjectName: r.subjectName || r.name || "Main Exam Subject",
-        examDate: r.examDate || r.date || "20/07/2026",
-        timeSlot: r.timeSlot || r.time || "2:00 PM - 5:00 PM",
+        examDate: r.examDate || r.date || "Scheduled",
+        timeSlot: r.timeSlot || r.time || (r.startTime && r.endTime ? `${r.startTime} - ${r.endTime}` : "09:30 AM - 12:30 PM"),
         hallNo: `${publishedTicket.room_number || "LH-101"} (${publishedTicket.seat_number || "SEAT-01"})`,
       }));
-    } else {
-      const baseDate = new Date();
-      baseDate.setDate(baseDate.getDate() + 4);
-      finalTimetable = activeSubjects.map((sub, idx) => {
-        const d = new Date(baseDate);
-        d.setDate(d.getDate() + idx * 2);
-        return {
-          slNo: idx + 1,
-          subjectCode: sub.code || `SUB30${idx + 1}`,
-          subjectName: sub.name,
-          examDate: d.toLocaleDateString("en-GB", { day: "2-digit", month: "2-digit", year: "numeric" }),
-          timeSlot: "2:00 PM - 5:00 PM",
-          hallNo: "LH-101 (SEAT-01)",
-        };
-      });
-    }
-
-    if (!publishedTicket && activeSubjects.length === 0) {
-      return res.json({
-        generated: false,
-        message: "No Hall Ticket has been published yet.",
-      });
     }
 
     res.json({
       generated: true,
-      published: !!publishedTicket,
-      institution: publishedTicket?.institution || "DAYANANDA SAGAR ACADEMY OF TECHNOLOGY & MANAGEMENT",
+      published: true,
+      institution: publishedTicket.institution || "DAYANANDA SAGAR ACADEMY OF TECHNOLOGY AND MANAGEMENT",
       title: "OFFICIAL MAIN EXAMINATION HALL TICKET / ADMIT CARD",
-      academicYear: publishedTicket?.academic_year || "2025–2026",
-      studentName: student.full_name,
-      registrationNo: student.registration_no || "1DT25MC036",
+      academicYear: publishedTicket.academic_year || "2025–2026",
+      studentName: student?.full_name || publishedTicket.student_name || "Student Candidate",
+      registrationNo: student?.registration_no || publishedTicket.registration_no || "USN Pending",
       departmentName: deptName,
       semester: sem,
-      avatarUrl: student.avatar_url,
-      examCenter: publishedTicket?.centre_name ? `${publishedTicket.centre_name} (${publishedTicket.room_number || "LH-101"})` : "DSATM Main Academic Block Examination Centre (LH-101)",
-      roomNumber: publishedTicket?.room_number || "LH-101",
-      seatNumber: publishedTicket?.seat_number || "SEAT-01",
+      avatarUrl: student?.avatar_url,
+      examCenter: publishedTicket.centre_name ? `${publishedTicket.centre_name} (${publishedTicket.room_number || "LH-101"})` : "DSATM Main Academic Block Examination Centre (LH-101)",
+      roomNumber: publishedTicket.room_number || "LH-101",
+      seatNumber: publishedTicket.seat_number || "SEAT-01",
       timetable: finalTimetable,
+      schedule: publishedExams,
     });
   } catch (err) {
     res.status(500).json({ error: err.message });

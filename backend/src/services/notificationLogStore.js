@@ -97,8 +97,19 @@ function getLogsAnalytics() {
   };
 }
 
+function isDuplicateNotifSent(recipientEmail, type, notifKey) {
+  return logsStore.some(
+    (log) =>
+      log.recipient === recipientEmail &&
+      (log.type === type || log.notification_type === type) &&
+      (log.notif_key === notifKey || log.id === notifKey) &&
+      log.status === "SENT"
+  );
+}
+
 module.exports = {
   createNotificationLog,
   isDuplicateAbsenceEmailSent,
+  isDuplicateNotifSent,
   getLogsAnalytics,
 };

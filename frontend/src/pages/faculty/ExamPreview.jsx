@@ -88,8 +88,8 @@ export default function ExamPreview({ examId }) {
 
   if (loading) return <p className="ep-empty-text">Loading question paper preview...</p>
 
-  const subjectName = exam?.subjects?.name || 'Computer Networks'
-  const subjectCode = exam?.subjects?.code || 'MMC204'
+  const subjectName = exam?.subjects?.name || exam?.subjectName || 'Subject'
+  const subjectCode = exam?.subjects?.code || exam?.subjectCode || 'ACAD'
   const examTitle = exam?.title || 'Second Internal Assessment Test (IAT-2)'
   const maxMarks = exam?.total_marks || 50
 

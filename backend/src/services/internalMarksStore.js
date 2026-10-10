@@ -90,6 +90,10 @@ async function getSubjectInternalMarks(subjectId) {
     const dbRec = dbMap.get(s.id);
     const rec = memRec || dbRec || {};
 
+    const hasEnteredMarks = Boolean(
+      (rec.internal1_marks !== undefined || rec.internal1 !== undefined || rec.total_internal_marks !== undefined || rec.updated_at)
+    );
+
     const rawI1 = Number(rec.internal1_marks ?? rec.internal1 ?? 0);
     const rawI2 = Number(rec.internal2_marks ?? rec.internal2 ?? 0);
     const rawI3 = Number(rec.internal3_marks ?? rec.project_marks ?? rec.project ?? rec.internal3 ?? 0);
@@ -101,7 +105,10 @@ async function getSubjectInternalMarks(subjectId) {
     const ass = Math.min(10, Math.max(0, rawAss));
 
     const tot = i1 + i2 + i3 + ass;
-    const isEligible = tot >= 25;
+    const isEligible = hasEnteredMarks && tot >= 25;
+
+    const currentStatus = hasEnteredMarks ? (rec.status || subjectStatus) : "PENDING_FACULTY_ENTRY";
+    const hodApproved = hasEnteredMarks && (rec.status === "approved_by_hod" || subjectStatus === "approved_by_hod");
 
     return {
       id: rec.id || `im-${s.id}`,
@@ -125,10 +132,11 @@ async function getSubjectInternalMarks(subjectId) {
       assignment_marks: ass,
       totalInternal: tot,
       total_internal_marks: tot,
+      hasEnteredMarks,
       isEligible,
       is_eligible: isEligible,
-      status: rec.status || subjectStatus,
-      hod_approved: rec.status === "approved_by_hod" || subjectStatus === "approved_by_hod",
+      status: currentStatus,
+      hod_approved: hodApproved,
       profiles: s,
     };
   });

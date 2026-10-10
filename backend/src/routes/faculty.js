@@ -632,18 +632,44 @@ CRITICAL REQUIREMENTS:
       if (!newQuestions || newQuestions.length === 0) {
         const sNameLower = subjectName.toLowerCase();
         
-        if (sNameLower.includes("network")) {
+        if (sNameLower.includes("devops") || sNameLower.includes("cloud")) {
           newQuestions = [
-            { question_no: 1, co: "CO3", rbt: "L4", difficulty: "hard", marks: 10, question_text: "A network administrator observes that packets transmitted from a source to a destination are taking different routes based on network conditions. Identify the type of network being used and explain its working along with its advantages and limitations." },
-            { question_no: 2, co: "CO3", rbt: "L4", difficulty: "hard", marks: 10, question_text: "A company requires guaranteed bandwidth for critical communication and efficient bandwidth utilization for data transfer. Recommend suitable switching techniques for both requirements and justify your recommendations." },
-            { question_no: 3, co: "CO2", rbt: "L3", difficulty: "medium", marks: 10, question_text: "A sender uses the generator polynomial 1011 to transmit the data word 100100. Calculate the CRC remainder, the transmitted frame, and find whether the receiver detects an error if the received frame is 100100111." },
-            { question_no: 4, co: "CO2", rbt: "L3", difficulty: "medium", marks: 10, question_text: "Apply the 8-bit Internet Checksum technique, compute the checksum for the following data segments: 10101010, 11001100. Find: I. The checksum generated at the sender. II. The transmitted message. III. The receiver verification process." },
-            { question_no: 5, co: "CO3", rbt: "L4", difficulty: "hard", marks: 10, question_text: "Analyze the differences between random access and controlled access techniques with examples like ALOHA and polling." },
-            { question_no: 6, co: "CO3", rbt: "L4", difficulty: "hard", marks: 10, question_text: "Compare and contrast between FDMA, TDMA, and CDMA. Describe how the Domain Name System (DNS) translates domain names into IP addresses." },
-            { question_no: 7, co: "CO1", rbt: "L2", difficulty: "easy", marks: 10, question_text: "Demonstrate how a firewall filters network traffic based on predefined security rules." },
-            { question_no: 8, co: "CO1", rbt: "L2", difficulty: "easy", marks: 10, question_text: "Illustrate the interaction between a client and a server in a web-based application and explain the request-response process." },
-            { question_no: 9, co: "CO2", rbt: "L3", difficulty: "medium", marks: 10, question_text: "Illustrate the operation of SMTP, POP3, and IMAP protocols in managing email transmission and retrieval." },
-            { question_no: 10, co: "CO2", rbt: "L3", difficulty: "medium", marks: 10, question_text: "Analyze the working mechanism of TCP three-way handshake and contrast TCP header fields with UDP datagram structure." }
+            { question_no: 1, co: "CO3", rbt: "L4", difficulty: "hard", marks: 10, question_text: "Analyze the architecture of a continuous integration and continuous deployment (CI/CD) pipeline using GitHub Actions and Docker. Detail step-by-step automated build, test, and deployment stages." },
+            { question_no: 2, co: "CO3", rbt: "L4", difficulty: "hard", marks: 10, question_text: "Compare Docker containers with Virtual Machines (VMs) in terms of kernel sharing, resource overhead, startup time, and isolation guarantees." },
+            { question_no: 3, co: "CO2", rbt: "L3", difficulty: "medium", marks: 10, question_text: "Write a multi-stage Dockerfile for a Node.js web service to minimize the final container image size and improve security posture." },
+            { question_no: 4, co: "CO2", rbt: "L3", difficulty: "medium", marks: 10, question_text: "Demonstrate Kubernetes Pod scheduling, Deployment rollouts, and Cluster IP service discovery using declarative YAML manifest configurations." },
+            { question_no: 5, co: "CO3", rbt: "L4", difficulty: "hard", marks: 10, question_text: "Evaluate Infrastructure as Code (IaC) principles using Terraform. Write Terraform state declarations to provision an AWS EC2 instance and VPC security group." },
+            { question_no: 6, co: "CO3", rbt: "L4", difficulty: "hard", marks: 10, question_text: "Detail the architecture of Prometheus and Grafana for cluster monitoring. Explain how time-series metrics are scraped and alerted." },
+            { question_no: 7, co: "CO1", rbt: "L2", difficulty: "easy", marks: 10, question_text: "Explain the Blue-Green and Canary deployment strategies. Contrast their rollback mechanisms and zero-downtime availability characteristics." },
+            { question_no: 8, co: "CO1", rbt: "L2", difficulty: "easy", marks: 10, question_text: "Describe Git branching strategies (GitFlow vs Trunk-Based Development) and demonstrate merge conflict resolution procedures." },
+            { question_no: 9, co: "CO2", rbt: "L3", difficulty: "medium", marks: 10, question_text: "Formulate a Ansible playbook to configure Nginx reverse proxy on remote Linux nodes automatically." },
+            { question_no: 10, co: "CO2", rbt: "L3", difficulty: "medium", marks: 10, question_text: "Analyze DevSecOps security practices. Explain how SAST, DAST, and secret scanning are integrated into build pipelines." }
+          ];
+        } else if (sNameLower.includes("hack") || sNameLower.includes("ethical") || sNameLower.includes("security")) {
+          newQuestions = [
+            { question_no: 1, co: "CO3", rbt: "L4", difficulty: "hard", marks: 10, question_text: "Analyze the methodology of Penetration Testing across Reconnaissance, Scanning, Exploitation, and Post-Exploitation phases using Nmap and Metasploit." },
+            { question_no: 2, co: "CO3", rbt: "L4", difficulty: "hard", marks: 10, question_text: "Demonstrate how SQL Injection (SQLi) vulnerabilities occur in web applications. Construct boolean-based blind SQLi payloads and explain parameterized query countermeasures." },
+            { question_no: 3, co: "CO2", rbt: "L3", difficulty: "medium", marks: 10, question_text: "Differentiate Stored Cross-Site Scripting (XSS), Reflected XSS, and DOM-based XSS. Provide JavaScript payload examples and CSP header defenses." },
+            { question_no: 4, co: "CO2", rbt: "L3", difficulty: "medium", marks: 10, question_text: "Explain Cross-Site Request Forgery (CSRF) attack vectors. Evaluate anti-CSRF token verification and SameSite cookie attribute protections." },
+            { question_no: 5, co: "CO3", rbt: "L4", difficulty: "hard", marks: 10, question_text: "Analyze the operation of Wireshark for network packet sniffing. Explain ARP poisoning attacks and how Man-in-the-Middle (MITM) attacks are executed and prevented." },
+            { question_no: 6, co: "CO3", rbt: "L4", difficulty: "hard", marks: 10, question_text: "Detail Symmetric vs Asymmetric Cryptography. Explain how RSA key pair generation works and how TLS/SSL handshakes establish secure sessions." },
+            { question_no: 7, co: "CO1", rbt: "L2", difficulty: "easy", marks: 10, question_text: "Explain Social Engineering vectors including Phishing, Spear Phishing, Baiting, and Pretexting. Outline organizational security awareness controls." },
+            { question_no: 8, co: "CO1", rbt: "L2", difficulty: "easy", marks: 10, question_text: "Describe password cracking techniques: Brute Force, Dictionary Attacks, and Rainbow Tables. Explain salt hashing and bcrypt key stretching." },
+            { question_no: 9, co: "CO2", rbt: "L3", difficulty: "medium", marks: 10, question_text: "Illustrate Buffer Overflow vulnerabilities in C programs. Detail stack memory layout, EIP overwrite, and mitigation techniques like ASLR and DEP." },
+            { question_no: 10, co: "CO2", rbt: "L3", difficulty: "medium", marks: 10, question_text: "Evaluate Web Application Firewalls (WAF) and Intrusion Detection Systems (IDS/IPS). Contrast signature-based detection with anomaly-based detection." }
+          ];
+        } else if (sNameLower.includes("web") || sNameLower.includes("full stack")) {
+          newQuestions = [
+            { question_no: 1, co: "CO3", rbt: "L4", difficulty: "hard", marks: 10, question_text: "Analyze the React Component Lifecycle and state management using useState, useEffect, useReducer, and Context API in Full Stack Single Page Applications." },
+            { question_no: 2, co: "CO3", rbt: "L4", difficulty: "hard", marks: 10, question_text: "Design a RESTful API architecture for an E-commerce system using Node.js and Express. Define HTTP methods, status codes, and JSON response formats." },
+            { question_no: 3, co: "CO2", rbt: "L3", difficulty: "medium", marks: 10, question_text: "Demonstrate asynchronous JavaScript handling using Callbacks, Promises, and Async/Await with try/catch error handling in Node.js backends." },
+            { question_no: 4, co: "CO2", rbt: "L3", difficulty: "medium", marks: 10, question_text: "Compare relational databases (PostgreSQL) with document databases (MongoDB). Write Mongoose schema definitions and aggregation pipeline queries." },
+            { question_no: 5, co: "CO3", rbt: "L4", difficulty: "hard", marks: 10, question_text: "Analyze JSON Web Token (JWT) authentication flow. Explain token signing, expiration, refresh tokens, and Authorization bearer headers in Express middleware." },
+            { question_no: 6, co: "CO3", rbt: "L4", difficulty: "hard", marks: 10, question_text: "Detail CSS Flexbox and Grid layout systems for responsive web design. Compare media queries with mobile-first CSS strategies." },
+            { question_no: 7, co: "CO1", rbt: "L2", difficulty: "easy", marks: 10, question_text: "Explain the Document Object Model (DOM) event bubbling, capturing, and event delegation mechanisms in modern web applications." },
+            { question_no: 8, co: "CO1", rbt: "L2", difficulty: "easy", marks: 10, question_text: "Describe Cross-Origin Resource Sharing (CORS) security mechanisms. Explain preflight OPTIONS requests and Access-Control-Allow-Origin headers." },
+            { question_no: 9, co: "CO2", rbt: "L3", difficulty: "medium", marks: 10, question_text: "Formulate automated unit and integration tests using Jest and Supertest for testing Node.js REST API controllers." },
+            { question_no: 10, co: "CO2", rbt: "L3", difficulty: "medium", marks: 10, question_text: "Evaluate Server-Side Rendering (SSR) vs Client-Side Rendering (CSR) vs Static Site Generation (SSG) in modern JavaScript frameworks." }
           ];
         } else if (sNameLower.includes("deep learning") || sNameLower.includes("ai") || sNameLower.includes("intelligence")) {
           newQuestions = [
@@ -657,6 +683,19 @@ CRITICAL REQUIREMENTS:
             { question_no: 8, co: "CO1", rbt: "L2", difficulty: "easy", marks: 10, question_text: "Illustrate the working of Batch Normalization during training and inference phases, highlighting its effect on internal covariate shift." },
             { question_no: 9, co: "CO2", rbt: "L3", difficulty: "medium", marks: 10, question_text: "Apply Transfer Learning using pretrained architectures (e.g. ResNet50/VGG16) for custom image classification. Discuss feature extraction vs fine-tuning." },
             { question_no: 10, co: "CO2", rbt: "L3", difficulty: "medium", marks: 10, question_text: "Compare optimization algorithms: SGD with Momentum, RMSprop, and Adam optimizer, focusing on adaptive learning rates and convergence rates." }
+          ];
+        } else if (sNameLower.includes("network")) {
+          newQuestions = [
+            { question_no: 1, co: "CO3", rbt: "L4", difficulty: "hard", marks: 10, question_text: "A network administrator observes that packets transmitted from a source to a destination are taking different routes based on network conditions. Identify the type of network being used and explain its working along with its advantages and limitations." },
+            { question_no: 2, co: "CO3", rbt: "L4", difficulty: "hard", marks: 10, question_text: "A company requires guaranteed bandwidth for critical communication and efficient bandwidth utilization for data transfer. Recommend suitable switching techniques for both requirements and justify your recommendations." },
+            { question_no: 3, co: "CO2", rbt: "L3", difficulty: "medium", marks: 10, question_text: "A sender uses the generator polynomial 1011 to transmit the data word 100100. Calculate the CRC remainder, the transmitted frame, and find whether the receiver detects an error if the received frame is 100100111." },
+            { question_no: 4, co: "CO2", rbt: "L3", difficulty: "medium", marks: 10, question_text: "Apply the 8-bit Internet Checksum technique, compute the checksum for the following data segments: 10101010, 11001100. Find: I. The checksum generated at the sender. II. The transmitted message. III. The receiver verification process." },
+            { question_no: 5, co: "CO3", rbt: "L4", difficulty: "hard", marks: 10, question_text: "Analyze the differences between random access and controlled access techniques with examples like ALOHA and polling." },
+            { question_no: 6, co: "CO3", rbt: "L4", difficulty: "hard", marks: 10, question_text: "Compare and contrast between FDMA, TDMA, and CDMA. Describe how the Domain Name System (DNS) translates domain names into IP addresses." },
+            { question_no: 7, co: "CO1", rbt: "L2", difficulty: "easy", marks: 10, question_text: "Demonstrate how a firewall filters network traffic based on predefined security rules." },
+            { question_no: 8, co: "CO1", rbt: "L2", difficulty: "easy", marks: 10, question_text: "Illustrate the interaction between a client and a server in a web-based application and explain the request-response process." },
+            { question_no: 9, co: "CO2", rbt: "L3", difficulty: "medium", marks: 10, question_text: "Illustrate the operation of SMTP, POP3, and IMAP protocols in managing email transmission and retrieval." },
+            { question_no: 10, co: "CO2", rbt: "L3", difficulty: "medium", marks: 10, question_text: "Analyze the working mechanism of TCP three-way handshake and contrast TCP header fields with UDP datagram structure." }
           ];
         } else {
           // General high-quality technical questions tailored to the subject name

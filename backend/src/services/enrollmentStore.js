@@ -43,11 +43,13 @@ function saveEnrollmentsToDisk() {
 initEnrollments();
 
 function getEnrolledStudentIds(subjectId) {
+  initEnrollments();
   const setOfStds = enrollmentStore.get(subjectId);
   return setOfStds ? Array.from(setOfStds) : [];
 }
 
 function enrollStudent(subjectId, studentId) {
+  initEnrollments();
   if (!enrollmentStore.has(subjectId)) {
     enrollmentStore.set(subjectId, new Set());
   }
@@ -56,6 +58,7 @@ function enrollStudent(subjectId, studentId) {
 }
 
 function enrollMultipleStudents(subjectId, studentIds) {
+  initEnrollments();
   if (!enrollmentStore.has(subjectId)) {
     enrollmentStore.set(subjectId, new Set());
   }
@@ -65,6 +68,7 @@ function enrollMultipleStudents(subjectId, studentIds) {
 }
 
 function unenrollStudent(subjectId, studentId) {
+  initEnrollments();
   if (enrollmentStore.has(subjectId)) {
     enrollmentStore.get(subjectId).delete(studentId);
     saveEnrollmentsToDisk();
@@ -72,6 +76,7 @@ function unenrollStudent(subjectId, studentId) {
 }
 
 function getEnrolledSubjectIdsForStudent(studentId) {
+  initEnrollments();
   const enrolledSubjectIds = [];
   for (const [subId, setOfStds] of enrollmentStore.entries()) {
     if (setOfStds.has(studentId)) {
