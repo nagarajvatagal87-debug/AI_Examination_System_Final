@@ -1,5 +1,27 @@
-node_modules
-# Keep environment variables out of version control
-.env
+@"
+# Dependencies
+node_modules/
+venv/
+__pycache__/
+*.pyc
 
-/generated/prisma
+# Environment / secrets
+.env
+.env.*
+!.env.example
+
+# Build output
+dist/
+build/
+.vite/
+
+# IDE
+.vscode/
+.idea/
+
+# Logs
+*.log
+
+# Generated files
+/generated/
+"@ | Set-Content ".gitignore"
