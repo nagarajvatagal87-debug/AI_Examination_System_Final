@@ -12,4 +12,4 @@ Pillow==10.4.0
 numpy==2.1.1
 
 sentence-transformers
-pip install pypdf
+pypdf
