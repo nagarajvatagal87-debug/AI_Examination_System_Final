@@ -1,24 +1,38 @@
-from sentence_transformers import SentenceTransformer
 
-_model: SentenceTransformer | None = None
+import os
+from openai import OpenAI
 
-
-def get_model() -> SentenceTransformer:
-    global _model
-    if _model is None:
-        # 384-dim by default — NOTE: your Supabase schema defines
-        # course_chunks.embedding as vector(1536). Either switch the model to one
-        # with 1536 dims, or alter the column to vector(384). Flagging this now
-        # so it doesn't silently fail on the first insert.
-        _model = SentenceTransformer("all-MiniLM-L6-v2")
-    return _model
+_client: OpenAI | None = None
 
 
-def embed(text: str) -> list[float]:
-    model = get_model()
-    return model.encode(text).tolist()
+def get_client() -> OpenAI:
+    global _client
+
+    if _client is None:
+        api_key = os.getenv("OPENAI_API_KEY")
+        if not api_key:
+            raise RuntimeError("OPENAI_API_KEY is not configured")
+
+        _client = OpenAI(api_key=api_key)
+
+    return _client
 
 
 def embed_batch(texts: list[str]) -> list[list[float]]:
-    model = get_model()
-    return model.encode(texts).tolist()
+    if not texts:
+        return []
+
+    response = get_client().embeddings.create(
+        model="text-embedding-3-small",
+        input=texts,
+        dimensions=1536,
+    )
+
+    return [
+        item.embedding
+        for item in sorted(response.data, key=lambda item: item.index)
+    ]
+
+
+def embed(text: str) -> list[float]:
+    return embed_batch([text])[0]
