@@ -3,10 +3,10 @@ import io
 import json
 import os
 
+import fitz
 from google.cloud import vision
 from google.oauth2 import service_account
-from PIL import Image
-import fitz  # PyMuPDF
+from PIL import Image, UnidentifiedImageError
 
 
 _vision_client: vision.ImageAnnotatorClient | None = None
@@ -22,13 +22,13 @@ def get_vision_client() -> vision.ImageAnnotatorClient:
         )
 
         if credentials_json:
-            # Render: load credentials from a JSON environment variable.
             try:
                 credentials_info = json.loads(credentials_json)
 
                 credentials = (
-                    service_account.Credentials
-                    .from_service_account_info(credentials_info)
+                    service_account.Credentials.from_service_account_info(
+                        credentials_info
+                    )
                 )
             except (json.JSONDecodeError, ValueError) as exc:
                 raise RuntimeError(
@@ -41,22 +41,24 @@ def get_vision_client() -> vision.ImageAnnotatorClient:
             )
 
         else:
-            # Local development: load credentials from a JSON file.
-            cred_path = os.environ.get(
+            credentials_path = os.environ.get(
                 "GOOGLE_APPLICATION_CREDENTIALS"
             )
 
-            if not cred_path or not os.path.isfile(cred_path):
+            if (
+                not credentials_path
+                or not os.path.isfile(credentials_path)
+            ):
                 raise RuntimeError(
-                    "Google Vision credentials are missing. Set "
-                    "GCP_VISION_CREDENTIALS_JSON on Render, or set "
-                    "GOOGLE_APPLICATION_CREDENTIALS to the path "
-                    "of your local service-account JSON file."
+                    "Google Vision credentials are missing. Configure "
+                    "GCP_VISION_CREDENTIALS_JSON on Render or "
+                    "GOOGLE_APPLICATION_CREDENTIALS locally."
                 )
 
             credentials = (
-                service_account.Credentials
-                .from_service_account_file(cred_path)
+                service_account.Credentials.from_service_account_file(
+                    credentials_path
+                )
             )
 
             _vision_client = vision.ImageAnnotatorClient(
@@ -68,59 +70,73 @@ def get_vision_client() -> vision.ImageAnnotatorClient:
 
 def pdf_to_images(
     pdf_bytes: bytes,
-    dpi: int = 200
+    dpi: int = 200,
 ) -> list[Image.Image]:
-    """Convert every PDF page into a PIL image."""
-    doc = fitz.open(stream=pdf_bytes, filetype="pdf")
+    """Convert PDF pages into PIL images."""
+    if not pdf_bytes:
+        raise ValueError("The supplied PDF is empty.")
 
-    images = []
-    zoom = dpi / 72
-    matrix = fitz.Matrix(zoom, zoom)
+    if dpi < 72 or dpi > 400:
+        raise ValueError("DPI must be between 72 and 400.")
+
+    images: list[Image.Image] = []
 
     try:
-        for page in doc:
-            pix = page.get_pixmap(
-                matrix=matrix,
-                alpha=False
-            )
+        with fitz.open(
+            stream=pdf_bytes,
+            filetype="pdf",
+        ) as document:
+            if document.page_count == 0:
+                raise ValueError("The PDF contains no pages.")
 
-            img = Image.open(
-                io.BytesIO(pix.tobytes("png"))
-            )
+            zoom = dpi / 72
+            matrix = fitz.Matrix(zoom, zoom)
 
-            # Ensure the image is fully loaded before the PDF closes.
-            img.load()
-            images.append(img.copy())
+            for page in document:
+                pixmap = page.get_pixmap(
+                    matrix=matrix,
+                    alpha=False,
+                )
 
-    finally:
-        doc.close()
+                with Image.open(
+                    io.BytesIO(pixmap.tobytes("png"))
+                ) as image:
+                    image.load()
+                    images.append(image.copy())
+
+    except (fitz.FileDataError, fitz.EmptyFileError) as exc:
+        raise ValueError(
+            "The uploaded file is not a valid readable PDF."
+        ) from exc
+
+    if not images:
+        raise ValueError("No pages could be converted from the PDF.")
 
     return images
 
 
-def _image_to_png_bytes(img: Image.Image) -> bytes:
-    """Convert a PIL image into PNG bytes."""
-    buf = io.BytesIO()
-    img.save(buf, format="PNG")
-    return buf.getvalue()
+def _image_to_png_bytes(image: Image.Image) -> bytes:
+    """Convert an image to PNG bytes for Google Vision."""
+    buffer = io.BytesIO()
+    image.save(buffer, format="PNG")
+    return buffer.getvalue()
 
 
 def ocr_pdf(pdf_bytes: bytes) -> tuple[str, float]:
     """
-    Extract text from a scanned answer-sheet PDF using Google Cloud
-    Vision document_text_detection.
+    Extract text from a scanned PDF using Google Vision.
 
     Returns:
-        tuple[str, float]: Extracted text and average block confidence.
+        Extracted text and average block confidence (0.0 to 1.0).
     """
     client = get_vision_client()
     images = pdf_to_images(pdf_bytes)
 
-    full_text_parts = []
-    page_confidences = []
+    text_parts: list[str] = []
+    page_confidences: list[float] = []
 
-    for page_number, img in enumerate(images, start=1):
-        content = _image_to_png_bytes(img)
+    for page_number, image in enumerate(images, start=1):
+        content = _image_to_png_bytes(image)
         vision_image = vision.Image(content=content)
 
         response = client.document_text_detection(
@@ -134,7 +150,7 @@ def ocr_pdf(pdf_bytes: bytes) -> tuple[str, float]:
             )
 
         annotation = response.full_text_annotation
-        full_text_parts.append(annotation.text or "")
+        text_parts.append(annotation.text or "")
 
         block_confidences = [
             block.confidence
@@ -147,12 +163,12 @@ def ocr_pdf(pdf_bytes: bytes) -> tuple[str, float]:
                 sum(block_confidences) / len(block_confidences)
             )
 
-    full_text = "\n\n".join(full_text_parts).strip()
+    full_text = "\n\n".join(text_parts).strip()
 
-    avg_confidence = (
+    average_confidence = (
         sum(page_confidences) / len(page_confidences)
         if page_confidences
         else 0.0
     )
 
-    return full_text, avg_confidence
+    return full_text, average_confidence
