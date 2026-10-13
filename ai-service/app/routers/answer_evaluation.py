@@ -26,11 +26,10 @@ def retrieve_context(
     query_text: str,
     match_count: int = 5,
 ) -> str:
-    """Retrieve relevant course chunks for the question."""
-    supabase = get_supabase()
+    """Retrieve course chunks relevant to the question."""
     query_embedding = embed(query_text)
 
-    result = supabase.rpc(
+    result = get_supabase().rpc(
         "match_course_chunks",
         {
             "query_embedding": query_embedding,
@@ -40,6 +39,7 @@ def retrieve_context(
     ).execute()
 
     chunks = result.data or []
+
     return "\n\n---\n\n".join(
         chunk["content"]
         for chunk in chunks
@@ -54,8 +54,8 @@ def evaluate_one_answer(
     ocr_text: str,
     subject_id: str,
 ) -> dict[str, Any]:
-    """Evaluate one answer and validate the model response."""
-    if not ocr_text.strip():
+    """Generate and validate AI-suggested marks."""
+    if not ocr_text or not ocr_text.strip():
         return {
             "suggested_marks": None,
             "confidence": 0,
@@ -90,9 +90,8 @@ Return ONLY a JSON object with:
 - evidence: string explaining the assessment
 - flagged_for_review: boolean
 
-If the OCR text is unclear or the evidence is insufficient,
-flag the answer for faculty review.
-Do not include markdown fences or a preamble.
+Flag unclear handwriting, incomplete answers, and insufficient evidence
+for faculty review. Do not include markdown fences or a preamble.
 """
 
     raw = complete(prompt, max_tokens=1024)
@@ -110,7 +109,6 @@ Do not include markdown fences or a preamble.
     suggested = result.get("suggested_marks")
     confidence = result.get("confidence")
 
-    # Invalid or missing marks must not be treated as a valid score.
     if (
         isinstance(suggested, bool)
         or not isinstance(suggested, (int, float))
@@ -127,9 +125,9 @@ Do not include markdown fences or a preamble.
 
     evidence = result.get("evidence")
     if not isinstance(evidence, str):
-        evidence = "Evidence was not provided in a valid format."
+        evidence = "No valid evaluation evidence was returned."
 
-    flagged = result.get("flagged_for_review", False)
+    flagged = result.get("flagged_for_review")
 
     return {
         "suggested_marks": suggested,
@@ -141,20 +139,20 @@ Do not include markdown fences or a preamble.
     }
 
 
-def fetch_answers(supabase, submission_id: str):
-    """Fetch answers using the submission foreign key used by Node."""
+def fetch_answers(supabase, submission_id: str) -> list[dict]:
+    """Fetch answers using the confirmed answers.submission_id column."""
     result = (
         supabase.table("answers")
         .select(
             """
-            id, ocr_text, question_id, answer_submission_id,
+            id, ocr_text, question_id, submission_id,
             questions (
                 question_text, marks, rubric, exam_id,
                 exams (subject_id)
             )
             """
         )
-        .eq("answer_submission_id", submission_id)
+        .eq("submission_id", submission_id)
         .execute()
     )
 
@@ -166,13 +164,13 @@ async def process_submission(
     payload: ProcessSubmissionRequest,
     authorization: str | None = Header(default=None),
 ):
-    # Authentication must match the Node backend's bearer token.
+    # Validate the shared secret used by the Node backend.
     await verify_shared_secret(authorization)
 
     supabase = get_supabase()
 
     try:
-        # Verify the submission exists and belongs to the requested exam.
+        # Confirm the submission exists and belongs to this exam.
         submission_result = (
             supabase.table("answer_submissions")
             .select("id, exam_id, scanned_file_path, status")
@@ -192,26 +190,26 @@ async def process_submission(
         if str(submission["exam_id"]) != str(payload.exam_id):
             raise HTTPException(
                 status_code=400,
-                detail="The submission does not belong to the specified exam.",
+                detail="Submission does not belong to the specified exam.",
             )
 
-        # Use the stored path as the source of truth.
         stored_path = submission.get("scanned_file_path")
+
         if not stored_path:
             raise HTTPException(
                 status_code=400,
-                detail="The submission has no scanned file path.",
+                detail="Submission has no scanned file path.",
             )
 
         if stored_path != payload.scanned_file_path:
             raise HTTPException(
                 status_code=400,
-                detail="The supplied file path does not match the submission.",
+                detail="Scanned file path does not match the stored submission.",
             )
 
         answers = fetch_answers(supabase, payload.submission_id)
 
-        # Run OCR if answers are missing OR existing answers lack text.
+        # Run OCR if answers are absent or any answer lacks OCR text.
         if not answers or any(
             not (answer.get("ocr_text") or "").strip()
             for answer in answers
@@ -226,15 +224,15 @@ async def process_submission(
                 authorization,
             )
 
-            # OCR must persist its results before evaluation continues.
             answers = fetch_answers(supabase, payload.submission_id)
 
         if not answers:
             return {
                 "status": "no_answers_found",
+                "submission_id": payload.submission_id,
                 "message": (
-                    "OCR completed, but no answer records were found. "
-                    "Check the OCR router and answers table schema."
+                    "OCR ran, but no answer rows were found. "
+                    "Check the OCR router and answers table."
                 ),
                 "results": [],
             }
@@ -244,22 +242,30 @@ async def process_submission(
         for answer in answers:
             try:
                 question = answer.get("questions")
+
                 if isinstance(question, list):
                     question = question[0] if question else None
 
                 if not question:
-                    raise ValueError("The answer has no linked question.")
+                    raise ValueError("Answer has no linked question.")
+
+                if str(question.get("exam_id")) != str(payload.exam_id):
+                    raise ValueError(
+                        "The linked question does not belong to this exam."
+                    )
 
                 exam = question.get("exams")
+
                 if isinstance(exam, list):
                     exam = exam[0] if exam else None
 
                 if not exam or not exam.get("subject_id"):
                     raise ValueError(
-                        "The linked question has no subject information."
+                        "Question has no linked subject information."
                     )
 
                 question_marks = question.get("marks")
+
                 if (
                     isinstance(question_marks, bool)
                     or not isinstance(question_marks, (int, float))
@@ -282,8 +288,7 @@ async def process_submission(
                     "ai_evidence": evaluation,
                 }
 
-                # Update an existing evaluation instead of blindly
-                # inserting a duplicate on every processing retry.
+                # Update an existing evaluation to reduce duplicate rows.
                 existing_result = (
                     supabase.table("evaluations")
                     .select("id")
@@ -313,7 +318,7 @@ async def process_submission(
                     **evaluation,
                 })
 
-            except Exception as exc:
+            except Exception:
                 logger.exception(
                     "Evaluation failed for answer %s",
                     answer.get("id"),
@@ -322,7 +327,7 @@ async def process_submission(
                 results.append({
                     "answer_id": answer.get("id"),
                     "status": "failed",
-                    "error": str(exc),
+                    "error": "Evaluation failed; check the AI-service logs.",
                     "flagged_for_review": True,
                 })
 
@@ -331,11 +336,19 @@ async def process_submission(
             for result in results
         )
 
-        final_status = "evaluated" if failed_count == 0 else "evaluation_partial"
+        # Use only an enum value confirmed in your Supabase screenshot.
+        # "evaluated" is used when all processing succeeds.
+        # "ocr_done" is used when at least one answer fails.
+        final_status = (
+            "evaluated" if failed_count == 0 else "ocr_done"
+        )
 
-        supabase.table("answer_submissions").update(
-            {"status": final_status}
-        ).eq("id", payload.submission_id).execute()
+        (
+            supabase.table("answer_submissions")
+            .update({"status": final_status})
+            .eq("id", payload.submission_id)
+            .execute()
+        )
 
         return {
             "status": "ok" if failed_count == 0 else "partial",
@@ -347,12 +360,17 @@ async def process_submission(
 
     except HTTPException:
         raise
+
     except Exception:
         logger.exception(
             "Submission processing failed: %s",
             payload.submission_id,
         )
+
         raise HTTPException(
             status_code=500,
-            detail="Submission processing failed. Check the AI-service logs.",
+            detail=(
+                "Submission processing failed. "
+                "Check the AI-service logs."
+            ),
         )
