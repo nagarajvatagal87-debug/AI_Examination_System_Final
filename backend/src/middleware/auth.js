@@ -30,7 +30,7 @@ async function requireAuth(req, res, next) {
     const targetId = token.replace("token-", "");
     const { data: userProfile } = await supabaseAdmin
       .from("profiles")
-      .select("id, role, full_name, department_id")
+      .select("id, role, full_name, department_id, email, registration_no")
       .eq("id", targetId)
       .maybeSingle();
 
@@ -39,22 +39,21 @@ async function requireAuth(req, res, next) {
       return next();
     }
 
-    req.user = {
-      id: targetId,
-      role: "examdept",
-      full_name: "Examination Department Controller",
-    };
-    return next();
+    return res.status(401).json({ error: "Unauthorized access: Account not found in database." });
   }
 
-  // 2. Demo token format: demo-<role>-token
+  // 2. Demo token format (restricted strictly to local development if enabled)
   if (token.startsWith("demo-")) {
+    if (process.env.NODE_ENV === "production" || process.env.ALLOW_DEMO_TOKENS !== "true") {
+      return res.status(401).json({ error: "Unauthorized access: Demo tokens are disabled." });
+    }
+
     const roleMatch = token.match(/demo-([a-z]+)-token/);
     const role = roleMatch ? roleMatch[1] : "faculty";
 
     const { data: dbProfile } = await supabaseAdmin
       .from("profiles")
-      .select("id, role, full_name, department_id")
+      .select("id, role, full_name, department_id, email, registration_no")
       .eq("role", role)
       .limit(1)
       .maybeSingle();
@@ -63,23 +62,27 @@ async function requireAuth(req, res, next) {
       req.user = dbProfile;
       return next();
     }
-    req.user = {
-      id: ROLE_FALLBACK_UUIDS[role] || "4d2c3964-6cc2-4531-8924-59918943c837",
-      role: role,
-      full_name: `${role.toUpperCase()} Controller`,
-    };
-    return next();
+    return res.status(401).json({ error: "Unauthorized access: No authorized profile found for demo role." });
   }
 
   // 3. Supabase Auth JWT Token Verification
   try {
     const { data, error } = await supabaseAdmin.auth.getUser(token);
     if (!error && data?.user) {
-      const { data: profile } = await supabaseAdmin
+      let { data: profile } = await supabaseAdmin
         .from("profiles")
         .select("id, role, full_name, department_id")
         .eq("id", data.user.id)
         .maybeSingle();
+
+      if (!profile && data.user.email) {
+        const { data: profileByEmail } = await supabaseAdmin
+          .from("profiles")
+          .select("id, role, full_name, department_id")
+          .ilike("email", data.user.email)
+          .maybeSingle();
+        profile = profileByEmail;
+      }
 
       if (profile) {
         req.user = profile;

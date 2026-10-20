@@ -726,20 +726,20 @@
   box-shadow: 0 8px 24px rgba(15, 23, 42, 0.05) !important;
 }
 
-/* Academic Profile Custom Header Banner Override */
+/* Academic Profile Custom Header Banner — Clean Light Theme */
 .eduexam-shell .academic-header-card {
-  background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 60%, #1e293b 100%) !important;
-  color: #ffffff !important;
+  background: linear-gradient(135deg, #ffffff 0%, #f0f7ff 50%, #f8fafc 100%) !important;
+  color: #0f172a !important;
   padding: 28px 32px !important;
   border-radius: 20px !important;
-  box-shadow: 0 12px 30px rgba(15, 23, 42, 0.2) !important;
-  border: 1px solid #334155 !important;
+  box-shadow: 0 10px 30px rgba(37, 99, 235, 0.07) !important;
+  border: 1px solid #bfdbfe !important;
   position: relative !important;
   overflow: hidden !important;
 }
 
 .eduexam-shell .academic-header-card h2 {
-  color: #ffffff !important;
+  color: #0f172a !important;
 }
 
 /* Fix text contrast in Student Dashboard inside cards */
@@ -874,18 +874,19 @@
 
   /* 5. Format Identity Banner & Credentials Cards Compactly for Single Page A4 */
   .academic-header-card {
-    background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 60%, #1e293b 100%) !important;
-    color: #ffffff !important;
+    background: linear-gradient(135deg, #ffffff 0%, #f0f7ff 100%) !important;
+    color: #0f172a !important;
     padding: 14px 20px !important;
     border-radius: 10px !important;
     box-shadow: none !important;
     margin-bottom: 0 !important;
-    border: 1px solid #1e293b !important;
+    border: 1px solid #bfdbfe !important;
     page-break-inside: avoid !important;
   }
 
   .academic-header-card h2 {
     font-size: 20px !important;
+    color: #0f172a !important;
   }
 
   .content-card {

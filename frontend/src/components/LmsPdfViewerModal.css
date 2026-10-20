@@ -1,3 +1,7 @@
+/* ==========================================================================
+   LmsPdfViewerModal.css — Consistent Light Theme & Institutional Styling
+   ========================================================================== */
+
 .lms-view-modal-overlay {
   position: fixed;
   top: 0;
@@ -6,8 +10,9 @@
   bottom: 0;
   width: 100vw;
   height: 100vh;
-  background: rgba(15, 23, 42, 0.75);
+  background: rgba(15, 23, 42, 0.45);
   backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
   z-index: 99999;
   display: flex;
   align-items: center;
@@ -19,33 +24,34 @@
   height: 92vh;
   background: #ffffff;
   border-radius: 16px;
-  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.35);
+  box-shadow: 0 24px 60px rgba(15, 23, 42, 0.16);
   display: flex;
   flex-direction: row;
   overflow: hidden;
   border: 1px solid #cbd5e1;
 }
 
-/* Left Sidebar */
+/* Left Sidebar — Clean Light Institutional Navigation */
 .lms-view-sidebar {
   width: 240px;
   height: 100%;
-  background: #0f172a;
-  color: #cbd5e1;
+  background: #f8fafc;
+  color: #1e293b;
   display: flex;
   flex-direction: column;
   padding: 18px 14px;
   flex-shrink: 0;
+  border-right: 1px solid #e2e8f0;
 }
 
 .lms-sidebar-logo {
   font-size: 18px;
   font-weight: 800;
-  color: #ffffff;
+  color: #0f172a;
   display: flex;
   align-items: center;
   gap: 10px;
-  margin-bottom: 20px;
+  margin-bottom: 18px;
 }
 
 .logo-grad-icon {
@@ -53,23 +59,31 @@
 }
 
 .back-subjects-btn {
-  background: rgba(255, 255, 255, 0.08);
-  border: 1px solid rgba(255, 255, 255, 0.15);
-  color: #f8fafc;
+  background: #ffffff;
+  border: 1px solid #cbd5e1;
+  color: #334155;
   padding: 8px 12px;
   border-radius: 8px;
   font-size: 12px;
   font-weight: 600;
   cursor: pointer;
-  margin-bottom: 24px;
+  margin-bottom: 22px;
   text-align: left;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+  transition: all 0.15s ease;
+}
+
+.back-subjects-btn:hover {
+  background: #f1f5f9;
+  border-color: #94a3b8;
+  color: #0f172a;
 }
 
 .active-subject-header {
-  font-size: 14px;
+  font-size: 12px;
   font-weight: 800;
-  color: #94a3b8;
-  letter-spacing: 1px;
+  color: #64748b;
+  letter-spacing: 0.8px;
   text-transform: uppercase;
   margin-bottom: 10px;
   padding-left: 8px;
@@ -85,24 +99,26 @@
   width: 100%;
   text-align: left;
   background: transparent;
-  border: none;
-  color: #94a3b8;
+  border: 1px solid transparent;
+  color: #475569;
   padding: 10px 14px;
   border-radius: 8px;
   font-size: 13px;
-  font-weight: 500;
+  font-weight: 600;
   cursor: pointer;
+  transition: all 0.15s ease;
 }
 
 .sub-nav-item:hover {
-  background: rgba(255, 255, 255, 0.05);
-  color: #ffffff;
+  background: #f1f5f9;
+  color: #0f172a;
 }
 
 .sub-nav-item.active {
-  background: #2563eb;
-  color: #ffffff;
-  font-weight: 600;
+  background: #eff6ff;
+  color: #2563eb;
+  font-weight: 700;
+  border: 1px solid #bfdbfe;
 }
 
 /* Main Area */
@@ -111,7 +127,7 @@
   height: 100%;
   display: flex;
   flex-direction: column;
-  background: #f1f5f9;
+  background: #f8fafc;
   overflow: hidden;
 }
 
@@ -129,10 +145,10 @@
   align-items: center;
   gap: 8px;
   background: #f8fafc;
-  border: 1px solid #e2e8f0;
+  border: 1px solid #cbd5e1;
   border-radius: 8px;
   padding: 6px 14px;
-  width: 240px;
+  width: 250px;
 }
 
 .lms-header-search input {
@@ -140,10 +156,12 @@
   background: transparent !important;
   outline: none !important;
   font-size: 13px !important;
+  color: #0f172a !important;
+  width: 100%;
 }
 
 .lms-doc-heading-title {
-  font-size: 16px;
+  font-size: 15px;
   font-weight: 800;
   color: #0f172a;
 }
@@ -155,7 +173,7 @@
 }
 
 .ask-ai-top-btn {
-  background: #2563eb;
+  background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
   color: #ffffff;
   border: none;
   padding: 8px 16px;
@@ -163,6 +181,12 @@
   font-weight: 700;
   font-size: 13px;
   cursor: pointer;
+  box-shadow: 0 2px 6px rgba(37, 99, 235, 0.25);
+  transition: opacity 0.15s ease;
+}
+
+.ask-ai-top-btn:hover {
+  opacity: 0.95;
 }
 
 .lms-close-x-btn {
@@ -171,7 +195,14 @@
   font-size: 18px;
   color: #64748b;
   cursor: pointer;
-  padding: 4px 8px;
+  padding: 4px 10px;
+  border-radius: 6px;
+  transition: all 0.15s ease;
+}
+
+.lms-close-x-btn:hover {
+  background: #fee2e2;
+  color: #dc2626;
 }
 
 /* Split View Container */
@@ -181,23 +212,24 @@
   overflow: hidden;
 }
 
-/* PDF Viewer Workspace */
+/* PDF Viewer Workspace — Clean Light Palette */
 .pdf-viewer-workspace {
   flex: 1.4;
   display: flex;
   flex-direction: column;
-  background: #64748b;
-  border-right: 1px solid #cbd5e1;
+  background: #f1f5f9;
+  border-right: 1px solid #e2e8f0;
   overflow: hidden;
 }
 
 .pdf-toolbar-bar {
-  background: #1e293b;
-  color: #f8fafc;
-  padding: 8px 16px;
+  background: #ffffff;
+  color: #334155;
+  padding: 9px 18px;
   display: flex;
   justify-content: space-between;
   align-items: center;
+  border-bottom: 1px solid #e2e8f0;
 }
 
 .pdf-nav-controls {
@@ -207,39 +239,73 @@
 }
 
 .pdf-nav-controls button {
-  background: rgba(255, 255, 255, 0.1);
-  border: none;
-  color: #ffffff;
+  background: #f8fafc;
+  border: 1px solid #cbd5e1;
+  color: #334155;
   padding: 4px 10px;
-  border-radius: 4px;
+  border-radius: 6px;
   cursor: pointer;
+  font-size: 12px;
+  font-weight: 700;
+  transition: all 0.15s ease;
+}
+
+.pdf-nav-controls button:hover:not(:disabled) {
+  background: #f1f5f9;
+  border-color: #94a3b8;
+  color: #0f172a;
+}
+
+.pdf-nav-controls button:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
 }
 
 .page-num-text {
   font-size: 13px;
-  font-weight: 600;
+  font-weight: 700;
+  color: #0f172a;
 }
 
 .pdf-zoom-controls {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 8px;
   font-size: 13px;
+  color: #334155;
 }
 
 .pdf-zoom-controls button {
-  background: rgba(255, 255, 255, 0.1);
-  border: none;
-  color: #ffffff;
-  padding: 2px 8px;
-  border-radius: 4px;
+  background: #f8fafc;
+  border: 1px solid #cbd5e1;
+  color: #334155;
+  padding: 2px 9px;
+  border-radius: 6px;
   cursor: pointer;
+  font-weight: 700;
+  transition: all 0.15s ease;
+}
+
+.pdf-zoom-controls button:hover {
+  background: #f1f5f9;
+  border-color: #94a3b8;
+  color: #0f172a;
 }
 
 .pdf-tool-icons {
   display: flex;
   gap: 12px;
   cursor: pointer;
+  color: #475569;
+}
+
+.pdf-tool-icon {
+  font-size: 15px;
+  transition: transform 0.15s ease;
+}
+
+.pdf-tool-icon:hover {
+  transform: scale(1.1);
 }
 
 .pdf-canvas-scroll {
@@ -248,36 +314,42 @@
   padding: 24px;
   display: flex;
   justify-content: center;
+  background: #f1f5f9;
 }
 
 .pdf-page-sheet {
   background: #ffffff;
-  width: 640px;
+  width: 680px;
   min-height: 840px;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
-  padding: 48px;
+  box-shadow: 0 4px 20px rgba(15, 23, 42, 0.08);
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 44px;
   color: #0f172a;
 }
 
 .pdf-chapter-header {
-  font-size: 24px;
+  font-size: 22px;
   font-weight: 800;
-  margin-bottom: 24px;
-  border-bottom: 2px solid #0f172a;
+  margin-bottom: 20px;
+  border-bottom: 2px solid #2563eb;
   padding-bottom: 8px;
+  color: #0f172a;
 }
 
 .pdf-body-prose p {
   font-size: 14px;
-  line-height: 1.6;
+  line-height: 1.65;
   margin-bottom: 16px;
+  color: #334155;
 }
 
 .pdf-body-prose ul {
   padding-left: 20px;
   font-size: 14px;
-  line-height: 1.6;
+  line-height: 1.65;
   margin-bottom: 20px;
+  color: #334155;
 }
 
 .pdf-diagram-architecture-box {
@@ -306,12 +378,13 @@
 
 .diagram-box-node {
   background: #ffffff;
-  border: 1px solid #94a3b8;
+  border: 1px solid #cbd5e1;
   border-radius: 6px;
   padding: 8px 12px;
   font-size: 12px;
   font-weight: 600;
   text-align: center;
+  color: #0f172a;
 }
 
 .diagram-box-node.active {
@@ -331,14 +404,16 @@
   background: #ffffff;
   display: flex;
   flex-direction: column;
+  border-left: 1px solid #e2e8f0;
 }
 
 .ai-pane-header {
-  padding: 16px 20px;
+  padding: 14px 20px;
   border-bottom: 1px solid #e2e8f0;
   display: flex;
   justify-content: space-between;
   align-items: center;
+  background: #ffffff;
 }
 
 .ai-pane-title {
@@ -352,6 +427,8 @@
   align-items: center;
   gap: 8px;
   font-size: 12px;
+  color: #64748b;
+  font-weight: 600;
 }
 
 .ai-doc-picker-wrap select {
@@ -359,6 +436,8 @@
   border-radius: 6px;
   border: 1px solid #cbd5e1;
   font-size: 12px;
+  background: #f8fafc;
+  color: #0f172a;
 }
 
 .ai-chat-thread {
@@ -398,13 +477,14 @@
   padding: 12px 16px;
   border-radius: 12px;
   font-size: 13px;
-  line-height: 1.5;
+  line-height: 1.55;
 }
 
 .chat-bubble-row.user .chat-bubble-content {
-  background: #2563eb;
+  background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
   color: #ffffff;
   border-bottom-right-radius: 2px;
+  box-shadow: 0 2px 8px rgba(37, 99, 235, 0.2);
 }
 
 .chat-bubble-row.assistant .chat-bubble-content {
@@ -412,15 +492,23 @@
   color: #1e293b;
   border: 1px solid #e2e8f0;
   border-bottom-left-radius: 2px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.03);
+  box-shadow: 0 2px 6px rgba(15, 23, 42, 0.04);
+}
+
+.chat-bubble-content.loading {
+  background: #eff6ff !important;
+  color: #1d4ed8 !important;
+  border: 1px solid #bfdbfe !important;
+  font-weight: 600;
 }
 
 .ai-chat-input-row {
-  padding: 14px 20px;
+  padding: 12px 18px;
   background: #ffffff;
   border-top: 1px solid #e2e8f0;
   display: flex;
   gap: 10px;
+  align-items: center;
 }
 
 .ai-chat-input-row input {
@@ -429,18 +517,35 @@
   background: #f8fafc !important;
   color: #0f172a !important;
   border-radius: 8px !important;
-  padding: 10px 14px !important;
+  padding: 9px 14px !important;
+  font-size: 13px !important;
 }
 
-.ai-chat-input-row button {
-  background: #2563eb;
+.ai-chat-input-row input:focus {
+  border-color: #2563eb !important;
+  background: #ffffff !important;
+}
+
+.ai-chat-input-row button[type="submit"] {
+  background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
   color: #ffffff;
   border: none;
-  padding: 10px 18px;
+  padding: 9px 18px;
   border-radius: 8px;
   font-weight: 700;
   font-size: 13px;
   cursor: pointer;
+  box-shadow: 0 2px 6px rgba(37, 99, 235, 0.2);
+  transition: opacity 0.15s ease;
+}
+
+.ai-chat-input-row button[type="submit"]:hover:not(:disabled) {
+  opacity: 0.95;
+}
+
+.ai-chat-input-row button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 
 /* ChatGPT-style Markdown Formatting */
@@ -469,6 +574,7 @@
 .markdown-content p {
   margin-top: 0;
   margin-bottom: 10px;
+  color: #334155;
 }
 
 .markdown-content ul,
@@ -480,6 +586,7 @@
 
 .markdown-content li {
   margin-bottom: 6px;
+  color: #334155;
 }
 
 .markdown-content strong {
@@ -537,6 +644,7 @@
 .markdown-content td {
   padding: 10px 12px;
   border: 1px solid #e2e8f0;
+  color: #334155;
 }
 
 .markdown-content blockquote {

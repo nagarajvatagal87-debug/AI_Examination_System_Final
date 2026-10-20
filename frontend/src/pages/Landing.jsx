@@ -492,6 +492,13 @@ export default function Landing() {
       <LocationMapModal isOpen={activeModal === 'location'} onClose={() => setActiveModal(null)} />
       <PgsModal isOpen={activeModal === 'pgs'} onClose={() => setActiveModal(null)} />
 
+      {/* Floating College AI Assistant Prompt */}
+      <Link to="/college-info" className="floating-chatbot-trigger" title="Ask College AI Assistant">
+        <span className="trigger-pulse">🤖</span>
+        <span className="trigger-text">Ask College AI</span>
+        <span className="trigger-badge">Live RAG</span>
+      </Link>
+
       {/* Modern Footer Component */}
       <Footer />
     </div>

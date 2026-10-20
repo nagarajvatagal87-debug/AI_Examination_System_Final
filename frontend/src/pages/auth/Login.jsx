@@ -94,6 +94,7 @@ export default function Login() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
+  const [detectedRole, setDetectedRole] = useState(null)
   const [loading, setLoading] = useState(false)
 
   const { login } = useAuth()
@@ -104,11 +105,13 @@ export default function Login() {
   function switchRole(roleKey) {
     setSearchParams({ role: roleKey })
     setError('')
+    setDetectedRole(null)
   }
 
   async function handleSubmit(e) {
     e.preventDefault()
     setError('')
+    setDetectedRole(null)
     setLoading(true)
 
     try {
@@ -119,6 +122,9 @@ export default function Login() {
       navigate(`/${data.user.role}`)
     } catch (err) {
       setError(err.response?.data?.error || 'Login failed. Please check credentials.')
+      if (err.response?.data?.detectedRole) {
+        setDetectedRole(err.response?.data?.detectedRole)
+      }
     } finally {
       setLoading(false)
     }
@@ -197,7 +203,32 @@ export default function Login() {
                 />
               </div>
 
-              {error && <div className="auth-error-banner">{error}</div>}
+              {error && (
+                <div className="auth-error-banner" style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                  <span>{error}</span>
+                  {detectedRole && ROLE_CONFIG[detectedRole] && (
+                    <button
+                      type="button"
+                      style={{
+                        alignSelf: 'flex-start',
+                        padding: '6px 14px',
+                        fontSize: '0.85rem',
+                        fontWeight: '600',
+                        backgroundColor: '#1d4ed8',
+                        color: '#ffffff',
+                        border: 'none',
+                        borderRadius: '6px',
+                        cursor: 'pointer',
+                        transition: 'background-color 0.2s',
+                        boxShadow: '0 2px 4px rgba(0,0,0,0.15)'
+                      }}
+                      onClick={() => switchRole(detectedRole)}
+                    >
+                      👉 Switch to {ROLE_CONFIG[detectedRole].tabLabel} Portal
+                    </button>
+                  )}
+                </div>
+              )}
 
               <button type="submit" className={`auth-submit-btn btn-${config.color}`} disabled={loading}>
                 {loading ? 'Authenticating...' : `Sign In →`}

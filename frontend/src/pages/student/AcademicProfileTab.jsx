@@ -87,7 +87,7 @@ export default function AcademicProfileTab() {
       {/* 1. Official Header Banner & Identity */}
       <div className="academic-header-card">
         {/* Decorative background glow */}
-        <div style={{ position: 'absolute', top: -50, right: -50, width: 220, height: 220, background: 'radial-gradient(circle, rgba(56,189,248,0.18) 0%, rgba(0,0,0,0) 70%)', pointerEvents: 'none' }} />
+        <div style={{ position: 'absolute', top: -50, right: -50, width: 240, height: 240, background: 'radial-gradient(circle, rgba(37,99,235,0.08) 0%, rgba(255,255,255,0) 70%)', pointerEvents: 'none' }} />
 
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 24, position: 'relative', zIndex: 1 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 22 }}>
@@ -95,7 +95,7 @@ export default function AcademicProfileTab() {
               width: 84, height: 84, borderRadius: '50%', overflow: 'hidden',
               background: '#2563eb', color: '#ffffff', display: 'flex',
               alignItems: 'center', justifyContent: 'center', fontSize: 34, fontWeight: 900,
-              border: '3.5px solid #38bdf8', boxShadow: '0 6px 18px rgba(37,99,235,0.45)', flexShrink: 0
+              border: '3.5px solid #2563eb', boxShadow: '0 4px 14px rgba(37,99,235,0.25)', flexShrink: 0
             }}>
               {avatarUrl ? (
                 <img src={avatarUrl} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
@@ -105,20 +105,20 @@ export default function AcademicProfileTab() {
             </div>
             <div>
               <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 4 }}>
-                <span style={{ fontSize: 11, fontWeight: 800, color: '#38bdf8', textTransform: 'uppercase', letterSpacing: 1.2 }}>
+                <span style={{ fontSize: 11, fontWeight: 800, color: '#1d4ed8', textTransform: 'uppercase', letterSpacing: 1.2 }}>
                   🎓 DSATM OFFICIAL ACADEMIC IDENTITY
                 </span>
                 <span style={{ background: '#10b981', color: '#ffffff', fontSize: 10, fontWeight: 900, padding: '2px 10px', borderRadius: 12, letterSpacing: 0.5 }}>
                   ✓ VERIFIED
                 </span>
               </div>
-              <h2 style={{ margin: '2px 0 4px 0', fontSize: 26, fontWeight: 900, color: '#ffffff', letterSpacing: -0.5 }}>
+              <h2 style={{ margin: '2px 0 4px 0', fontSize: 26, fontWeight: 900, color: '#0f172a', letterSpacing: -0.5 }}>
                 {studentName || 'Student'}
               </h2>
-              <div style={{ fontSize: 14, color: '#cbd5e1', display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
-                <span>USN / Reg No: <strong style={{ color: '#38bdf8', fontFamily: 'monospace', fontSize: 15 }}>{activeUsn}</strong></span>
+              <div style={{ fontSize: 14, color: '#475569', display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+                <span>USN / Reg No: <strong style={{ color: '#1d4ed8', fontFamily: 'monospace', fontSize: 15 }}>{activeUsn}</strong></span>
                 <span>•</span>
-                <span>{departmentName}</span>
+                <span style={{ color: '#334155', fontWeight: 600 }}>{departmentName}</span>
               </div>
             </div>
           </div>
@@ -126,13 +126,13 @@ export default function AcademicProfileTab() {
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 10 }}>
             <span style={{
               padding: '6px 18px', borderRadius: 20, fontSize: 12, fontWeight: 800,
-              background: 'rgba(56, 189, 248, 0.18)', color: '#38bdf8', border: '1px solid rgba(56,189,248,0.4)',
+              background: '#ecfdf5', color: '#059669', border: '1px solid #a7f3d0',
               letterSpacing: 0.5
             }}>
               ● {enrollmentStatus || 'ACTIVE / REGULAR'}
             </span>
-            <div style={{ fontSize: 13, color: '#cbd5e1', fontWeight: 600 }}>
-              Term: <strong style={{ color: '#ffffff', fontWeight: 800 }}>{semester || '3rd Sem'} ({section || 'Section A'})</strong> | A.Y. {academicYear || '2026-2027'}
+            <div style={{ fontSize: 13, color: '#475569', fontWeight: 600 }}>
+              Term: <strong style={{ color: '#0f172a', fontWeight: 800 }}>{semester || '3rd Sem'} ({section || 'Section A'})</strong> | A.Y. {academicYear || '2026-2027'}
             </div>
             <button
               className="no-print"
@@ -140,7 +140,8 @@ export default function AcademicProfileTab() {
               style={{
                 marginTop: 4, background: 'linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%)', color: '#ffffff', border: 'none',
                 padding: '9px 20px', borderRadius: 10, fontSize: 13, fontWeight: 800,
-                cursor: 'pointer', boxShadow: '0 4px 14px rgba(37,99,235,0.4)', display: 'flex', alignItems: 'center', gap: 8
+                cursor: 'pointer', boxShadow: '0 4px 14px rgba(37,99,235,0.3)', display: 'flex', alignItems: 'center', gap: 8,
+                transition: 'opacity 0.15s ease'
               }}
             >
               🖨️ Print Official Transcript

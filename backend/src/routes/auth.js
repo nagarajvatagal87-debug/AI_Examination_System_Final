@@ -1,14 +1,15 @@
 const express = require("express");
 const crypto = require("crypto");
 const { supabaseAdmin, supabaseAuth } = require("../../config/Supabase");
+const { getUserAvatar, setUserAvatar } = require("../services/avatarStore");
 
 const router = express.Router();
 const VALID_ROLES = ["student", "faculty", "hod", "principal", "examdept", "lms"];
 
-// POST /api/auth/register -> Real User Registration
+// POST /api/auth/register -> Account Activation for Pre-Authorized Users Only
 router.post("/register", async (req, res) => {
   try {
-    const { email, password, fullName, role, registrationNo, year, section, departmentId } = req.body;
+    const { email, password, fullName, role, registrationNo } = req.body;
 
     if (!email || !fullName || !role) {
       return res.status(400).json({ error: "Email, fullName and role are required." });
@@ -20,233 +21,203 @@ router.post("/register", async (req, res) => {
     const cleanEmail = email.toLowerCase().trim();
     const cleanRegNo = registrationNo ? registrationNo.trim() : null;
 
-    // Check if user pre-exists in profiles (added by HOD or Faculty)
+    // Check if user pre-exists in profiles table
+    let userProfile = null;
     const { data: existing } = await supabaseAdmin
       .from("profiles")
       .select("id, email, role, full_name, registration_no")
       .or(`email.ilike.${cleanEmail}${cleanRegNo ? `,registration_no.ilike.${cleanRegNo}` : ""}`)
       .limit(1);
 
-    let userProfile = existing && existing.length > 0 ? existing[0] : null;
+    if (existing && existing.length > 0) {
+      userProfile = existing[0];
+    }
 
-    if (role === "student" && !userProfile) {
+    // STRICT CHECK: Reject if user was not pre-registered in institutional database
+    if (!userProfile) {
       return res.status(403).json({
-        error: "Registration Denied: Student record not found in system database. Your Faculty or HOD must first add your email or USN to the database."
+        error: "Registration Denied: Record not found in institutional database. Only authorized students, faculty, HOD, principal, and exam department personnel pre-registered by the institution can activate an account."
       });
     }
 
-    if (role === "faculty" && !userProfile) {
+    // Check role match
+    if (userProfile.role !== role) {
       return res.status(403).json({
-        error: "Registration Denied: Faculty record not found in system database. Your HOD must first add your email to the faculty roster."
+        error: `Registration Denied: This email or USN is authorized as ${userProfile.role.toUpperCase()}, not as ${role.toUpperCase()}.`
       });
     }
 
-    if (userProfile) {
-      // Update existing pre-registered profile
-      const { data: updatedProfile, error: updateError } = await supabaseAdmin
-        .from("profiles")
-        .update({
-          full_name: fullName.trim(),
-          registration_no: cleanRegNo || userProfile.registration_no,
-        })
-        .eq("id", userProfile.id)
-        .select()
-        .single();
-
-      return res.status(200).json({
-        id: userProfile.id,
-        role: userProfile.role,
-        fullName: updatedProfile?.full_name || fullName,
-        email: userProfile.email,
-        message: "Account activated successfully! You can now log in.",
-      });
-    }
-
-    let userId = null;
-
-    // 1. Create Supabase Auth user if password provided
-    if (password) {
-      try {
-        const { data: authData, error: authErr } = await supabaseAdmin.auth.admin.createUser({
-          email: cleanEmail,
-          password: password,
-          email_confirm: true,
-        });
-        if (authData?.user) {
-          userId = authData.user.id;
-        } else if (authErr) {
-          // If user already registered in Supabase Auth, look up existing user ID and update password
-          const { data: list } = await supabaseAdmin.auth.admin.listUsers();
-          const existingAuth = (list?.users || []).find((u) => u.email.toLowerCase() === cleanEmail);
-          if (existingAuth) {
-            userId = existingAuth.id;
-            await supabaseAdmin.auth.admin.updateUserById(userId, { password: password, email_confirm: true }).catch(() => {});
-          }
-        }
-      } catch (e) {
-        console.warn("Auth creation bypass note:", e.message);
-      }
-    }
-
-    if (!userId) {
-      userId = crypto.randomUUID();
-    }
-
-    // 2. Insert into profiles table
-    const profilePayload = {
-      id: userId,
-      role,
-      full_name: fullName.trim(),
-      email: cleanEmail,
-      registration_no: role === "student" ? (cleanRegNo || `REG-${Date.now()}`) : null,
-      year: role === "student" ? Number(year || 1) : null,
-      section: role === "student" ? (section || "A") : null,
-      department_id: departmentId || null,
-    };
-
-    const { data: profile, error: profileError } = await supabaseAdmin
+    // Update existing pre-registered profile
+    const { data: updatedProfile, error: updateError } = await supabaseAdmin
       .from("profiles")
-      .insert(profilePayload)
+      .update({
+        full_name: fullName.trim(),
+        registration_no: cleanRegNo || userProfile.registration_no,
+      })
+      .eq("id", userProfile.id)
       .select()
       .single();
 
-    if (profileError) {
-      return res.status(400).json({ error: profileError.message });
+    if (updateError) {
+      return res.status(400).json({ error: updateError.message });
     }
 
-    res.status(201).json({
-      id: profile.id,
-      role: profile.role,
-      fullName: profile.full_name,
-      email: profile.email,
-      message: "Account created successfully! You can now log in.",
+    // Update or create password in Supabase Auth
+    if (password && password.trim()) {
+      try {
+        const { data: authUser, error: authErr } = await supabaseAdmin.auth.admin.createUser({
+          id: userProfile.id,
+          email: userProfile.email || cleanEmail,
+          password: password.trim(),
+          email_confirm: true,
+        });
+
+        if (authErr) {
+          // If already in auth.users, update password
+          await supabaseAdmin.auth.admin.updateUserById(userProfile.id, {
+            password: password.trim(),
+            email_confirm: true
+          });
+        }
+      } catch (authE) {
+        console.warn("Auth password update note:", authE.message);
+      }
+    }
+
+    return res.status(200).json({
+      id: userProfile.id,
+      role: userProfile.role,
+      fullName: updatedProfile?.full_name || fullName,
+      email: userProfile.email,
+      message: "Account activated successfully! You can now log in.",
     });
   } catch (err) {
     res.status(400).json({ error: err.message });
   }
 });
 
-const { getUserAvatar, setUserAvatar } = require("../services/avatarStore");
-
-// POST /api/auth/login -> Real Account Login
+// POST /api/auth/login -> Real Account Login with Strict Authorization & Password Verification
 router.post("/login", async (req, res) => {
   try {
-    const { email, password } = req.body;
-    if (!email) {
-      return res.status(400).json({ error: "Email or Registration Number is required." });
+    const { email, password, role } = req.body;
+    if (!email || !email.trim()) {
+      return res.status(400).json({ error: "Email or USN is required." });
+    }
+    if (!password || !password.trim()) {
+      return res.status(400).json({ error: "Password is required." });
     }
 
     const cleanInput = email.toLowerCase().trim();
 
-    // 1. Query profile by email directly in DB (safe query)
+    // 1. Query profile by email directly in DB
     let userProfile = null;
-    try {
-      const { data } = await supabaseAdmin
+    let { data: byEmail, error: errByEmail } = await supabaseAdmin
+      .from("profiles")
+      .select("*, departments!profiles_department_fk(name)")
+      .ilike("email", cleanInput)
+      .limit(1);
+
+    if (errByEmail || !byEmail || byEmail.length === 0) {
+      const { data: rawEmail } = await supabaseAdmin
         .from("profiles")
         .select("*")
         .ilike("email", cleanInput)
         .limit(1);
-      if (data && data.length > 0) {
-        userProfile = data[0];
-      }
-    } catch (e) {
-      console.warn("Profiles email query note:", e.message);
+      byEmail = rawEmail;
     }
 
-    // 2. Query profile by registration_no if not found by email
+    if (byEmail && byEmail.length > 0) {
+      userProfile = byEmail[0];
+    }
+
+    // 2. Query profile by registration_no (USN) if not found by email
     if (!userProfile) {
-      try {
-        const { data } = await supabaseAdmin
+      let { data: byReg, error: errByReg } = await supabaseAdmin
+        .from("profiles")
+        .select("*, departments!profiles_department_fk(name)")
+        .ilike("registration_no", cleanInput)
+        .limit(1);
+
+      if (errByReg || !byReg || byReg.length === 0) {
+        const { data: rawReg } = await supabaseAdmin
           .from("profiles")
           .select("*")
           .ilike("registration_no", cleanInput)
           .limit(1);
-        if (data && data.length > 0) {
-          userProfile = data[0];
+        byReg = rawReg;
+      }
+
+      if (byReg && byReg.length > 0) {
+        userProfile = byReg[0];
+      }
+    }
+
+    // Attach department name if not already resolved
+    if (userProfile && !userProfile.departments && userProfile.department_id) {
+      try {
+        const { data: dept } = await supabaseAdmin
+          .from("departments")
+          .select("name")
+          .eq("id", userProfile.department_id)
+          .maybeSingle();
+        if (dept) {
+          userProfile.departments = dept;
         }
       } catch (e) {}
     }
 
-    // 3. Auto-provision profile on login if user profile is not yet registered in profiles table
+    // 3. STRICT DATABASE AUTHORIZATION: If profile is NOT found in DB, reject immediately!
     if (!userProfile) {
-      const reqRole = req.body.role || "student";
-      const roleTitle = reqRole === "examdept" ? "Examination Department Controller"
-        : reqRole === "principal" ? "Principal Administrative Head"
-        : reqRole === "hod" ? "Head of Department"
-        : reqRole === "faculty" ? "Faculty Member"
-        : "Student Candidate";
-
-      const newId = crypto.randomUUID();
-      try {
-        const { data: createdProfile, error: insErr } = await supabaseAdmin
-          .from("profiles")
-          .insert({
-            id: newId,
-            email: cleanInput,
-            full_name: roleTitle,
-            role: reqRole,
-          })
-          .select("*")
-          .single();
-
-        if (!insErr && createdProfile) {
-          userProfile = createdProfile;
-        } else {
-          console.warn("Insert profile note:", insErr?.message);
-          // Fallback: if insertion failed, fetch existing or generate guaranteed profile
-          const { data: existing } = await supabaseAdmin
-            .from("profiles")
-            .select("*")
-            .ilike("email", cleanInput)
-            .maybeSingle();
-          userProfile = existing || {
-            id: newId,
-            role: reqRole,
-            full_name: roleTitle,
-            email: cleanInput,
-          };
-        }
-      } catch (e) {
-        userProfile = {
-          id: crypto.randomUUID(),
-          role: reqRole,
-          full_name: roleTitle,
-          email: cleanInput,
-        };
-      }
-    }
-
-    // If profile found, verify role match if specific portal role was requested
-    if (userProfile) {
-      if (req.body.role && userProfile.role !== req.body.role) {
-        return res.status(403).json({
-          error: `Access Denied: Your account is registered as a ${userProfile.role.toUpperCase()}, not as a ${req.body.role.toUpperCase()}. Please select the correct ${userProfile.role.toUpperCase()} portal to log in.`
-        });
-      }
-
-      if (userProfile.avatar_url) {
-        setUserAvatar(userProfile.id, userProfile.avatar_url);
-      }
-      const avatarUrl = userProfile.avatar_url || getUserAvatar(userProfile.id) || null;
-
-      return res.json({
-        token: `token-${userProfile.id}`,
-        user: {
-          id: userProfile.id,
-          role: userProfile.role,
-          fullName: userProfile.full_name,
-          email: userProfile.email || cleanInput,
-          registrationNo: userProfile.registration_no,
-          departmentName: userProfile.departments?.name || "Computer Applications",
-          avatarUrl: avatarUrl,
-          avatar_url: avatarUrl,
-        },
+      return res.status(401).json({
+        error: "Access Denied: Account not found. Only authorized students, faculty, HOD, principal, and exam department personnel registered in the institutional database can access this portal."
       });
     }
 
-    // Strict Authorization: If user profile is NOT found in DB, block access immediately!
-    return res.status(403).json({
-      error: "Access Denied: Your email or USN is not registered in the system database. Only authorized students or faculty registered by the HOD or administration can access the application."
+    // 4. STRICT PORTAL ROLE CHECK: Ensure user is logging into their authorized portal
+    if (role && userProfile.role !== role) {
+      return res.status(403).json({
+        error: `Access Denied: Your account is registered as a ${userProfile.role.toUpperCase()}. You cannot log in through the ${role.toUpperCase()} portal. Please switch to the ${userProfile.role.toUpperCase()} tab.`,
+        detectedRole: userProfile.role
+      });
+    }
+
+    // 5. STRICT PASSWORD VERIFICATION via Supabase Auth
+    const authEmail = (userProfile.email || "").toLowerCase().trim();
+    if (!authEmail) {
+      return res.status(401).json({ error: "Account has no registered email. Please contact the administrator." });
+    }
+
+    let sessionToken = null;
+    const { data: authSignIn, error: signInErr } = await supabaseAuth.auth.signInWithPassword({
+      email: authEmail,
+      password: password.trim()
+    });
+
+    if (!signInErr && authSignIn?.user) {
+      sessionToken = authSignIn.session?.access_token || `token-${userProfile.id}`;
+    } else {
+      return res.status(401).json({
+        error: "Invalid credentials: The password you entered is incorrect. Please try again."
+      });
+    }
+
+    if (userProfile.avatar_url) {
+      setUserAvatar(userProfile.id, userProfile.avatar_url);
+    }
+    const avatarUrl = userProfile.avatar_url || getUserAvatar(userProfile.id) || null;
+
+    return res.json({
+      token: sessionToken,
+      user: {
+        id: userProfile.id,
+        role: userProfile.role,
+        fullName: userProfile.full_name,
+        email: userProfile.email || cleanInput,
+        registrationNo: userProfile.registration_no,
+        departmentName: userProfile.departments?.name || "Computer Applications",
+        avatarUrl: avatarUrl,
+        avatar_url: avatarUrl,
+      },
     });
   } catch (err) {
     res.status(401).json({ error: err.message || "Invalid credentials" });

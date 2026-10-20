@@ -801,14 +801,15 @@ Based on **${selectedDoc}**, core principles for ${subjectName} emphasize struct
                     <button
                       onClick={() => setViewMode('pdf')}
                       style={{
-                        padding: '4px 10px',
+                        padding: '5px 12px',
                         borderRadius: 6,
-                        border: 'none',
-                        background: viewMode === 'pdf' ? '#2563eb' : '#e2e8f0',
-                        color: viewMode === 'pdf' ? '#ffffff' : '#334155',
+                        border: viewMode === 'pdf' ? '1px solid #2563eb' : '1px solid #cbd5e1',
+                        background: viewMode === 'pdf' ? '#2563eb' : '#f8fafc',
+                        color: viewMode === 'pdf' ? '#ffffff' : '#475569',
                         fontSize: 12,
                         fontWeight: 700,
                         cursor: 'pointer',
+                        transition: 'all 0.15s ease',
                       }}
                     >
                       📄 Original PDF Document
@@ -816,14 +817,15 @@ Based on **${selectedDoc}**, core principles for ${subjectName} emphasize struct
                     <button
                       onClick={() => setViewMode('notes')}
                       style={{
-                        padding: '4px 10px',
+                        padding: '5px 12px',
                         borderRadius: 6,
-                        border: 'none',
-                        background: viewMode === 'notes' ? '#2563eb' : '#e2e8f0',
-                        color: viewMode === 'notes' ? '#ffffff' : '#334155',
+                        border: viewMode === 'notes' ? '1px solid #2563eb' : '1px solid #cbd5e1',
+                        background: viewMode === 'notes' ? '#2563eb' : '#f8fafc',
+                        color: viewMode === 'notes' ? '#ffffff' : '#475569',
                         fontSize: 12,
                         fontWeight: 700,
                         cursor: 'pointer',
+                        transition: 'all 0.15s ease',
                       }}
                     >
                       📑 Syllabus Reader
@@ -1016,17 +1018,17 @@ Based on **${selectedDoc}**, core principles for ${subjectName} emphasize struct
                 </div>
 
                 {/* Suggested Quick Question Pills */}
-                <div style={{ padding: '6px 12px', background: 'rgba(15,23,42,0.8)', borderTop: '1px solid rgba(255,255,255,0.06)', display: 'flex', gap: 6, overflowX: 'auto' }}>
-                  <button onClick={() => handleSend(`Explain page ${currentPage}`)} style={{ padding: '3px 10px', borderRadius: 12, background: 'rgba(59,130,246,0.2)', color: '#60a5fa', border: '1px solid rgba(59,130,246,0.4)', cursor: 'pointer', whiteSpace: 'nowrap', fontSize: 11, fontWeight: 700 }}>
+                <div style={{ padding: '8px 14px', background: '#ffffff', borderTop: '1px solid #e2e8f0', display: 'flex', gap: 8, overflowX: 'auto' }}>
+                  <button onClick={() => handleSend(`Explain page ${currentPage}`)} style={{ padding: '4px 12px', borderRadius: 14, background: '#eff6ff', color: '#1d4ed8', border: '1px solid #bfdbfe', cursor: 'pointer', whiteSpace: 'nowrap', fontSize: 11, fontWeight: 700, transition: 'all 0.15s ease' }}>
                     💡 Explain page {currentPage}
                   </button>
-                  <button onClick={() => handleSend('Summarize this material')} style={{ padding: '3px 10px', borderRadius: 12, background: 'rgba(16,185,129,0.2)', color: '#34d399', border: '1px solid rgba(16,185,129,0.4)', cursor: 'pointer', whiteSpace: 'nowrap', fontSize: 11, fontWeight: 700 }}>
+                  <button onClick={() => handleSend('Summarize this material')} style={{ padding: '4px 12px', borderRadius: 14, background: '#f0fdf4', color: '#15803d', border: '1px solid #bbf7d0', cursor: 'pointer', whiteSpace: 'nowrap', fontSize: 11, fontWeight: 700, transition: 'all 0.15s ease' }}>
                     📑 Summarize PDF
                   </button>
-                  <button onClick={() => handleSend('What are the important points?')} style={{ padding: '3px 10px', borderRadius: 12, background: 'rgba(168,85,247,0.2)', color: '#c084fc', border: '1px solid rgba(168,85,247,0.4)', cursor: 'pointer', whiteSpace: 'nowrap', fontSize: 11, fontWeight: 700 }}>
+                  <button onClick={() => handleSend('What are the important points?')} style={{ padding: '4px 12px', borderRadius: 14, background: '#faf5ff', color: '#7c3aed', border: '1px solid #e9d5ff', cursor: 'pointer', whiteSpace: 'nowrap', fontSize: 11, fontWeight: 700, transition: 'all 0.15s ease' }}>
                     📌 Key Points
                   </button>
-                  <button onClick={() => handleSend('Generate 5 MCQs from this PDF')} style={{ padding: '3px 10px', borderRadius: 12, background: 'rgba(249,115,22,0.2)', color: '#fb923c', border: '1px solid rgba(249,115,22,0.4)', cursor: 'pointer', whiteSpace: 'nowrap', fontSize: 11, fontWeight: 700 }}>
+                  <button onClick={() => handleSend('Generate 5 MCQs from this PDF')} style={{ padding: '4px 12px', borderRadius: 14, background: '#fff7ed', color: '#c2410c', border: '1px solid #fed7aa', cursor: 'pointer', whiteSpace: 'nowrap', fontSize: 11, fontWeight: 700, transition: 'all 0.15s ease' }}>
                     📝 5 MCQs
                   </button>
                 </div>

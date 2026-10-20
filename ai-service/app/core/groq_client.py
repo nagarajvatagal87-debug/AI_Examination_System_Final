@@ -29,9 +29,26 @@ def complete(prompt: str, system: str | None = None, max_tokens: int = 2048) -> 
         messages.append({"role": "system", "content": system})
     messages.append({"role": "user", "content": prompt})
 
-    response = client.chat.completions.create(
-        model=os.environ.get("GROQ_MODEL", "llama-3.3-70b-versatile"),
-        messages=messages,
-        max_tokens=max_tokens,
-    )
-    return response.choices[0].message.content
+    models_to_try = [
+        os.environ.get("GROQ_MODEL", "openai/gpt-oss-120b"),
+        "openai/gpt-oss-120b",
+        "openai/gpt-oss-20b",
+        "qwen/qwen3.8-27b"
+    ]
+    # Remove duplicates while preserving order
+    unique_models = list(dict.fromkeys(models_to_try))
+
+    last_error = None
+    for model_id in unique_models:
+        try:
+            response = client.chat.completions.create(
+                model=model_id,
+                messages=messages,
+                max_tokens=max_tokens,
+            )
+            return response.choices[0].message.content
+        except Exception as e:
+            last_error = e
+            continue
+
+    raise RuntimeError(f"All Groq models failed. Last error: {last_error}")
