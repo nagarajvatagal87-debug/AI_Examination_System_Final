@@ -473,3 +473,1387 @@
   font-weight: 800;
   text-align: center;
 }
+
+/* =========================================================================
+   JEMS-STYLE ANIMATED INSTITUTIONAL SHOWCASE (LOGIN PAGE)
+   ========================================================================= */
+
+.auth-page.jems-mode {
+  min-height: 100vh;
+  width: 100%;
+  background: 
+    radial-gradient(circle at 18% 28%, rgba(6, 182, 212, 0.16) 0%, transparent 45%),
+    radial-gradient(circle at 82% 72%, rgba(16, 185, 129, 0.14) 0%, transparent 45%),
+    radial-gradient(circle at 50% 50%, rgba(30, 58, 138, 0.22) 0%, transparent 60%),
+    linear-gradient(rgba(3, 8, 20, 0.94), rgba(4, 12, 26, 0.96)),
+    url('/dsatm-campus.png') no-repeat center center / cover fixed;
+  color: #f8fafc;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  padding: 30px 24px;
+  position: relative;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  overflow-x: hidden;
+}
+
+/* 50/50 Full Screen Mode Override */
+.auth-page.jems-mode.full-screen-mode {
+  min-height: 100vh;
+  width: 100%;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  align-items: stretch;
+  box-sizing: border-box;
+  overflow-x: hidden;
+  overflow-y: auto;
+}
+
+/* Subtle Tech Matrix Grid Overlay */
+.auth-page.jems-mode::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background-image: 
+    linear-gradient(rgba(6, 182, 212, 0.06) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(6, 182, 212, 0.06) 1px, transparent 1px);
+  background-size: 38px 38px;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.auth-page.jems-mode .auth-container {
+  max-width: 1360px;
+  width: 100%;
+  margin: 0 auto;
+  position: relative;
+  z-index: 1;
+}
+
+.auth-container.full-container {
+  max-width: 100% !important;
+  width: 100% !important;
+  min-height: 100vh;
+  margin: 0 !important;
+  padding: 0 !important;
+  display: flex;
+  flex-direction: column;
+  box-sizing: border-box;
+}
+
+/* DSATM Auth Full Header with Dashboard styling */
+.dsatm-auth-header {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 10px 32px;
+  flex-shrink: 0;
+  background: linear-gradient(135deg, rgba(15, 23, 42, 0.96) 0%, rgba(30, 41, 59, 0.96) 50%, rgba(15, 23, 42, 0.96) 100%);
+  border-bottom: 2px solid rgba(245, 158, 11, 0.7);
+  box-shadow: 0 4px 25px rgba(0, 0, 0, 0.55);
+  backdrop-filter: blur(14px);
+  position: relative;
+  z-index: 50;
+}
+
+.dsatm-auth-header .auth-back-link {
+  background: rgba(15, 23, 42, 0.9);
+  border: 1.5px solid rgba(56, 189, 248, 0.45);
+  color: #38bdf8;
+  padding: 6px 16px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 800;
+  text-decoration: none;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.dsatm-auth-header .auth-back-link:hover {
+  background: #0284c7;
+  border-color: #38bdf8;
+  color: #ffffff;
+  transform: translateY(-1px);
+}
+
+/* Marquee Header in JEMS Dark Mode */
+.auth-page.jems-mode .auth-header-bar {
+  background: rgba(10, 20, 36, 0.88);
+  border: 1px solid rgba(56, 189, 248, 0.25);
+  box-shadow: 0 12px 36px rgba(0, 0, 0, 0.45);
+  backdrop-filter: blur(12px);
+}
+
+.auth-page.jems-mode .marquee-text-item {
+  color: #cbd5e1;
+}
+
+.auth-page.jems-mode .marquee-college-highlight {
+  color: #38bdf8 !important;
+}
+
+.auth-page.jems-mode .auth-back-link {
+  background: rgba(15, 23, 42, 0.9);
+  border: 1.5px solid rgba(56, 189, 248, 0.35);
+  color: #38bdf8;
+}
+
+.auth-page.jems-mode .auth-back-link:hover {
+  background: #0284c7;
+  border-color: #38bdf8;
+  color: #ffffff;
+}
+
+/* 2-Column Split Grid (50/50 Screen Proportion) */
+.jems-split-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 36px;
+  align-items: start;
+}
+
+.auth-content-grid.full-grid {
+  flex: 1;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  width: 100%;
+  max-width: 1720px;
+  margin: 0 auto;
+  padding: 24px 40px 32px 40px;
+  box-sizing: border-box;
+  gap: 40px;
+  align-items: stretch;
+}
+
+@media (max-width: 1100px) {
+  .jems-split-grid,
+  .auth-content-grid.full-grid {
+    grid-template-columns: 1fr;
+    padding: 20px 20px 40px 20px;
+    gap: 32px;
+    align-items: flex-start;
+  }
+}
+
+/* =========================================================================
+   LEFT COLUMN: JEMS SHOWCASE PANEL
+   ========================================================================= */
+
+.jems-showcase-panel {
+  display: flex;
+  flex-direction: column;
+  padding: 10px 16px;
+}
+
+/* Top Governance & Live Database Badges Row */
+.jems-top-badge-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 20px;
+}
+
+.jems-pill-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(254, 243, 199, 0.94);
+  border: 1.5px solid #f59e0b;
+  color: #92400e;
+  padding: 6px 16px;
+  border-radius: 9999px;
+  font-size: 12.5px;
+  font-weight: 800;
+  letter-spacing: 0.3px;
+  box-shadow: 0 4px 14px rgba(245, 158, 11, 0.25);
+}
+
+.jems-pill-icon {
+  font-size: 14px;
+}
+
+.dsatm-live-db-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(16, 185, 129, 0.16);
+  border: 1.2px solid #10b981;
+  color: #34d399;
+  padding: 6px 14px;
+  border-radius: 9999px;
+  font-size: 11.5px;
+  font-weight: 800;
+  box-shadow: 0 0 14px rgba(16, 185, 129, 0.2);
+}
+
+.live-pulse-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #34d399;
+  box-shadow: 0 0 8px #34d399;
+  animation: pulseLedAnim 1.6s infinite;
+}
+
+.dsatm-accredit-pill {
+  display: inline-flex;
+  align-items: center;
+  background: rgba(56, 189, 248, 0.12);
+  border: 1.2px solid rgba(56, 189, 248, 0.4);
+  color: #7dd3fc;
+  padding: 6px 14px;
+  border-radius: 9999px;
+  font-size: 11.5px;
+  font-weight: 800;
+}
+
+/* Clean Project Hero Header matching AI Examination System */
+.project-hero-header {
+  margin-bottom: 16px;
+}
+
+.project-main-title {
+  font-size: 42px;
+  font-weight: 900;
+  color: #ffffff;
+  letter-spacing: -0.5px;
+  line-height: 1.15;
+  margin: 0 0 6px 0;
+  text-shadow: 0 4px 20px rgba(0, 0, 0, 0.6);
+}
+
+.highlight-ai-gradient {
+  background: linear-gradient(135deg, #38bdf8 0%, #2dd4bf 50%, #facc15 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  filter: drop-shadow(0 0 16px rgba(56, 189, 248, 0.4));
+}
+
+.project-hero-desc {
+  font-size: 13.5px;
+  color: #94a3b8;
+  font-weight: 600;
+  line-height: 1.45;
+  margin: 0;
+  max-width: 680px;
+}
+
+/* Structured Real Data Metrics Grid (Matching Main Dashboard) */
+.dsatm-metrics-structured {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+  width: 100%;
+  margin-bottom: 16px;
+}
+
+@media (max-width: 640px) {
+  .dsatm-metrics-structured {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+.dsatm-metrics-structured .hero-metric-box {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 10px;
+  border-radius: 14px;
+  background: rgba(15, 23, 42, 0.82);
+  border: 1.5px solid rgba(255, 255, 255, 0.12);
+  backdrop-filter: blur(8px);
+  transition: all 0.25s ease;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.35);
+  min-width: 0;
+}
+
+.dsatm-metrics-structured .hero-metric-box:hover {
+  transform: translateY(-3px);
+  border-color: #38bdf8;
+  box-shadow: 0 8px 24px rgba(56, 189, 248, 0.25);
+  background: rgba(15, 23, 42, 0.95);
+}
+
+.dsatm-metrics-structured .metric-icon-wrap {
+  font-size: 20px;
+  width: 38px;
+  height: 38px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+}
+
+.dsatm-metrics-structured .metric-blue .metric-icon-wrap   { background: rgba(37, 99, 235, 0.22); color: #60a5fa; border-color: rgba(37, 99, 235, 0.45); }
+.dsatm-metrics-structured .metric-cyan .metric-icon-wrap   { background: rgba(6, 182, 212, 0.22); color: #38bdf8; border-color: rgba(6, 182, 212, 0.45); }
+.dsatm-metrics-structured .metric-emerald .metric-icon-wrap { background: rgba(16, 185, 129, 0.22); color: #34d399; border-color: rgba(16, 185, 129, 0.45); }
+.dsatm-metrics-structured .metric-purple .metric-icon-wrap { background: rgba(139, 92, 246, 0.22); color: #a78bfa; border-color: rgba(139, 92, 246, 0.45); }
+.dsatm-metrics-structured .metric-amber .metric-icon-wrap  { background: rgba(245, 158, 11, 0.22); color: #fbbf24; border-color: rgba(245, 158, 11, 0.45); }
+.dsatm-metrics-structured .metric-rose .metric-icon-wrap   { background: rgba(244, 63, 94, 0.22); color: #fb7185; border-color: rgba(244, 63, 94, 0.45); }
+
+.dsatm-metrics-structured .metric-info {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.dsatm-metrics-structured .metric-num {
+  font-size: 22px;
+  font-weight: 900;
+  color: #ffffff;
+  line-height: 1;
+  margin-bottom: 2px;
+  letter-spacing: -0.5px;
+}
+
+.dsatm-metrics-structured .metric-lbl {
+  font-size: 10px;
+  font-weight: 800;
+  color: #94a3b8;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Real Department Spotlight Card from Main Dashboard */
+.dsatm-dept-spotlight-card {
+  background: linear-gradient(135deg, rgba(15, 23, 42, 0.88) 0%, rgba(17, 24, 39, 0.92) 100%);
+  border: 1.5px solid rgba(245, 158, 11, 0.45);
+  border-radius: 16px;
+  padding: 14px 20px;
+  margin-bottom: 20px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+  backdrop-filter: blur(12px);
+}
+
+.dept-spotlight-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 12px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.spotlight-icon {
+  font-size: 18px;
+}
+
+.spotlight-title {
+  font-size: 13.5px;
+  font-weight: 800;
+  color: #ffffff;
+  flex: 1;
+}
+
+.spotlight-badge {
+  font-size: 10px;
+  font-weight: 900;
+  color: #fbbf24;
+  background: rgba(245, 158, 11, 0.2);
+  border: 1px solid rgba(245, 158, 11, 0.45);
+  padding: 3px 8px;
+  border-radius: 9999px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.dept-spotlight-stats {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+}
+
+@media (max-width: 900px) {
+  .dept-spotlight-stats {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+.spotlight-stat-item {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.spotlight-stat-item.spotlight-achievement-box {
+  grid-column: span 1;
+  background: transparent !important;
+  border: none !important;
+  padding: 0 !important;
+}
+
+.stat-label {
+  font-size: 10.5px;
+  color: #94a3b8;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+}
+
+.stat-val {
+  font-size: 15px;
+  font-weight: 900;
+  color: #ffffff;
+}
+
+.stat-val.highlight-green {
+  color: #34d399;
+}
+
+.stat-val.highlight-gold {
+  color: #fbbf24;
+}
+
+.stat-val.highlight-blue {
+  color: #38bdf8;
+}
+
+.stat-val.achievement-txt {
+  font-size: 11.5px;
+  color: #e2e8f0;
+  font-weight: 700;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Central Radar Orb Stage */
+.jems-orb-stage {
+  position: relative;
+  width: 100%;
+  height: 480px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 6px 0 12px 0;
+  overflow: visible;
+}
+
+/* SVG Dotted Constellation Lines */
+.jems-constellation-lines {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.constellation-line {
+  stroke: rgba(45, 212, 191, 0.28);
+  stroke-dasharray: 4 4;
+  stroke-width: 1.2;
+}
+
+/* Radar Circle */
+.jems-radar-circle {
+  width: 260px;
+  height: 260px;
+  border-radius: 50%;
+  position: relative;
+  z-index: 2;
+  border: 2px solid rgba(45, 212, 191, 0.85);
+  box-shadow: 
+    0 0 35px rgba(20, 184, 166, 0.45),
+    inset 0 0 30px rgba(20, 184, 166, 0.22);
+  background: radial-gradient(circle, rgba(13, 148, 136, 0.16) 0%, rgba(4, 25, 22, 0.12) 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Matrix Dotted Mesh Grid inside Radar */
+.radar-grid-dots {
+  position: absolute;
+  inset: 6px;
+  border-radius: 50%;
+  background-image: radial-gradient(rgba(45, 212, 191, 0.38) 1.5px, transparent 1.5px);
+  background-size: 13px 13px;
+  pointer-events: none;
+}
+
+/* Inner Dotted Ring */
+.radar-inner-ring {
+  position: absolute;
+  inset: 24px;
+  border-radius: 50%;
+  border: 1px dashed rgba(45, 212, 191, 0.35);
+  pointer-events: none;
+}
+
+/* Animated Rotating Radar Scanner Sweep */
+.radar-scanner-sweep {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background: conic-gradient(from 0deg, transparent 0deg, transparent 270deg, rgba(45, 212, 191, 0.32) 360deg);
+  animation: radarSweepAnim 5.5s linear infinite;
+  pointer-events: none;
+}
+
+@keyframes radarSweepAnim {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Radar Center Core with DSATM College Logo & Name */
+.radar-center-core {
+  position: relative;
+  z-index: 3;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  background: transparent;
+  border: none;
+  padding: 0;
+  box-shadow: none;
+  pointer-events: none;
+}
+
+.core-college-logo-wrap {
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  background: #ffffff;
+  padding: 3.5px;
+  border: 2px solid #2dd4bf;
+  box-shadow: 0 0 24px rgba(45, 212, 191, 0.75), inset 0 0 6px rgba(0, 0, 0, 0.2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 6px;
+  animation: logoPulseGlow 3.2s ease-in-out infinite;
+}
+
+@keyframes logoPulseGlow {
+  0%, 100% {
+    box-shadow: 0 0 20px rgba(45, 212, 191, 0.7), 0 0 40px rgba(45, 212, 191, 0.3);
+    transform: scale(1);
+  }
+  50% {
+    box-shadow: 0 0 30px rgba(45, 212, 191, 0.95), 0 0 60px rgba(45, 212, 191, 0.5);
+    transform: scale(1.05);
+  }
+}
+
+.radar-dsatm-logo {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  border-radius: 50%;
+}
+
+.radar-dsatm-title {
+  font-size: 34px;
+  font-weight: 900;
+  letter-spacing: 2px;
+  color: #ffffff;
+  line-height: 1;
+  text-shadow: 0 0 24px rgba(45, 212, 191, 0.85), 0 2px 6px rgba(0, 0, 0, 0.9);
+}
+
+.radar-dsatm-tagline {
+  font-size: 8px;
+  font-weight: 900;
+  letter-spacing: 1.8px;
+  color: #5eead4;
+  text-transform: uppercase;
+  margin-top: 5px;
+  text-shadow: 0 0 10px rgba(45, 212, 191, 0.8);
+}
+
+.radar-active-role-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  margin-top: 8px;
+  background: rgba(15, 23, 42, 0.9);
+  border: 1px solid rgba(45, 212, 191, 0.55);
+  padding: 3px 12px;
+  border-radius: 9999px;
+  font-size: 10.5px;
+  font-weight: 800;
+  color: #f1f5f9;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.45);
+  backdrop-filter: blur(8px);
+}
+
+/* =========================================================================
+   CONTINUOUS CIRCULAR ORBITAL SYSTEM: LABELS & COUPLED CONNECTING LINES
+   ========================================================================= */
+
+/* Continuous Orbital System Overlay */
+.jems-orbital-system {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 4;
+}
+
+/* Individual Orbital Arm Slot positioned at globe center (50%, 50%) */
+.orbit-arm-slot {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 0;
+  height: 0;
+  transform: rotate(var(--start-angle));
+  pointer-events: none;
+}
+
+/* Continuously Rotating Orbital Arm Spinner */
+.orbit-arm-spinner {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 0;
+  height: 0;
+  animation: orbitSpinAnim var(--orbit-duration) linear infinite;
+  will-change: transform;
+  pointer-events: none;
+}
+
+@keyframes orbitSpinAnim {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Connecting Line Moving in Lockstep with Feature Label */
+.orbit-moving-line {
+  stroke: rgba(45, 212, 191, 0.42);
+  stroke-dasharray: 4 4;
+  stroke-width: 1.3;
+}
+
+.orbit-anchor-dot {
+  fill: #2dd4bf;
+  filter: drop-shadow(0 0 5px #2dd4bf);
+}
+
+.orbit-badge-dot {
+  fill: #5eead4;
+  opacity: 0.85;
+  filter: drop-shadow(0 0 4px #5eead4);
+}
+
+/* Badge Anchor at Orbital Radius R */
+.orbit-badge-anchor {
+  position: absolute;
+  left: var(--orbit-radius);
+  top: 0;
+  width: 0;
+  height: 0;
+  pointer-events: none;
+}
+
+/* Cancels out initial slot angle */
+.orbit-static-unrotate {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 0;
+  height: 0;
+  transform: rotate(calc(-1 * var(--start-angle)));
+  pointer-events: none;
+}
+
+/* Cancels out continuous spin so label text is ALWAYS horizontally upright & readable */
+.orbit-counter-rotator {
+  position: absolute;
+  top: 0;
+  left: 0;
+  animation: orbitCounterAnim var(--orbit-duration) linear infinite;
+  will-change: transform;
+  display: inline-flex;
+  pointer-events: auto;
+}
+
+@keyframes orbitCounterAnim {
+  from {
+    transform: translate(-50%, -50%) rotate(0deg);
+  }
+  to {
+    transform: translate(-50%, -50%) rotate(-360deg);
+  }
+}
+
+/* Pause orbital motion on hover so user can easily interact */
+.orbit-arm-slot:hover .orbit-arm-spinner,
+.orbit-arm-slot:hover .orbit-counter-rotator {
+  animation-play-state: paused;
+}
+
+/* Feature Badge Styling */
+.jems-module-badge {
+  position: relative;
+  display: inline-block;
+  pointer-events: auto;
+  z-index: 5;
+  background: rgba(9, 23, 40, 0.94);
+  border: 1.2px solid rgba(45, 212, 191, 0.55);
+  color: #f1f5f9;
+  font-size: 11px;
+  font-weight: 800;
+  padding: 4px 11px;
+  border-radius: 8px;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.55);
+  backdrop-filter: blur(8px);
+  white-space: nowrap;
+  transition: border-color 0.25s ease, box-shadow 0.25s ease, color 0.25s ease, transform 0.25s ease;
+  cursor: pointer;
+  user-select: none;
+}
+
+.jems-module-badge:hover {
+  border-color: #2dd4bf;
+  box-shadow: 0 0 20px rgba(45, 212, 191, 0.75);
+  color: #ffffff;
+  transform: scale(1.08);
+}
+
+/* Responsive orbital scaling so labels never clip on smaller viewports */
+@media (max-width: 1200px) {
+  .jems-orb-stage {
+    height: 480px;
+  }
+  .jems-orbital-system {
+    transform: scale(0.92);
+  }
+}
+
+@media (max-width: 768px) {
+  .jems-orb-stage {
+    height: 430px;
+  }
+  .jems-radar-circle {
+    transform: scale(0.85);
+  }
+  .jems-orbital-system {
+    transform: scale(0.78);
+  }
+}
+
+@media (max-width: 500px) {
+  .jems-orb-stage {
+    height: 380px;
+  }
+  .jems-radar-circle {
+    transform: scale(0.72);
+  }
+  .jems-orbital-system {
+    transform: scale(0.65);
+  }
+}
+
+/* Feature Banner Card */
+.jems-feature-banner {
+  background: rgba(15, 23, 42, 0.78);
+  border: 1.5px solid rgba(45, 212, 191, 0.35);
+  border-radius: 16px;
+  padding: 14px 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+  backdrop-filter: blur(12px);
+  margin-bottom: 20px;
+}
+
+.feature-banner-left {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.feature-icon-badge {
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  background: rgba(249, 115, 22, 0.2);
+  border: 1.5px solid rgba(249, 115, 22, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 20px;
+  flex-shrink: 0;
+}
+
+.feature-banner-title {
+  color: #ffffff;
+  font-size: 15px;
+  font-weight: 800;
+  line-height: 1.2;
+}
+
+.feature-banner-desc {
+  color: #94a3b8;
+  font-size: 12px;
+  font-weight: 600;
+  margin-top: 2px;
+}
+
+.feature-banner-btn {
+  background: linear-gradient(135deg, #ea580c 0%, #f97316 100%);
+  color: #ffffff;
+  font-size: 13px;
+  font-weight: 800;
+  padding: 10px 22px;
+  border-radius: 9999px;
+  text-decoration: none;
+  white-space: nowrap;
+  box-shadow: 0 4px 16px rgba(234, 88, 12, 0.45);
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+}
+
+.feature-banner-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(234, 88, 12, 0.6);
+  background: linear-gradient(135deg, #f97316 0%, #fb923c 100%);
+}
+
+/* In The Pipeline Card */
+.jems-pipeline-box {
+  margin-bottom: 20px;
+}
+
+.pipeline-header-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.pipeline-pulse-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #f97316;
+  box-shadow: 0 0 8px #f97316;
+}
+
+.pipeline-title {
+  font-size: 11px;
+  font-weight: 900;
+  letter-spacing: 0.8px;
+  color: #f97316;
+}
+
+.pipeline-sub {
+  font-size: 12px;
+  color: #64748b;
+  font-weight: 600;
+}
+
+.pipeline-feature-card {
+  background: rgba(11, 25, 44, 0.8);
+  border: 1.2px solid rgba(255, 255, 255, 0.1);
+  border-radius: 14px;
+  padding: 12px 18px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+}
+
+.pipeline-card-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.pipeline-card-icon {
+  font-size: 22px;
+}
+
+.pipeline-dept-tag {
+  font-size: 10px;
+  font-weight: 900;
+  letter-spacing: 0.8px;
+  color: #94a3b8;
+  text-transform: uppercase;
+}
+
+.pipeline-name {
+  font-size: 14px;
+  font-weight: 800;
+  color: #ffffff;
+}
+
+.pipeline-coming-badge {
+  background: rgba(15, 23, 42, 0.95);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: #e2e8f0;
+  font-size: 10.5px;
+  font-weight: 900;
+  padding: 4px 10px;
+  border-radius: 9999px;
+  letter-spacing: 0.5px;
+}
+
+/* Live Platform Status Bar */
+.jems-live-bar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.live-pill-badge {
+  background: rgba(6, 78, 59, 0.65);
+  border: 1.2px solid #10b981;
+  color: #6ee7b7;
+  font-size: 11px;
+  font-weight: 900;
+  padding: 6px 14px;
+  border-radius: 9999px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+  box-shadow: 0 0 14px rgba(16, 185, 129, 0.25);
+}
+
+.live-led-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #34d399;
+  box-shadow: 0 0 8px #34d399;
+  animation: pulseLedAnim 1.8s infinite;
+}
+
+@keyframes pulseLedAnim {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.5; transform: scale(0.85); }
+}
+
+.live-notice-ticker {
+  background: rgba(15, 23, 42, 0.85);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  padding: 8px 16px;
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: #cbd5e1;
+  font-size: 12px;
+  font-weight: 600;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.ticker-speaker {
+  font-size: 14px;
+  flex-shrink: 0;
+}
+
+.ticker-text {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+/* Left Showcase Footer */
+.jems-showcase-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  color: #64748b;
+  font-size: 12px;
+  font-weight: 600;
+  padding-top: 14px;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.showcase-key-hint kbd {
+  background: rgba(30, 41, 59, 0.9);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 4px;
+  padding: 2px 7px;
+  font-family: inherit;
+  font-size: 11px;
+  color: #e2e8f0;
+}
+
+/* =========================================================================
+   RIGHT COLUMN: JEMS LOGIN CARD
+   ========================================================================= */
+
+/* =========================================================================
+   RIGHT COLUMN: FULL-HEIGHT WHITE LOGIN PANEL (JEMS SPLIT LAYOUT)
+   ========================================================================= */
+
+.jems-login-column {
+  display: flex;
+  flex-direction: column;
+  background: #ffffff;
+  border-radius: 24px;
+  padding: 36px 40px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.45);
+  box-sizing: border-box;
+  border: 1px solid rgba(255, 255, 255, 0.9);
+  height: 100%;
+  min-height: 100%;
+  justify-content: flex-start;
+  position: relative;
+  z-index: 2;
+}
+
+/* Role Switcher Tabs Pills */
+.login-role-tabs-glass {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-bottom: 24px;
+  background: #f1f5f9;
+  border: 1.5px solid #e2e8f0;
+  padding: 6px;
+  border-radius: 14px;
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.04);
+}
+
+.role-tab-pill {
+  flex: 1;
+  min-width: 90px;
+  background: transparent;
+  border: 1.5px solid transparent;
+  color: #64748b;
+  padding: 8px 12px;
+  border-radius: 10px;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-align: center;
+}
+
+.role-tab-pill:hover {
+  color: #0f172a;
+  background: rgba(255, 255, 255, 0.85);
+}
+
+.role-tab-pill.active {
+  color: #ffffff !important;
+  font-weight: 800;
+}
+
+.role-tab-pill.active.tab-blue {
+  background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.35);
+}
+
+.role-tab-pill.active.tab-emerald {
+  background: linear-gradient(135deg, #059669 0%, #047857 100%);
+  box-shadow: 0 4px 12px rgba(5, 150, 105, 0.35);
+}
+
+.role-tab-pill.active.tab-purple {
+  background: linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%);
+  box-shadow: 0 4px 12px rgba(124, 58, 237, 0.35);
+}
+
+.role-tab-pill.active.tab-amber {
+  background: linear-gradient(135deg, #d97706 0%, #b45309 100%);
+  box-shadow: 0 4px 12px rgba(217, 119, 6, 0.35);
+}
+
+.role-tab-pill.active.tab-rose {
+  background: linear-gradient(135deg, #e11d48 0%, #be123c 100%);
+  box-shadow: 0 4px 12px rgba(225, 29, 72, 0.35);
+}
+
+/* Glass Login Card Inner Container */
+.auth-card.jems-glass-card {
+  background: transparent !important;
+  border: none !important;
+  padding: 0 !important;
+  box-shadow: none !important;
+  backdrop-filter: none !important;
+  border-radius: 0 !important;
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  justify-content: space-between;
+}
+
+.auth-card.jems-glass-card .auth-brand-header {
+  margin-bottom: 20px;
+  text-align: center;
+}
+
+.auth-card.jems-glass-card .auth-role-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11.5px;
+  font-weight: 800;
+  padding: 4px 12px;
+  border-radius: 8px;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  margin-bottom: 8px;
+}
+
+.auth-card.jems-glass-card .auth-role-tag.tag-blue {
+  background: #eff6ff;
+  color: #1e40af;
+  border: 1.5px solid #bfdbfe;
+}
+
+.auth-card.jems-glass-card .auth-role-tag.tag-emerald {
+  background: #ecfdf5;
+  color: #065f46;
+  border: 1.5px solid #a7f3d0;
+}
+
+.auth-card.jems-glass-card .auth-role-tag.tag-purple {
+  background: #f5f3ff;
+  color: #5b21b6;
+  border: 1.5px solid #ddd6fe;
+}
+
+.auth-card.jems-glass-card .auth-role-tag.tag-amber {
+  background: #fffbeb;
+  color: #92400e;
+  border: 1.5px solid #fde68a;
+}
+
+.auth-card.jems-glass-card .auth-role-tag.tag-rose {
+  background: #fff1f2;
+  color: #9f1239;
+  border: 1.5px solid #fecdd3;
+}
+
+.auth-card.jems-glass-card .auth-title {
+  color: #0f172a;
+  font-size: 28px;
+  font-weight: 900;
+  letter-spacing: -0.5px;
+  margin: 4px 0 6px 0;
+}
+
+.auth-card.jems-glass-card .auth-subtitle {
+  color: #64748b;
+  font-size: 14px;
+  margin: 0;
+  font-weight: 500;
+}
+
+.auth-card.jems-glass-card .auth-field {
+  margin-bottom: 16px;
+  display: flex;
+  flex-direction: column;
+  text-align: left;
+}
+
+.auth-card.jems-glass-card .auth-field label {
+  color: #1e293b;
+  font-size: 13px;
+  font-weight: 700;
+  margin-bottom: 6px;
+}
+
+.auth-card.jems-glass-card .auth-field input {
+  background: #f8fafc !important;
+  border: 1.5px solid #cbd5e1 !important;
+  color: #0f172a !important;
+  border-radius: 12px !important;
+  padding: 13px 16px !important;
+  font-size: 14.5px !important;
+  font-weight: 600 !important;
+  transition: all 0.2s ease !important;
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.04) !important;
+}
+
+.auth-card.jems-glass-card .auth-field input:focus {
+  background: #ffffff !important;
+  border-color: #2563eb !important;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.16) !important;
+}
+
+.auth-card.jems-glass-card .auth-submit-btn {
+  width: 100%;
+  padding: 14px 20px;
+  font-size: 15px;
+  font-weight: 800;
+  border-radius: 12px;
+  border: none;
+  color: #ffffff;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 4px 14px rgba(37, 99, 235, 0.35);
+  margin-top: 6px;
+}
+
+.auth-card.jems-glass-card .auth-submit-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 18px rgba(37, 99, 235, 0.45);
+}
+
+.auth-card.jems-glass-card .auth-submit-btn.btn-blue {
+  background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+}
+
+.auth-card.jems-glass-card .auth-submit-btn.btn-emerald {
+  background: linear-gradient(135deg, #059669 0%, #047857 100%);
+  box-shadow: 0 4px 14px rgba(5, 150, 105, 0.35);
+}
+
+.auth-card.jems-glass-card .auth-submit-btn.btn-purple {
+  background: linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%);
+  box-shadow: 0 4px 14px rgba(124, 58, 237, 0.35);
+}
+
+.auth-card.jems-glass-card .auth-submit-btn.btn-amber {
+  background: linear-gradient(135deg, #d97706 0%, #b45309 100%);
+  box-shadow: 0 4px 14px rgba(217, 119, 6, 0.35);
+}
+
+.auth-card.jems-glass-card .auth-submit-btn.btn-rose {
+  background: linear-gradient(135deg, #e11d48 0%, #be123c 100%);
+  box-shadow: 0 4px 14px rgba(225, 29, 72, 0.35);
+}
+
+.auth-switch-role-btn {
+  align-self: flex-start;
+  padding: 6px 14px;
+  font-size: 0.85rem;
+  font-weight: 700;
+  background-color: #2563eb;
+  color: #ffffff;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+}
+
+.auth-switch-role-btn:hover {
+  background-color: #1d4ed8;
+  transform: translateY(-1px);
+}
+
+/* Quick Features Chip List */
+.jems-role-quick-features {
+  margin-top: 24px;
+  padding-top: 18px;
+  border-top: 1px solid #e2e8f0;
+}
+
+.quick-features-title {
+  font-size: 11.5px;
+  font-weight: 800;
+  color: #64748b;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  margin-bottom: 10px;
+}
+
+.quick-features-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+@media (max-width: 500px) {
+  .quick-features-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.quick-feature-chip {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  padding: 8px 12px;
+  font-size: 12px;
+  color: #334155;
+  font-weight: 600;
+}
+
+.chip-tick {
+  color: #059669;
+  font-weight: 900;
+  font-size: 13px;
+}
+
+.auth-card.jems-glass-card .auth-footer-nav {
+  margin-top: 18px;
+  text-align: center;
+}
+
+.auth-card.jems-glass-card .auth-footer-nav p {
+  color: #64748b;
+  font-size: 13.5px;
+  margin: 0;
+}
+
+.auth-card.jems-glass-card .auth-footer-nav a {
+  color: #2563eb;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.auth-card.jems-glass-card .auth-footer-nav a:hover {
+  color: #1d4ed8;
+  text-decoration: underline;
+}
+
+/* Simple Clean Institutional Footer */
+.dsatm-simple-footer {
+  width: 100%;
+  padding: 12px 32px;
+  background: rgba(10, 18, 32, 0.95);
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.4);
+  backdrop-filter: blur(12px);
+  margin-top: auto;
+  flex-shrink: 0;
+  box-sizing: border-box;
+}
+
+.simple-footer-content {
+  max-width: 1720px;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  font-size: 12.5px;
+  color: #94a3b8;
+  font-weight: 600;
+  text-align: center;
+}
+
+.simple-footer-content .footer-dot {
+  color: #f59e0b;
+  font-weight: 900;
+}

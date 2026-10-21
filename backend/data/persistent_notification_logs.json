@@ -1,5 +1,21 @@
 [
   {
+    "id": "notif-log-1792568546958-432",
+    "student_id": "85947c37-dfc9-442b-9918-72b4124492ff",
+    "parent_id": "pg-85947c37-dfc9-442b-9918-72b4124492ff-1791091600573",
+    "attendance_id": "att-rec-f1c125fa-ca62-44a8-9e88-1c96c0fa9358-85947c37-dfc9-442b-9918-72b4124492ff-2026-10-21",
+    "channel": "EMAIL",
+    "notification_type": "ATTENDANCE_ABSENCE",
+    "recipient": "nagarajvatagal2003@gmail.com",
+    "subject": "⚠️ Attendance Alert: Nagaraj was ABSENT for Deep Learning / ಹಾಜರಾತಿ ಸೂಚನೆ",
+    "message": "Multilingual alert dispatched in English, Kannada (ಕನ್ನಡ) & Hindi (हिंदी) to nagarajvatagal2003@gmail.com",
+    "status": "SENT",
+    "provider_message_id": null,
+    "created_at": "2026-10-21T07:42:26.958Z",
+    "sent_at": "2026-10-21T07:42:26.958Z",
+    "failure_reason": null
+  },
+  {
     "id": "notif-ht-85947c37-dfc9-442b-9918-72b4124492ff-exam-1791645161205-r7jw",
     "student_id": "85947c37-dfc9-442b-9918-72b4124492ff",
     "parent_id": null,

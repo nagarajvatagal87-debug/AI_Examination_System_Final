@@ -283,6 +283,14 @@ router.get("/hall-ticket", async (req, res) => {
       });
     }
 
+    const DEFAULT_SUBJECT_DETAILS = {
+      "004df87a-c02a-4296-bed5-51d8bd0fe371": { code: "MMC335", name: "Devops", date: "22/07/2026", time: "2:00 PM - 5:00 PM" },
+      "f1c125fa-ca62-44a8-9e88-1c96c0fa9358": { code: "MMC321", name: "Deep Learning", date: "20/07/2026", time: "2:00 PM - 5:00 PM" },
+      "b76fa471-11e9-4b91-9281-93200ff8d6e7": { code: "MMC333", name: "Web Development using Full Stack Open", date: "24/07/2026", time: "09:30 AM - 12:30 PM" },
+      "711130b8-e26e-424b-800e-957637a05662": { code: "MMC316", name: "Software Design Patterns", date: "27/07/2026", time: "09:30 AM - 12:30 PM" },
+      "9d4b7294-a0d0-4c39-acb3-93e01d818cb3": { code: "MMC312", name: "Ethical Hacking", date: "29/07/2026", time: "09:30 AM - 12:30 PM" },
+    };
+
     let finalTimetable = [];
     let sourceTimetable = Array.isArray(publishedTicket.timetable) && publishedTicket.timetable.length > 0 ? publishedTicket.timetable : publishedExams;
 
@@ -291,7 +299,7 @@ router.get("/hall-ticket", async (req, res) => {
       if (enrolledSubIds && enrolledSubIds.length > 0) {
         filteredRows = filteredRows.filter((r) => {
           const sId = resolveSubjectIdFromEntry(r);
-          return sId ? enrolledSubIds.includes(sId) : true;
+          return sId ? enrolledSubIds.includes(sId) : false;
         });
       }
       finalTimetable = filteredRows.map((r, idx) => ({
@@ -302,6 +310,25 @@ router.get("/hall-ticket", async (req, res) => {
         timeSlot: r.timeSlot || r.time || (r.startTime && r.endTime ? `${r.startTime} - ${r.endTime}` : "09:30 AM - 12:30 PM"),
         hallNo: `${publishedTicket.room_number || "LH-101"} (${publishedTicket.seat_number || "SEAT-01"})`,
       }));
+    }
+
+    // Ensure all student's enrolled subjects are present in the final timetable
+    if (enrolledSubIds && enrolledSubIds.length > 0) {
+      const existingCodes = new Set(finalTimetable.map((r) => (r.subjectCode || "").toUpperCase()));
+      for (const sId of enrolledSubIds) {
+        const info = DEFAULT_SUBJECT_DETAILS[sId];
+        if (info && !existingCodes.has(info.code.toUpperCase())) {
+          finalTimetable.push({
+            slNo: finalTimetable.length + 1,
+            subjectCode: info.code,
+            subjectName: info.name,
+            examDate: info.date,
+            timeSlot: info.time,
+            hallNo: `${publishedTicket.room_number || "LH-101"} (${publishedTicket.seat_number || "SEAT-01"})`,
+          });
+          existingCodes.add(info.code.toUpperCase());
+        }
+      }
     }
 
     res.json({

@@ -36,12 +36,12 @@
       "institution": "DAYANANDA SAGAR ACADEMY OF TECHNOLOGY AND MANAGEMENT",
       "student_name": "Nagaraj",
       "registration_no": "1DT25MC036",
-      "department_name": "Master of Computer Applications (MCA)",
+      "department_name": "DEPARTMENT OF MASTER OF COMPUTER APPLICATIONS (MCA)",
       "semester": "3rd Sem",
       "academic_year": "2025–2026",
       "exam_title": "Main Semester Examination 2026",
-      "subject_code": "MMC321",
-      "subject_name": "Main Examination Subject",
+      "subject_code": "MMC335 / MMC321",
+      "subject_name": "Devops & Deep Learning",
       "exam_date": "Scheduled",
       "exam_time": "09:30 AM - 12:30 PM",
       "centre_name": "DSATM Main Academic Block Examination Centre",
@@ -49,11 +49,18 @@
       "seat_number": "SEAT-01",
       "timetable": [
         {
-          "subjectId": "b76fa471-11e9-4b91-9281-93200ff8d6e7",
-          "subjectCode": "MMC333",
-          "subjectName": "Web Development using Full Stack Open",
-          "examDate": "2026-11-21",
-          "timeSlot": "09:30 AM - 12:30 PM"
+          "subjectId": "004df87a-c02a-4296-bed5-51d8bd0fe371",
+          "subjectCode": "MMC335",
+          "subjectName": "Devops",
+          "examDate": "22/07/2026",
+          "timeSlot": "2:00 PM - 5:00 PM"
+        },
+        {
+          "subjectId": "f1c125fa-ca62-44a8-9e88-1c96c0fa9358",
+          "subjectCode": "MMC321",
+          "subjectName": "Deep Learning",
+          "examDate": "20/07/2026",
+          "timeSlot": "2:00 PM - 5:00 PM"
         }
       ],
       "status": "PUBLISHED",
@@ -67,12 +74,12 @@
       "institution": "DAYANANDA SAGAR ACADEMY OF TECHNOLOGY AND MANAGEMENT",
       "student_name": "Nagaraj",
       "registration_no": "1DT25MC036",
-      "department_name": "Master of Computer Applications (MCA)",
+      "department_name": "DEPARTMENT OF MASTER OF COMPUTER APPLICATIONS (MCA)",
       "semester": "3rd Sem",
       "academic_year": "2025–2026",
       "exam_title": "Main Semester Examination 2026",
-      "subject_code": "MMC321",
-      "subject_name": "Main Examination Subject",
+      "subject_code": "MMC335 / MMC321",
+      "subject_name": "Devops & Deep Learning",
       "exam_date": "Scheduled",
       "exam_time": "09:30 AM - 12:30 PM",
       "centre_name": "DSATM Main Academic Block Examination Centre",
@@ -80,11 +87,18 @@
       "seat_number": "SEAT-01",
       "timetable": [
         {
-          "subjectId": "b76fa471-11e9-4b91-9281-93200ff8d6e7",
-          "subjectCode": "MMC333",
-          "subjectName": "Web Development using Full Stack Open",
-          "examDate": "2026-11-21",
-          "timeSlot": "09:30 AM - 12:30 PM"
+          "subjectId": "004df87a-c02a-4296-bed5-51d8bd0fe371",
+          "subjectCode": "MMC335",
+          "subjectName": "Devops",
+          "examDate": "22/07/2026",
+          "timeSlot": "2:00 PM - 5:00 PM"
+        },
+        {
+          "subjectId": "f1c125fa-ca62-44a8-9e88-1c96c0fa9358",
+          "subjectCode": "MMC321",
+          "subjectName": "Deep Learning",
+          "examDate": "20/07/2026",
+          "timeSlot": "2:00 PM - 5:00 PM"
         }
       ],
       "status": "PUBLISHED",
@@ -98,18 +112,33 @@
       "institution": "DAYANANDA SAGAR ACADEMY OF TECHNOLOGY AND MANAGEMENT",
       "student_name": "Nagaraj",
       "registration_no": "1DT25MC036",
-      "department_name": "Master of Computer Applications (MCA)",
+      "department_name": "DEPARTMENT OF MASTER OF COMPUTER APPLICATIONS (MCA)",
       "semester": "3rd Sem",
       "academic_year": "2025–2026",
       "exam_title": "Main Semester Examination 2026",
-      "subject_code": "MMC321",
-      "subject_name": "Main Examination Subject",
+      "subject_code": "MMC335 / MMC321",
+      "subject_name": "Devops & Deep Learning",
       "exam_date": "Scheduled",
       "exam_time": "09:30 AM - 12:30 PM",
       "centre_name": "DSATM Main Academic Block Examination Centre",
       "room_number": "Room 404 (Block A, 1st Floor)",
       "seat_number": "SEAT-01",
-      "timetable": [],
+      "timetable": [
+        {
+          "subjectId": "004df87a-c02a-4296-bed5-51d8bd0fe371",
+          "subjectCode": "MMC335",
+          "subjectName": "Devops",
+          "examDate": "22/07/2026",
+          "timeSlot": "2:00 PM - 5:00 PM"
+        },
+        {
+          "subjectId": "f1c125fa-ca62-44a8-9e88-1c96c0fa9358",
+          "subjectCode": "MMC321",
+          "subjectName": "Deep Learning",
+          "examDate": "20/07/2026",
+          "timeSlot": "2:00 PM - 5:00 PM"
+        }
+      ],
       "status": "PUBLISHED",
       "created_at": "2026-10-10T12:59:19.224Z",
       "published_at": "2026-10-10T12:59:19.224Z"
@@ -121,18 +150,33 @@
       "institution": "DAYANANDA SAGAR ACADEMY OF TECHNOLOGY AND MANAGEMENT",
       "student_name": "Nagaraj",
       "registration_no": "1DT25MC036",
-      "department_name": "Master of Computer Applications (MCA)",
+      "department_name": "DEPARTMENT OF MASTER OF COMPUTER APPLICATIONS (MCA)",
       "semester": "3rd Sem",
       "academic_year": "2025–2026",
       "exam_title": "Main Semester Examination 2026",
-      "subject_code": "MMC321",
-      "subject_name": "Main Examination Subject",
+      "subject_code": "MMC335 / MMC321",
+      "subject_name": "Devops & Deep Learning",
       "exam_date": "Scheduled",
       "exam_time": "09:30 AM - 12:30 PM",
       "centre_name": "DSATM Main Academic Block Examination Centre",
       "room_number": "Room 404 (Block A, 1st Floor)",
       "seat_number": "SEAT-01",
-      "timetable": [],
+      "timetable": [
+        {
+          "subjectId": "004df87a-c02a-4296-bed5-51d8bd0fe371",
+          "subjectCode": "MMC335",
+          "subjectName": "Devops",
+          "examDate": "22/07/2026",
+          "timeSlot": "2:00 PM - 5:00 PM"
+        },
+        {
+          "subjectId": "f1c125fa-ca62-44a8-9e88-1c96c0fa9358",
+          "subjectCode": "MMC321",
+          "subjectName": "Deep Learning",
+          "examDate": "20/07/2026",
+          "timeSlot": "2:00 PM - 5:00 PM"
+        }
+      ],
       "status": "PUBLISHED",
       "created_at": "2026-10-10T12:47:01.841Z",
       "published_at": "2026-10-10T12:47:01.841Z"
@@ -144,18 +188,33 @@
       "institution": "DAYANANDA SAGAR ACADEMY OF TECHNOLOGY AND MANAGEMENT",
       "student_name": "Nagaraj",
       "registration_no": "1DT25MC036",
-      "department_name": "Master of Computer Applications (MCA)",
+      "department_name": "DEPARTMENT OF MASTER OF COMPUTER APPLICATIONS (MCA)",
       "semester": "3rd Sem",
       "academic_year": "2025–2026",
       "exam_title": "Main Semester Examination 2026",
-      "subject_code": "MMC321",
-      "subject_name": "Main Examination Subject",
+      "subject_code": "MMC335 / MMC321",
+      "subject_name": "Devops & Deep Learning",
       "exam_date": "Scheduled",
       "exam_time": "09:30 AM - 12:30 PM",
       "centre_name": "DSATM Main Academic Block Examination Centre",
       "room_number": "Room 404 (Block A, 1st Floor)",
       "seat_number": "SEAT-01",
-      "timetable": [],
+      "timetable": [
+        {
+          "subjectId": "004df87a-c02a-4296-bed5-51d8bd0fe371",
+          "subjectCode": "MMC335",
+          "subjectName": "Devops",
+          "examDate": "22/07/2026",
+          "timeSlot": "2:00 PM - 5:00 PM"
+        },
+        {
+          "subjectId": "f1c125fa-ca62-44a8-9e88-1c96c0fa9358",
+          "subjectCode": "MMC321",
+          "subjectName": "Deep Learning",
+          "examDate": "20/07/2026",
+          "timeSlot": "2:00 PM - 5:00 PM"
+        }
+      ],
       "status": "PUBLISHED",
       "created_at": "2026-10-10T12:45:29.126Z",
       "published_at": "2026-10-10T12:45:29.126Z"
@@ -167,18 +226,33 @@
       "institution": "DAYANANDA SAGAR ACADEMY OF TECHNOLOGY AND MANAGEMENT",
       "student_name": "Nagaraj",
       "registration_no": "1DT25MC036",
-      "department_name": "Master of Computer Applications (MCA)",
+      "department_name": "DEPARTMENT OF MASTER OF COMPUTER APPLICATIONS (MCA)",
       "semester": "3rd Sem",
       "academic_year": "2025–2026",
       "exam_title": "Main Semester Examination 2026",
-      "subject_code": "MMC321",
-      "subject_name": "Main Examination Subject",
+      "subject_code": "MMC335 / MMC321",
+      "subject_name": "Devops & Deep Learning",
       "exam_date": "Scheduled",
       "exam_time": "09:30 AM - 12:30 PM",
       "centre_name": "DSATM Main Academic Block Examination Centre",
       "room_number": "Room 404 (Block A, 1st Floor)",
       "seat_number": "SEAT-01",
-      "timetable": [],
+      "timetable": [
+        {
+          "subjectId": "004df87a-c02a-4296-bed5-51d8bd0fe371",
+          "subjectCode": "MMC335",
+          "subjectName": "Devops",
+          "examDate": "22/07/2026",
+          "timeSlot": "2:00 PM - 5:00 PM"
+        },
+        {
+          "subjectId": "f1c125fa-ca62-44a8-9e88-1c96c0fa9358",
+          "subjectCode": "MMC321",
+          "subjectName": "Deep Learning",
+          "examDate": "20/07/2026",
+          "timeSlot": "2:00 PM - 5:00 PM"
+        }
+      ],
       "status": "PUBLISHED",
       "created_at": "2026-10-10T12:14:07.318Z",
       "published_at": "2026-10-10T12:14:07.318Z"
@@ -190,18 +264,33 @@
       "institution": "DAYANANDA SAGAR ACADEMY OF TECHNOLOGY AND MANAGEMENT",
       "student_name": "Nagaraj",
       "registration_no": "1DT25MC036",
-      "department_name": "MBA",
+      "department_name": "DEPARTMENT OF MASTER OF COMPUTER APPLICATIONS (MCA)",
       "semester": "3rd Sem",
       "academic_year": "2025–2026",
       "exam_title": "Main Semester Examination 2026",
-      "subject_code": "MMC321",
-      "subject_name": "Main Examination Subject",
+      "subject_code": "MMC335 / MMC321",
+      "subject_name": "Devops & Deep Learning",
       "exam_date": "Scheduled",
       "exam_time": "09:30 AM - 12:30 PM",
       "centre_name": "DSATM Main Academic Block Examination Centre",
       "room_number": "Room 404 (Block A, 1st Floor)",
       "seat_number": "SEAT-01",
-      "timetable": [],
+      "timetable": [
+        {
+          "subjectId": "004df87a-c02a-4296-bed5-51d8bd0fe371",
+          "subjectCode": "MMC335",
+          "subjectName": "Devops",
+          "examDate": "22/07/2026",
+          "timeSlot": "2:00 PM - 5:00 PM"
+        },
+        {
+          "subjectId": "f1c125fa-ca62-44a8-9e88-1c96c0fa9358",
+          "subjectCode": "MMC321",
+          "subjectName": "Deep Learning",
+          "examDate": "20/07/2026",
+          "timeSlot": "2:00 PM - 5:00 PM"
+        }
+      ],
       "status": "PUBLISHED",
       "created_at": "2026-10-10T11:38:51.758Z",
       "published_at": "2026-10-10T11:38:51.758Z"
@@ -213,18 +302,33 @@
       "institution": "DAYANANDA SAGAR ACADEMY OF TECHNOLOGY AND MANAGEMENT",
       "student_name": "Nagaraj",
       "registration_no": "1DT25MC036",
-      "department_name": "MBA",
+      "department_name": "DEPARTMENT OF MASTER OF COMPUTER APPLICATIONS (MCA)",
       "semester": "3rd Sem",
       "academic_year": "2025–2026",
       "exam_title": "Main Semester Examination 2026",
-      "subject_code": "MMC321",
-      "subject_name": "Main Examination Subject",
+      "subject_code": "MMC335 / MMC321",
+      "subject_name": "Devops & Deep Learning",
       "exam_date": "Scheduled",
       "exam_time": "09:30 AM - 12:30 PM",
       "centre_name": "DSATM Main Academic Block Examination Centre",
       "room_number": "Room 404 (Block A, 1st Floor)",
       "seat_number": "SEAT-01",
-      "timetable": [],
+      "timetable": [
+        {
+          "subjectId": "004df87a-c02a-4296-bed5-51d8bd0fe371",
+          "subjectCode": "MMC335",
+          "subjectName": "Devops",
+          "examDate": "22/07/2026",
+          "timeSlot": "2:00 PM - 5:00 PM"
+        },
+        {
+          "subjectId": "f1c125fa-ca62-44a8-9e88-1c96c0fa9358",
+          "subjectCode": "MMC321",
+          "subjectName": "Deep Learning",
+          "examDate": "20/07/2026",
+          "timeSlot": "2:00 PM - 5:00 PM"
+        }
+      ],
       "status": "PUBLISHED",
       "created_at": "2026-10-10T11:22:21.570Z",
       "published_at": "2026-10-10T11:22:21.570Z"
@@ -236,18 +340,33 @@
       "institution": "DAYANANDA SAGAR ACADEMY OF TECHNOLOGY AND MANAGEMENT",
       "student_name": "Nagaraj",
       "registration_no": "1DT25MC036",
-      "department_name": "MBA",
+      "department_name": "DEPARTMENT OF MASTER OF COMPUTER APPLICATIONS (MCA)",
       "semester": "3rd Sem",
       "academic_year": "2025–2026",
       "exam_title": "Main Semester Examination 2026",
-      "subject_code": "MMC321",
-      "subject_name": "Main Examination Subject",
+      "subject_code": "MMC335 / MMC321",
+      "subject_name": "Devops & Deep Learning",
       "exam_date": "Scheduled",
       "exam_time": "09:30 AM - 12:30 PM",
       "centre_name": "DSATM Main Academic Block Examination Centre",
       "room_number": "Room 404 (Block A, 1st Floor)",
       "seat_number": "SEAT-01",
-      "timetable": [],
+      "timetable": [
+        {
+          "subjectId": "004df87a-c02a-4296-bed5-51d8bd0fe371",
+          "subjectCode": "MMC335",
+          "subjectName": "Devops",
+          "examDate": "22/07/2026",
+          "timeSlot": "2:00 PM - 5:00 PM"
+        },
+        {
+          "subjectId": "f1c125fa-ca62-44a8-9e88-1c96c0fa9358",
+          "subjectCode": "MMC321",
+          "subjectName": "Deep Learning",
+          "examDate": "20/07/2026",
+          "timeSlot": "2:00 PM - 5:00 PM"
+        }
+      ],
       "status": "PUBLISHED",
       "created_at": "2026-10-10T11:21:02.338Z",
       "published_at": "2026-10-10T11:21:02.338Z"
@@ -259,18 +378,33 @@
       "institution": "DAYANANDA SAGAR ACADEMY OF TECHNOLOGY AND MANAGEMENT",
       "student_name": "Nagaraj",
       "registration_no": "1DT25MC036",
-      "department_name": "MBA",
+      "department_name": "DEPARTMENT OF MASTER OF COMPUTER APPLICATIONS (MCA)",
       "semester": "3rd Sem",
       "academic_year": "2025–2026",
       "exam_title": "Main Semester Examination 2026",
-      "subject_code": "MMC321",
-      "subject_name": "Main Examination Subject",
+      "subject_code": "MMC335 / MMC321",
+      "subject_name": "Devops & Deep Learning",
       "exam_date": "Scheduled",
       "exam_time": "09:30 AM - 12:30 PM",
       "centre_name": "DSATM Main Academic Block Examination Centre",
       "room_number": "Room 404 (Block A, 1st Floor)",
       "seat_number": "SEAT-01",
-      "timetable": null,
+      "timetable": [
+        {
+          "subjectId": "004df87a-c02a-4296-bed5-51d8bd0fe371",
+          "subjectCode": "MMC335",
+          "subjectName": "Devops",
+          "examDate": "22/07/2026",
+          "timeSlot": "2:00 PM - 5:00 PM"
+        },
+        {
+          "subjectId": "f1c125fa-ca62-44a8-9e88-1c96c0fa9358",
+          "subjectCode": "MMC321",
+          "subjectName": "Deep Learning",
+          "examDate": "20/07/2026",
+          "timeSlot": "2:00 PM - 5:00 PM"
+        }
+      ],
       "status": "PUBLISHED",
       "created_at": "2026-10-10T11:20:18.407Z",
       "published_at": "2026-10-10T11:20:18.407Z"
@@ -282,18 +416,33 @@
       "institution": "DAYANANDA SAGAR ACADEMY OF TECHNOLOGY AND MANAGEMENT",
       "student_name": "Nagaraj",
       "registration_no": "1DT25MC036",
-      "department_name": "MBA",
+      "department_name": "DEPARTMENT OF MASTER OF COMPUTER APPLICATIONS (MCA)",
       "semester": "3rd Sem",
       "academic_year": "2025–2026",
       "exam_title": "Main Semester Examination 2026",
-      "subject_code": "MMC321",
-      "subject_name": "Main Examination Subject",
+      "subject_code": "MMC335 / MMC321",
+      "subject_name": "Devops & Deep Learning",
       "exam_date": "Scheduled",
       "exam_time": "09:30 AM - 12:30 PM",
       "centre_name": "DSATM Main Academic Block Examination Centre",
       "room_number": "Room 404 (Block A, 1st Floor)",
       "seat_number": "SEAT-01",
-      "timetable": null,
+      "timetable": [
+        {
+          "subjectId": "004df87a-c02a-4296-bed5-51d8bd0fe371",
+          "subjectCode": "MMC335",
+          "subjectName": "Devops",
+          "examDate": "22/07/2026",
+          "timeSlot": "2:00 PM - 5:00 PM"
+        },
+        {
+          "subjectId": "f1c125fa-ca62-44a8-9e88-1c96c0fa9358",
+          "subjectCode": "MMC321",
+          "subjectName": "Deep Learning",
+          "examDate": "20/07/2026",
+          "timeSlot": "2:00 PM - 5:00 PM"
+        }
+      ],
       "status": "PUBLISHED",
       "created_at": "2026-10-10T11:02:18.280Z",
       "published_at": "2026-10-10T11:02:18.280Z"
@@ -305,18 +454,33 @@
       "institution": "DAYANANDA SAGAR ACADEMY OF TECHNOLOGY AND MANAGEMENT",
       "student_name": "Nagaraj",
       "registration_no": "1DT25MC036",
-      "department_name": "MBA",
+      "department_name": "DEPARTMENT OF MASTER OF COMPUTER APPLICATIONS (MCA)",
       "semester": "3rd Sem",
       "academic_year": "2025–2026",
       "exam_title": "Main Semester Examination 2026",
-      "subject_code": "MMC321",
-      "subject_name": "Main Examination Subject",
+      "subject_code": "MMC335 / MMC321",
+      "subject_name": "Devops & Deep Learning",
       "exam_date": "Scheduled",
       "exam_time": "09:30 AM - 12:30 PM",
       "centre_name": "DSATM Main Academic Block Examination Centre",
       "room_number": "Room 404 (Block A, 1st Floor)",
       "seat_number": "SEAT-01",
-      "timetable": null,
+      "timetable": [
+        {
+          "subjectId": "004df87a-c02a-4296-bed5-51d8bd0fe371",
+          "subjectCode": "MMC335",
+          "subjectName": "Devops",
+          "examDate": "22/07/2026",
+          "timeSlot": "2:00 PM - 5:00 PM"
+        },
+        {
+          "subjectId": "f1c125fa-ca62-44a8-9e88-1c96c0fa9358",
+          "subjectCode": "MMC321",
+          "subjectName": "Deep Learning",
+          "examDate": "20/07/2026",
+          "timeSlot": "2:00 PM - 5:00 PM"
+        }
+      ],
       "status": "PUBLISHED",
       "created_at": "2026-10-10T10:59:30.289Z",
       "published_at": "2026-10-10T10:59:30.289Z"
@@ -328,18 +492,33 @@
       "institution": "DAYANANDA SAGAR ACADEMY OF TECHNOLOGY AND MANAGEMENT",
       "student_name": "Nagaraj",
       "registration_no": "1DT25MC036",
-      "department_name": "MBA",
+      "department_name": "DEPARTMENT OF MASTER OF COMPUTER APPLICATIONS (MCA)",
       "semester": "3rd Sem",
       "academic_year": "2025–2026",
       "exam_title": "Main Semester Examination 2026",
-      "subject_code": "MMC321",
-      "subject_name": "Main Examination Subject",
+      "subject_code": "MMC335 / MMC321",
+      "subject_name": "Devops & Deep Learning",
       "exam_date": "Scheduled",
       "exam_time": "09:30 AM - 12:30 PM",
       "centre_name": "DSATM Main Academic Block Examination Centre",
       "room_number": "Room 404 (Block A, 1st Floor)",
       "seat_number": "SEAT-01",
-      "timetable": null,
+      "timetable": [
+        {
+          "subjectId": "004df87a-c02a-4296-bed5-51d8bd0fe371",
+          "subjectCode": "MMC335",
+          "subjectName": "Devops",
+          "examDate": "22/07/2026",
+          "timeSlot": "2:00 PM - 5:00 PM"
+        },
+        {
+          "subjectId": "f1c125fa-ca62-44a8-9e88-1c96c0fa9358",
+          "subjectCode": "MMC321",
+          "subjectName": "Deep Learning",
+          "examDate": "20/07/2026",
+          "timeSlot": "2:00 PM - 5:00 PM"
+        }
+      ],
       "status": "PUBLISHED",
       "created_at": "2026-10-10T10:57:17.336Z",
       "published_at": "2026-10-10T10:57:17.336Z"
@@ -351,18 +530,33 @@
       "institution": "DAYANANDA SAGAR ACADEMY OF TECHNOLOGY AND MANAGEMENT",
       "student_name": "Nagaraj",
       "registration_no": "1DT25MC036",
-      "department_name": "MBA",
+      "department_name": "DEPARTMENT OF MASTER OF COMPUTER APPLICATIONS (MCA)",
       "semester": "3rd Sem",
       "academic_year": "2025–2026",
       "exam_title": "Main Semester Examination 2026",
-      "subject_code": "MMC321",
-      "subject_name": "Main Examination Subject",
+      "subject_code": "MMC335 / MMC321",
+      "subject_name": "Devops & Deep Learning",
       "exam_date": "Scheduled",
       "exam_time": "09:30 AM - 12:30 PM",
       "centre_name": "DSATM Main Academic Block Examination Centre",
       "room_number": "Room 404 (Block A, 1st Floor)",
       "seat_number": "SEAT-01",
-      "timetable": null,
+      "timetable": [
+        {
+          "subjectId": "004df87a-c02a-4296-bed5-51d8bd0fe371",
+          "subjectCode": "MMC335",
+          "subjectName": "Devops",
+          "examDate": "22/07/2026",
+          "timeSlot": "2:00 PM - 5:00 PM"
+        },
+        {
+          "subjectId": "f1c125fa-ca62-44a8-9e88-1c96c0fa9358",
+          "subjectCode": "MMC321",
+          "subjectName": "Deep Learning",
+          "examDate": "20/07/2026",
+          "timeSlot": "2:00 PM - 5:00 PM"
+        }
+      ],
       "status": "PUBLISHED",
       "created_at": "2026-10-10T10:54:23.822Z",
       "published_at": "2026-10-10T10:54:23.822Z"
@@ -637,12 +831,12 @@
       "institution": "DAYANANDA SAGAR ACADEMY OF TECHNOLOGY AND MANAGEMENT",
       "student_name": "Nagaraj",
       "registration_no": "1DT25MC036",
-      "department_name": "MCA",
+      "department_name": "DEPARTMENT OF MASTER OF COMPUTER APPLICATIONS (MCA)",
       "semester": "3rd Sem",
       "academic_year": "2025–2026",
       "exam_title": "Main Semester Examination 2026",
-      "subject_code": "MMC321",
-      "subject_name": "Main Examination Subject",
+      "subject_code": "MMC335 / MMC321",
+      "subject_name": "Devops & Deep Learning",
       "exam_date": "Scheduled",
       "exam_time": "09:30 AM - 12:30 PM",
       "centre_name": "DSATM Main Academic Block Examination Centre",
@@ -650,6 +844,14 @@
       "seat_number": "SEAT-01",
       "timetable": [
         {
+          "subjectId": "004df87a-c02a-4296-bed5-51d8bd0fe371",
+          "subjectCode": "MMC335",
+          "subjectName": "Devops",
+          "examDate": "22/07/2026",
+          "timeSlot": "2:00 PM - 5:00 PM"
+        },
+        {
+          "subjectId": "f1c125fa-ca62-44a8-9e88-1c96c0fa9358",
           "subjectCode": "MMC321",
           "subjectName": "Deep Learning",
           "examDate": "20/07/2026",
@@ -1042,12 +1244,12 @@
       "institution": "DAYANANDA SAGAR ACADEMY OF TECHNOLOGY AND MANAGEMENT",
       "student_name": "Nagaraj",
       "registration_no": "1DT25MC036",
-      "department_name": "MCA",
+      "department_name": "DEPARTMENT OF MASTER OF COMPUTER APPLICATIONS (MCA)",
       "semester": "3rd Sem",
       "academic_year": "2025–2026",
       "exam_title": "Main Examination 2026",
-      "subject_code": "MMC321",
-      "subject_name": "Main Examination Subject",
+      "subject_code": "MMC335 / MMC321",
+      "subject_name": "Devops & Deep Learning",
       "exam_date": "Scheduled",
       "exam_time": "09:30 AM - 12:30 PM",
       "centre_name": "DSATM Main Academic Block Examination Centre",
@@ -1055,9 +1257,17 @@
       "seat_number": "SEAT-01",
       "timetable": [
         {
+          "subjectId": "004df87a-c02a-4296-bed5-51d8bd0fe371",
+          "subjectCode": "MMC335",
+          "subjectName": "Devops",
+          "examDate": "22/07/2026",
+          "timeSlot": "2:00 PM - 5:00 PM"
+        },
+        {
+          "subjectId": "f1c125fa-ca62-44a8-9e88-1c96c0fa9358",
           "subjectCode": "MMC321",
           "subjectName": "Deep Learning",
-          "examDate": "20/12/2026",
+          "examDate": "20/07/2026",
           "timeSlot": "2:00 PM - 5:00 PM"
         }
       ],
