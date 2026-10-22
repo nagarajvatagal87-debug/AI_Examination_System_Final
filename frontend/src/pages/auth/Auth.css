@@ -481,21 +481,18 @@
 .auth-page.jems-mode {
   min-height: 100vh;
   width: 100%;
-  background: 
-    radial-gradient(circle at 18% 28%, rgba(6, 182, 212, 0.16) 0%, transparent 45%),
-    radial-gradient(circle at 82% 72%, rgba(16, 185, 129, 0.14) 0%, transparent 45%),
-    radial-gradient(circle at 50% 50%, rgba(30, 58, 138, 0.22) 0%, transparent 60%),
-    linear-gradient(rgba(3, 8, 20, 0.94), rgba(4, 12, 26, 0.96)),
-    url('/dsatm-campus.png') no-repeat center center / cover fixed;
+  background: #060b14;
   color: #f8fafc;
   display: flex;
   flex-direction: column;
-  justify-content: center;
-  align-items: center;
-  padding: 30px 24px;
+  justify-content: flex-start;
+  align-items: stretch;
+  padding: 0;
+  margin: 0;
   position: relative;
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   overflow-x: hidden;
+  overflow-y: auto;
 }
 
 /* 50/50 Full Screen Mode Override */
@@ -513,17 +510,9 @@
   overflow-y: auto;
 }
 
-/* Subtle Tech Matrix Grid Overlay */
+/* Scoped matrix grid, removed global cover */
 .auth-page.jems-mode::before {
-  content: '';
-  position: fixed;
-  inset: 0;
-  background-image: 
-    linear-gradient(rgba(6, 182, 212, 0.06) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(6, 182, 212, 0.06) 1px, transparent 1px);
-  background-size: 38px 38px;
-  pointer-events: none;
-  z-index: 0;
+  display: none;
 }
 
 .auth-page.jems-mode .auth-container {
@@ -607,45 +596,71 @@
   color: #ffffff;
 }
 
-/* 2-Column Split Grid (50/50 Screen Proportion) */
+/* 2-Column Split Grid (50/50 Full Screen Proportion without empty corners) */
 .jems-split-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 36px;
-  align-items: start;
+  gap: 0;
+  align-items: stretch;
 }
 
 .auth-content-grid.full-grid {
   flex: 1;
   display: grid;
-  grid-template-columns: 1fr 1fr;
-  width: 100%;
-  max-width: 1720px;
-  margin: 0 auto;
-  padding: 24px 40px 32px 40px;
-  box-sizing: border-box;
-  gap: 40px;
+  grid-template-columns: 50% 50%;
+  width: 100% !important;
+  max-width: 100% !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  gap: 0 !important;
   align-items: stretch;
+  box-sizing: border-box;
 }
 
 @media (max-width: 1100px) {
   .jems-split-grid,
   .auth-content-grid.full-grid {
-    grid-template-columns: 1fr;
-    padding: 20px 20px 40px 20px;
-    gap: 32px;
-    align-items: flex-start;
+    grid-template-columns: 1fr !important;
+    padding: 0 !important;
+    gap: 0 !important;
   }
 }
 
 /* =========================================================================
-   LEFT COLUMN: JEMS SHOWCASE PANEL
+   LEFT COLUMN: JEMS SHOWCASE PANEL (Clean Dark Institutional Background, NO College Image)
    ========================================================================= */
 
 .jems-showcase-panel {
   display: flex;
   flex-direction: column;
-  padding: 10px 16px;
+  padding: 24px 36px 28px 44px;
+  box-sizing: border-box;
+  position: relative;
+  overflow-y: auto;
+  overflow-x: hidden;
+  background: 
+    radial-gradient(circle at 15% 20%, rgba(6, 182, 212, 0.14) 0%, transparent 45%),
+    radial-gradient(circle at 85% 80%, rgba(30, 58, 138, 0.22) 0%, transparent 55%),
+    linear-gradient(180deg, #070e1c 0%, #0b1528 50%, #060c18 100%);
+  border-right: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+/* Tech matrix grid pattern scoped exclusively to left institutional side */
+.jems-showcase-panel::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image: 
+    linear-gradient(rgba(6, 182, 212, 0.04) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(6, 182, 212, 0.04) 1px, transparent 1px);
+  background-size: 34px 34px;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.jems-showcase-panel > * {
+  position: relative;
+  z-index: 1;
 }
 
 /* Top Governance & Live Database Badges Row */
@@ -1504,51 +1519,98 @@
    ========================================================================= */
 
 /* =========================================================================
-   RIGHT COLUMN: FULL-HEIGHT WHITE LOGIN PANEL (JEMS SPLIT LAYOUT)
+   RIGHT COLUMN: COLLEGE IMAGE BACKGROUND PANEL (DSATM Campus Full-Bleed)
    ========================================================================= */
 
 .jems-login-column {
   display: flex;
   flex-direction: column;
-  background: #ffffff;
-  border-radius: 24px;
-  padding: 36px 40px;
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.45);
+  justify-content: center;
+  align-items: center;
+  padding: 30px 24px;
   box-sizing: border-box;
-  border: 1px solid rgba(255, 255, 255, 0.9);
+  position: relative;
+  overflow-y: auto;
+  overflow-x: hidden;
   height: 100%;
   min-height: 100%;
-  justify-content: flex-start;
-  position: relative;
+  /* COLLEGE CAMPUS IMAGE APPLIED SPECIFICALLY TO RIGHT SIDE */
+  background: 
+    linear-gradient(135deg, rgba(8, 15, 30, 0.65) 0%, rgba(15, 23, 42, 0.76) 100%),
+    url('/dsatm-campus.png') no-repeat center center / cover;
+  border-left: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: inset 1px 0 0 rgba(255, 255, 255, 0.06);
   z-index: 2;
+}
+
+/* Campus Location Badge over Right Background */
+.campus-image-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(15, 23, 42, 0.88);
+  border: 1px solid rgba(56, 189, 248, 0.45);
+  color: #f1f5f9;
+  padding: 6px 18px;
+  border-radius: 9999px;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.5px;
+  margin-bottom: 16px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.45);
+  backdrop-filter: blur(10px);
+  text-transform: uppercase;
+}
+
+.campus-pin {
+  font-size: 13px;
+}
+
+/* Centered Structured White Login Card Container */
+.jems-login-card-container {
+  width: 100%;
+  max-width: 560px;
+  background: #ffffff;
+  border-radius: 24px;
+  padding: 28px 32px;
+  box-shadow: 
+    0 24px 60px rgba(0, 0, 0, 0.5),
+    0 4px 16px rgba(0, 0, 0, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.95);
+  display: flex;
+  flex-direction: column;
+  box-sizing: border-box;
+  position: relative;
+  z-index: 3;
 }
 
 /* Role Switcher Tabs Pills */
 .login-role-tabs-glass {
   display: flex;
-  gap: 8px;
-  flex-wrap: wrap;
+  gap: 6px;
+  flex-wrap: nowrap;
   margin-bottom: 24px;
   background: #f1f5f9;
   border: 1.5px solid #e2e8f0;
-  padding: 6px;
+  padding: 5px;
   border-radius: 14px;
   box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.04);
 }
 
 .role-tab-pill {
   flex: 1;
-  min-width: 90px;
+  min-width: 0;
   background: transparent;
   border: 1.5px solid transparent;
   color: #64748b;
-  padding: 8px 12px;
+  padding: 8px 6px;
   border-radius: 10px;
-  font-size: 13px;
+  font-size: 12px;
   font-weight: 700;
   cursor: pointer;
   transition: all 0.2s ease;
   text-align: center;
+  white-space: nowrap;
 }
 
 .role-tab-pill:hover {

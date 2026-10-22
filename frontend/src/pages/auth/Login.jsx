@@ -447,94 +447,101 @@ export default function Login() {
             </div>
           </div>
 
-          {/* RIGHT 50%: The Working Login Card */}
+          {/* RIGHT 50%: The Working Login Column with College Campus Background */}
           <div className="jems-login-column full-panel">
-            {/* Role Switcher Tabs */}
-            <div className="login-role-tabs-glass">
-              {Object.values(ROLE_CONFIG).map((role) => (
-                <button
-                  key={role.key}
-                  type="button"
-                  className={`role-tab-pill tab-${role.color} ${activeRole === role.key ? 'active' : ''}`}
-                  onClick={() => switchRole(role.key)}
-                >
-                  {role.tabLabel}
-                </button>
-              ))}
+            <div className="campus-image-badge">
+              <span className="campus-pin">🏛️</span>
+              <span>DAYANANDA SAGAR ACADEMY OF TECHNOLOGY & MANAGEMENT</span>
             </div>
 
-            {/* Login Card Form */}
-            <div className="auth-card jems-glass-card">
-              <div className="auth-brand-header">
-                <span className={`auth-role-tag tag-${config.color}`}>{config.icon} {config.badge}</span>
-                <h2 className="auth-title">{config.label}</h2>
-                <p className="auth-subtitle">Sign in to access your autonomous institutional workspace</p>
+            <div className="jems-login-card-container">
+              {/* Role Switcher Tabs */}
+              <div className="login-role-tabs-glass">
+                {Object.values(ROLE_CONFIG).map((role) => (
+                  <button
+                    key={role.key}
+                    type="button"
+                    className={`role-tab-pill tab-${role.color} ${activeRole === role.key ? 'active' : ''}`}
+                    onClick={() => switchRole(role.key)}
+                  >
+                    {role.tabLabel}
+                  </button>
+                ))}
               </div>
 
-              <form onSubmit={handleSubmit}>
-                <div className="auth-field">
-                  <label>Email Address / Registration USN</label>
-                  <input
-                    type="text"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    placeholder={config.placeholder}
-                    required
-                    autoFocus
-                  />
+              {/* Login Card Form */}
+              <div className="auth-card jems-glass-card">
+                <div className="auth-brand-header">
+                  <span className={`auth-role-tag tag-${config.color}`}>{config.icon} {config.badge}</span>
+                  <h2 className="auth-title">{config.label}</h2>
+                  <p className="auth-subtitle">Sign in to access your autonomous institutional workspace</p>
                 </div>
 
-                <div className="auth-field">
-                  <label>Password</label>
-                  <input
-                    type="password"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    placeholder="••••••••"
-                    required
-                  />
-                </div>
-
-                {error && (
-                  <div className="auth-error-banner" style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                    <span>{error}</span>
-                    {detectedRole && ROLE_CONFIG[detectedRole] && (
-                      <button
-                        type="button"
-                        className="auth-switch-role-btn"
-                        onClick={() => switchRole(detectedRole)}
-                      >
-                        👉 Switch to {ROLE_CONFIG[detectedRole].tabLabel} Portal
-                      </button>
-                    )}
+                <form onSubmit={handleSubmit}>
+                  <div className="auth-field">
+                    <label>Email Address / Registration USN</label>
+                    <input
+                      type="text"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      placeholder={config.placeholder}
+                      required
+                      autoFocus
+                    />
                   </div>
-                )}
 
-                <button type="submit" className={`auth-submit-btn btn-${config.color}`} disabled={loading}>
-                  {loading ? 'Authenticating...' : `Sign In to ${config.tabLabel.replace(/^[^\w\s]+/, '').trim()} Portal →`}
-                </button>
-              </form>
+                  <div className="auth-field">
+                    <label>Password</label>
+                    <input
+                      type="password"
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      placeholder="••••••••"
+                      required
+                    />
+                  </div>
 
-              {/* Quick Feature Highlights of selected role */}
-              <div className="jems-role-quick-features">
-                <div className="quick-features-title">✨ Included in {config.badge}:</div>
-                <div className="quick-features-grid">
-                  {config.features.map((feat, idx) => (
-                    <div key={idx} className="quick-feature-chip">
-                      <span className="chip-tick">✓</span>
-                      <span>{feat}</span>
+                  {error && (
+                    <div className="auth-error-banner" style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                      <span>{error}</span>
+                      {detectedRole && ROLE_CONFIG[detectedRole] && (
+                        <button
+                          type="button"
+                          className="auth-switch-role-btn"
+                          onClick={() => switchRole(detectedRole)}
+                        >
+                          👉 Switch to {ROLE_CONFIG[detectedRole].tabLabel} Portal
+                        </button>
+                      )}
                     </div>
-                  ))}
-                </div>
-              </div>
+                  )}
 
-              <div className="auth-footer-nav">
-                <p>
-                  Don't have an account?{' '}
-                  <Link to={activeRole ? `/register?role=${activeRole}` : '/register'}>
-                    Register
-                  </Link>
-                </p>
+                  <button type="submit" className={`auth-submit-btn btn-${config.color}`} disabled={loading}>
+                    {loading ? 'Authenticating...' : `Sign In to ${config.tabLabel.replace(/^[^\w\s]+/, '').trim()} Portal →`}
+                  </button>
+                </form>
+
+                {/* Quick Feature Highlights of selected role */}
+                <div className="jems-role-quick-features">
+                  <div className="quick-features-title">✨ Included in {config.badge}:</div>
+                  <div className="quick-features-grid">
+                    {config.features.map((feat, idx) => (
+                      <div key={idx} className="quick-feature-chip">
+                        <span className="chip-tick">✓</span>
+                        <span>{feat}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="auth-footer-nav">
+                  <p>
+                    Don't have an account?{' '}
+                    <Link to={activeRole ? `/register?role=${activeRole}` : '/register'}>
+                      Register
+                    </Link>
+                  </p>
+                </div>
               </div>
             </div>
           </div>
