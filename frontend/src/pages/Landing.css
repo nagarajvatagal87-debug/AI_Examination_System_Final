@@ -515,6 +515,16 @@
   padding: 26px;
   transition: all 0.25s ease;
   position: relative;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  text-decoration: none;
+  color: inherit;
+}
+
+.pub-card-main {
+  display: flex;
+  flex-direction: column;
 }
 
 .clickable-pub-card {

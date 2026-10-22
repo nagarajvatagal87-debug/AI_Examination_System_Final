@@ -26,10 +26,16 @@ export default function HeaderBanner({
         <div className="header-center-marquee">
           <div className="header-marquee-track">
             <span className="header-marquee-item">
-              🏛️ <strong>DAYANANDA SAGAR ACADEMY OF TECHNOLOGY AND MANAGEMENT</strong> • Autonomous Institute Affiliated to VTU • {subtitle}
+              🏛️ <strong>{collegeName}</strong>
             </span>
             <span className="header-marquee-item">
-              🏛️ <strong>DAYANANDA SAGAR ACADEMY OF TECHNOLOGY AND MANAGEMENT</strong> • Autonomous Institute Affiliated to VTU • {subtitle}
+              🏛️ <strong>{collegeName}</strong>
+            </span>
+            <span className="header-marquee-item">
+              🏛️ <strong>{collegeName}</strong>
+            </span>
+            <span className="header-marquee-item">
+              🏛️ <strong>{collegeName}</strong>
             </span>
           </div>
         </div>

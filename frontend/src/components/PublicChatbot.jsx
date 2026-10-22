@@ -16,6 +16,7 @@ export default function PublicChatbot() {
   const [messages, setMessages] = useState([])
   const [input, setInput] = useState('')
   const [loading, setLoading] = useState(false)
+  const [isExpanded, setIsExpanded] = useState(false)
   const chatAreaRef = useRef(null)
 
   useEffect(() => {
@@ -23,6 +24,16 @@ export default function PublicChatbot() {
       chatAreaRef.current.scrollTop = chatAreaRef.current.scrollHeight
     }
   }, [messages, loading])
+
+  useEffect(() => {
+    function handleKeyDown(e) {
+      if (e.key === 'Escape' && isExpanded) {
+        setIsExpanded(false)
+      }
+    }
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [isExpanded])
 
   async function sendMessage(questionText) {
     if (!questionText.trim() || loading) return
@@ -62,24 +73,45 @@ export default function PublicChatbot() {
   }
 
   return (
-    <div className="public-chatbot-card">
-      <div className="chatbot-header">
-        <div className="chatbot-avatar">🤖</div>
-        <div className="chatbot-title-wrap">
-          <h3>College AI Assistant</h3>
-          <span className="chatbot-status">● Live RAG Information AI</span>
+    <>
+      {isExpanded && (
+        <div
+          className="chatbot-backdrop"
+          onClick={() => setIsExpanded(false)}
+          title="Click to minimize"
+        />
+      )}
+
+      <div className={`public-chatbot-card ${isExpanded ? 'chatbot-expanded-fullscreen' : ''}`}>
+        <div className="chatbot-header">
+          <div className="chatbot-avatar">🤖</div>
+          <div className="chatbot-title-wrap">
+            <h3>College AI Assistant</h3>
+            <span className="chatbot-status">● Live RAG Information AI</span>
+          </div>
+
+          <div className="chatbot-header-actions">
+            {messages.length > 0 && (
+              <button
+                type="button"
+                className="chatbot-clear-btn"
+                onClick={handleClearChat}
+                title="Reset conversation"
+              >
+                🔄 Reset
+              </button>
+            )}
+
+            <button
+              type="button"
+              className="chatbot-expand-btn"
+              onClick={() => setIsExpanded(!isExpanded)}
+              title={isExpanded ? 'Minimize view' : 'Expand for maximum conversation space'}
+            >
+              {isExpanded ? '🗗 Minimize' : '⛶ Expand Chat'}
+            </button>
+          </div>
         </div>
-        {messages.length > 0 && (
-          <button
-            type="button"
-            className="chatbot-clear-btn"
-            onClick={handleClearChat}
-            title="Reset conversation"
-          >
-            🔄 Reset
-          </button>
-        )}
-      </div>
 
       <div className="chatbot-messages-area" ref={chatAreaRef}>
         {messages.length === 0 && (
@@ -151,5 +183,6 @@ export default function PublicChatbot() {
         </button>
       </form>
     </div>
-  )
+  </>
+)
 }

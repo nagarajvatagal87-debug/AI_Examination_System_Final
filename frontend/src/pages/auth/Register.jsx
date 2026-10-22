@@ -80,10 +80,10 @@ export default function Register() {
           <div className="auth-marquee-box">
             <div className="auth-marquee-track">
               <span className="marquee-text-item">
-                🏛️ <strong className="marquee-college-highlight">DAYANANDA SAGAR ACADEMY OF TECHNOLOGY AND MANAGEMENT</strong> • Autonomous Institute Affiliated to VTU • AI Examination Portal
+                🏛️ <strong className="marquee-college-highlight">DAYANANDA SAGAR ACADEMY OF TECHNOLOGY AND MANAGEMENT</strong>
               </span>
               <span className="marquee-text-item">
-                🏛️ <strong className="marquee-college-highlight">DAYANANDA SAGAR ACADEMY OF TECHNOLOGY AND MANAGEMENT</strong> • Autonomous Institute Affiliated to VTU • AI Examination Portal
+                🏛️ <strong className="marquee-college-highlight">DAYANANDA SAGAR ACADEMY OF TECHNOLOGY AND MANAGEMENT</strong>
               </span>
             </div>
           </div>

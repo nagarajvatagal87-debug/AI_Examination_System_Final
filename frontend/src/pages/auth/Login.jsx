@@ -265,10 +265,16 @@ export default function Login() {
           <div className="header-center-marquee">
             <div className="header-marquee-track">
               <span className="header-marquee-item">
-                🏛️ <strong>DAYANANDA SAGAR ACADEMY OF TECHNOLOGY AND MANAGEMENT</strong> • Autonomous Institute Affiliated to VTU • AI Examination & Autonomous Evaluation System
+                🏛️ <strong>DAYANANDA SAGAR ACADEMY OF TECHNOLOGY AND MANAGEMENT</strong>
               </span>
               <span className="header-marquee-item">
-                🏛️ <strong>DAYANANDA SAGAR ACADEMY OF TECHNOLOGY AND MANAGEMENT</strong> • Autonomous Institute Affiliated to VTU • AI Examination & Autonomous Evaluation System
+                🏛️ <strong>DAYANANDA SAGAR ACADEMY OF TECHNOLOGY AND MANAGEMENT</strong>
+              </span>
+              <span className="header-marquee-item">
+                🏛️ <strong>DAYANANDA SAGAR ACADEMY OF TECHNOLOGY AND MANAGEMENT</strong>
+              </span>
+              <span className="header-marquee-item">
+                🏛️ <strong>DAYANANDA SAGAR ACADEMY OF TECHNOLOGY AND MANAGEMENT</strong>
               </span>
             </div>
           </div>
@@ -303,7 +309,9 @@ export default function Login() {
             {/* Project Header matching AI Examination System */}
             <div className="project-hero-header">
               <h1 className="project-main-title">
-                AI Examination <span className="highlight-ai-gradient">System</span>
+                <span className="project-title-ai">AI</span>{' '}
+                <span className="project-title-exam">Examination</span>{' '}
+                <span className="highlight-ai-gradient">System</span>
               </h1>
               <p className="project-hero-desc">
                 Autonomous AI Question Paper Generation, Handwritten Answer Script Evaluation & Academic Portal

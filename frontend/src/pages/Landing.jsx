@@ -286,38 +286,33 @@ export default function Landing() {
           </div>
 
           <div className="public-cards-grid">
-            <div
+            <Link
+              to="/college-info"
               className="public-subcard card-glow-blue clickable-pub-card"
-              onClick={() => setActiveModal('departments')}
             >
-              <div className="pub-card-header">
-                <div className="pub-card-icon">📚</div>
-                <span className="pub-badge-count">{departments.length > 0 ? `${departments.length} Active` : 'Active Branches'}</span>
-              </div>
-              <h4>Departments</h4>
-              <p>Explore computer science, ISE, MCA, BCA, ECE and management departments.</p>
-
-              {departments.length > 0 && (
-                <div className="pub-dept-tags">
-                  {departments.slice(0, 4).map((d) => (
-                    <span key={d.id} className="dept-pill">{d.name}</span>
-                  ))}
-                  {departments.length > 4 && <span className="dept-pill count-pill">+{departments.length - 4} more</span>}
+              <div className="pub-card-main">
+                <div className="pub-card-header">
+                  <div className="pub-card-icon">📚</div>
+                  <span className="pub-badge-count">{departments.length > 0 ? `${departments.length} Active` : '12 Active Branches'}</span>
                 </div>
-              )}
+                <h4>Departments</h4>
+                <p>Explore Computer Science, ISE, MCA, BCA, ECE and Management departments.</p>
+              </div>
               <div className="card-click-hint">Click to open branch details →</div>
-            </div>
+            </Link>
 
             <div
               className="public-subcard card-glow-emerald clickable-pub-card"
               onClick={() => setActiveModal('fees')}
             >
-              <div className="pub-card-header">
-                <div className="pub-card-icon">💳</div>
-                <span className="pub-badge-count">Transparent</span>
+              <div className="pub-card-main">
+                <div className="pub-card-header">
+                  <div className="pub-card-icon">💳</div>
+                  <span className="pub-badge-count">Transparent</span>
+                </div>
+                <h4>Department-wise Fees</h4>
+                <p>View structured fee schedules, lab quotas, and course details for each branch.</p>
               </div>
-              <h4>Department-wise Fees</h4>
-              <p>View structured fee schedules, lab quotas, and course details for each branch.</p>
               <div className="card-click-hint">Click to open fee breakdown →</div>
             </div>
 
@@ -325,12 +320,14 @@ export default function Landing() {
               className="public-subcard card-glow-amber clickable-pub-card"
               onClick={() => setActiveModal('achievements')}
             >
-              <div className="pub-card-header">
-                <div className="pub-card-icon">🏆</div>
-                <span className="pub-badge-count">Rank Holders</span>
+              <div className="pub-card-main">
+                <div className="pub-card-header">
+                  <div className="pub-card-icon">🏆</div>
+                  <span className="pub-badge-count">Rank Holders</span>
+                </div>
+                <h4>Achievements & Toppers</h4>
+                <p>Discover student rank holders with photos, VTU gold medalists, and research grants.</p>
               </div>
-              <h4>Achievements & Toppers</h4>
-              <p>Discover student rank holders with photos, VTU gold medalists, and research grants.</p>
               <div className="card-click-hint">Click to open rank holders & photos →</div>
             </div>
 
@@ -338,12 +335,14 @@ export default function Landing() {
               className="public-subcard card-glow-cyan clickable-pub-card"
               onClick={() => setActiveModal('location')}
             >
-              <div className="pub-card-header">
-                <div className="pub-card-icon">📍</div>
-                <span className="pub-badge-count">GPS Navigation</span>
+              <div className="pub-card-main">
+                <div className="pub-card-header">
+                  <div className="pub-card-icon">📍</div>
+                  <span className="pub-badge-count">GPS Navigation</span>
+                </div>
+                <h4>Live Campus Location</h4>
+                <p>View interactive Google Maps location of DSATM, transit bus routes, and metro guide.</p>
               </div>
-              <h4>Live Campus Location</h4>
-              <p>View interactive Google Maps location of DSATM, transit bus routes, and metro guide.</p>
               <div className="card-click-hint">Click to open live Google Map →</div>
             </div>
 
@@ -351,12 +350,14 @@ export default function Landing() {
               className="public-subcard card-glow-purple clickable-pub-card"
               onClick={() => setActiveModal('pgs')}
             >
-              <div className="pub-card-header">
-                <div className="pub-card-icon">🏡</div>
-                <span className="pub-badge-count">Student Housing</span>
+              <div className="pub-card-main">
+                <div className="pub-card-header">
+                  <div className="pub-card-icon">🏡</div>
+                  <span className="pub-badge-count">Student Housing</span>
+                </div>
+                <h4>Nearby PGs & Hostels</h4>
+                <p>Browse verified paying guest accommodations near DSATM with rent, food & phone contacts.</p>
               </div>
-              <h4>Nearby PGs & Hostels</h4>
-              <p>Browse verified paying guest accommodations near DSATM with rent, food & phone contacts.</p>
               <div className="card-click-hint">Click to view PGs list & contacts →</div>
             </div>
           </div>
