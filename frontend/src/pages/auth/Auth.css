@@ -1360,9 +1360,9 @@
   }
 }
 
-/* Pause orbital motion on hover so user can easily interact */
-.orbit-arm-slot:hover .orbit-arm-spinner,
-.orbit-arm-slot:hover .orbit-counter-rotator {
+/* Pause orbital motion on hover so user can easily interact without desynchronizing */
+.jems-orb-stage:hover .orbit-arm-spinner,
+.jems-orb-stage:hover .orbit-counter-rotator {
   animation-play-state: paused;
 }
 

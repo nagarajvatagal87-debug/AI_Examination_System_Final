@@ -91,84 +91,64 @@ const ROLE_CONFIG = {
 // Role-specific dynamic floating features that glide and move across the DSATM logo
 const ROLE_BADGES = {
   student: [
-    { id: 'st1', label: 'Admission Reports', pos: 'pos-top-right', side: 'right' },
-    { id: 'st2', label: 'Examination', pos: 'pos-mid-right-top', side: 'right' },
-    { id: 'st3', label: 'LMS & Notes', pos: 'pos-mid-right', side: 'right' },
-    { id: 'st4', label: 'Archive', pos: 'pos-mid-right-bot', side: 'right' },
-    { id: 'st5', label: 'Academic Calendar', pos: 'pos-bot-right', side: 'right' },
-    { id: 'st6', label: 'Student Clubs', pos: 'pos-far-bot-right', side: 'right' },
-    { id: 'st7', label: 'AI Study Assistant', pos: 'pos-top-mid', side: 'top' },
-    { id: 'st8', label: 'Merit Awards', pos: 'pos-top-mid-left', side: 'top' },
-    { id: 'st9', label: 'On-Screen Marking', pos: 'pos-bot-left', side: 'left' },
-    { id: 'st10', label: 'Malpractice Check', pos: 'pos-mid-left-bot', side: 'left' },
-    { id: 'st11', label: 'Semester Registration', pos: 'pos-far-bot-left', side: 'left' },
-    { id: 'st12', label: 'Placement Cell', pos: 'pos-bot-edge-left', side: 'left' },
-    { id: 'st13', label: 'Fee Payments', pos: 'pos-mid-left-top', side: 'left' },
-    { id: 'st14', label: 'Sports & Cultural', pos: 'pos-top-left', side: 'left' },
+    { id: 'st1', label: 'AI Study Assistant' },
+    { id: 'st2', label: 'Academic Calendar' },
+    { id: 'st3', label: 'On-Screen Marking' },
+    { id: 'st4', label: 'Merit Awards' },
+    { id: 'st5', label: 'Placement Cell' },
+    { id: 'st6', label: 'Semester Registration' },
+    { id: 'st7', label: 'Fee Payments' },
+    { id: 'st8', label: 'Sports & Cultural' },
+    { id: 'st9', label: 'Examination & Hall Tickets' },
+    { id: 'st10', label: 'LMS & Study Notes' },
   ],
   faculty: [
-    { id: 'fa1', label: 'AI Question Gen', pos: 'pos-top-right', side: 'right' },
-    { id: 'fa2', label: 'Evaluation Schemes', pos: 'pos-mid-right-top', side: 'right' },
-    { id: 'fa3', label: 'AI Answer Grading', pos: 'pos-mid-right', side: 'right' },
-    { id: 'fa4', label: 'Upload Notes & Syllabus', pos: 'pos-mid-right-bot', side: 'right' },
-    { id: 'fa5', label: 'Continuous CIA Marks', pos: 'pos-bot-right', side: 'right' },
-    { id: 'fa6', label: 'Class Analytics', pos: 'pos-far-bot-right', side: 'right' },
-    { id: 'fa7', label: 'Subject Roster (55 Stds)', pos: 'pos-top-mid', side: 'top' },
-    { id: 'fa8', label: 'Parent SMS Alerts', pos: 'pos-top-mid-left', side: 'top' },
-    { id: 'fa9', label: 'On-Screen Valuation', pos: 'pos-bot-left', side: 'left' },
-    { id: 'fa10', label: 'Attendance Entry', pos: 'pos-mid-left-bot', side: 'left' },
-    { id: 'fa11', label: 'Faculty Calendar', pos: 'pos-far-bot-left', side: 'left' },
-    { id: 'fa12', label: 'Club Coordination', pos: 'pos-bot-edge-left', side: 'left' },
-    { id: 'fa13', label: 'CIA Moderation', pos: 'pos-mid-left-top', side: 'left' },
-    { id: 'fa14', label: 'Course Materials', pos: 'pos-top-left', side: 'left' },
+    { id: 'fa1', label: 'AI Question Gen' },
+    { id: 'fa2', label: 'Evaluation Schemes' },
+    { id: 'fa3', label: 'AI Answer Grading' },
+    { id: 'fa4', label: 'Upload Notes & Syllabus' },
+    { id: 'fa5', label: 'Continuous CIA Marks' },
+    { id: 'fa6', label: 'Class Analytics' },
+    { id: 'fa7', label: 'On-Screen Valuation' },
+    { id: 'fa8', label: 'Attendance Entry' },
+    { id: 'fa9', label: 'Parent SMS Alerts' },
+    { id: 'fa10', label: 'Faculty Calendar' },
   ],
   hod: [
-    { id: 'hd1', label: 'Department Analytics', pos: 'pos-top-right', side: 'right' },
-    { id: 'hd2', label: 'Pass / Fail Performance', pos: 'pos-mid-right-top', side: 'right' },
-    { id: 'hd3', label: 'Approve CIA Marks', pos: 'pos-mid-right', side: 'right' },
-    { id: 'hd4', label: 'Medical Condonation', pos: 'pos-mid-right-bot', side: 'right' },
-    { id: 'hd5', label: 'Top 10 Performers', pos: 'pos-bot-right', side: 'right' },
-    { id: 'hd6', label: 'Calendar Logs', pos: 'pos-far-bot-right', side: 'right' },
-    { id: 'hd7', label: 'Hall Ticket Authority', pos: 'pos-top-mid', side: 'top' },
-    { id: 'hd8', label: 'Faculty Messaging', pos: 'pos-top-mid-left', side: 'top' },
-    { id: 'hd9', label: 'Marks Audit Panel', pos: 'pos-bot-left', side: 'left' },
-    { id: 'hd10', label: 'Faculty Subject Map', pos: 'pos-mid-left-bot', side: 'left' },
-    { id: 'hd11', label: 'Student Direct Intervene', pos: 'pos-far-bot-left', side: 'left' },
-    { id: 'hd12', label: 'Department Roster', pos: 'pos-bot-edge-left', side: 'left' },
-    { id: 'hd13', label: 'Course Verification', pos: 'pos-mid-left-top', side: 'left' },
-    { id: 'hd14', label: 'Autonomous Oversight', pos: 'pos-top-left', side: 'left' },
+    { id: 'hd1', label: 'Department Analytics' },
+    { id: 'hd2', label: 'Pass / Fail Performance' },
+    { id: 'hd3', label: 'Approve CIA Marks' },
+    { id: 'hd4', label: 'Medical Condonation' },
+    { id: 'hd5', label: 'Top 10 Performers' },
+    { id: 'hd6', label: 'Hall Ticket Authority' },
+    { id: 'hd7', label: 'Faculty Messaging' },
+    { id: 'hd8', label: 'Marks Audit Panel' },
+    { id: 'hd9', label: 'Faculty Subject Map' },
+    { id: 'hd10', label: 'Autonomous Oversight' },
   ],
   principal: [
-    { id: 'pr1', label: 'Institutional Oversight', pos: 'pos-top-right', side: 'right' },
-    { id: 'pr2', label: 'Department Pass Rates', pos: 'pos-mid-right-top', side: 'right' },
-    { id: 'pr3', label: 'College Merit Ranking', pos: 'pos-mid-right', side: 'right' },
-    { id: 'pr4', label: 'Official Announcements', pos: 'pos-mid-right-bot', side: 'right' },
-    { id: 'pr5', label: 'Institutional Policy', pos: 'pos-bot-right', side: 'right' },
-    { id: 'pr6', label: 'Centre Audit Reports', pos: 'pos-far-bot-right', side: 'right' },
-    { id: 'pr7', label: 'Autonomous Governance', pos: 'pos-top-mid', side: 'top' },
-    { id: 'pr8', label: 'Public Info Publish', pos: 'pos-top-mid-left', side: 'top' },
-    { id: 'pr9', label: 'Faculty Audit Oversight', pos: 'pos-bot-left', side: 'left' },
-    { id: 'pr10', label: 'College Calendar Pub', pos: 'pos-mid-left-bot', side: 'left' },
-    { id: 'pr11', label: 'Rank Transfer Engine', pos: 'pos-far-bot-left', side: 'left' },
-    { id: 'pr12', label: 'NAAC A+ Compliance', pos: 'pos-bot-edge-left', side: 'left' },
-    { id: 'pr13', label: 'Merit Scholarships', pos: 'pos-mid-left-top', side: 'left' },
-    { id: 'pr14', label: 'VTU Affiliation Hub', pos: 'pos-top-left', side: 'left' },
+    { id: 'pr1', label: 'Institutional Oversight' },
+    { id: 'pr2', label: 'Department Pass Rates' },
+    { id: 'pr3', label: 'College Merit Ranking' },
+    { id: 'pr4', label: 'Official Announcements' },
+    { id: 'pr5', label: 'Institutional Policy' },
+    { id: 'pr6', label: 'Autonomous Governance' },
+    { id: 'pr7', label: 'Public Info Publish' },
+    { id: 'pr8', label: 'Faculty Audit Oversight' },
+    { id: 'pr9', label: 'NAAC A+ Compliance' },
+    { id: 'pr10', label: 'VTU Affiliation Hub' },
   ],
   examdept: [
-    { id: 'ex1', label: 'Schedule Main Exams', pos: 'pos-top-right', side: 'right' },
-    { id: 'ex2', label: 'Confidential QP Vault', pos: 'pos-mid-right-top', side: 'right' },
-    { id: 'ex3', label: 'Room & Seat Allotment', pos: 'pos-mid-right', side: 'right' },
-    { id: 'ex4', label: 'Hall Ticket Generator', pos: 'pos-mid-right-bot', side: 'right' },
-    { id: 'ex5', label: 'Official Result Release', pos: 'pos-bot-right', side: 'right' },
-    { id: 'ex6', label: 'Revaluation Processing', pos: 'pos-far-bot-right', side: 'right' },
-    { id: 'ex7', label: 'Automated Seat Matrix', pos: 'pos-top-mid', side: 'top' },
-    { id: 'ex8', label: 'Chief Supt Verifications', pos: 'pos-top-mid-left', side: 'top' },
-    { id: 'ex9', label: 'On-Screen Mark Audit', pos: 'pos-bot-left', side: 'left' },
-    { id: 'ex10', label: 'Malpractice Committee', pos: 'pos-mid-left-bot', side: 'left' },
-    { id: 'ex11', label: 'Answer Script Barcode', pos: 'pos-far-bot-left', side: 'left' },
-    { id: 'ex12', label: 'Attendance Lock Engine', pos: 'pos-bot-edge-left', side: 'left' },
-    { id: 'ex13', label: 'Exam Centre Master', pos: 'pos-mid-left-top', side: 'left' },
-    { id: 'ex14', label: 'Digital Ledger Roster', pos: 'pos-top-left', side: 'left' },
+    { id: 'ex1', label: 'Schedule Main Exams' },
+    { id: 'ex2', label: 'Confidential QP Vault' },
+    { id: 'ex3', label: 'Room & Seat Allotment' },
+    { id: 'ex4', label: 'Hall Ticket Generator' },
+    { id: 'ex5', label: 'Official Result Release' },
+    { id: 'ex6', label: 'Revaluation Processing' },
+    { id: 'ex7', label: 'Automated Seat Matrix' },
+    { id: 'ex8', label: 'Chief Supt Verifications' },
+    { id: 'ex9', label: 'On-Screen Mark Audit' },
+    { id: 'ex10', label: 'Answer Script Barcode' },
   ],
 }
 
@@ -393,13 +373,10 @@ export default function Login() {
               {/* Continuous Orbiting Feature Labels & Coupled Connecting Lines */}
               <div key={animateKey} className="jems-orbital-system">
                 {activeBadges.map((badge, idx) => {
-                  // 3 orbital radii & speeds for natural Keplerian distribution around DSATM globe
-                  const ringConfig = [
-                    { radius: 172, duration: 46, lineOffset: 130 },
-                    { radius: 212, duration: 60, lineOffset: 130 },
-                    { radius: 252, duration: 74, lineOffset: 130 },
-                  ]
-                  const ring = ringConfig[idx % 3]
+                  // Uniform orbital radius, line length, and synchronized speed for balanced distribution
+                  const orbitRadius = 208
+                  const lineOffset = 130
+                  const orbitDuration = 55
                   const baseAngle = idx * (360 / activeBadges.length)
 
                   return (
@@ -408,8 +385,8 @@ export default function Login() {
                       className="orbit-arm-slot"
                       style={{
                         '--start-angle': `${baseAngle}deg`,
-                        '--orbit-radius': `${ring.radius}px`,
-                        '--orbit-duration': `${ring.duration}s`,
+                        '--orbit-radius': `${orbitRadius}px`,
+                        '--orbit-duration': `${orbitDuration}s`,
                       }}
                     >
                       <div className="orbit-arm-spinner">
@@ -427,14 +404,14 @@ export default function Login() {
                           }}
                         >
                           <line
-                            x1={ring.lineOffset}
+                            x1={lineOffset}
                             y1="0"
-                            x2={ring.radius - 14}
+                            x2={orbitRadius - 14}
                             y2="0"
                             className="constellation-line orbit-moving-line"
                           />
-                          <circle cx={ring.lineOffset} cy="0" r="2.5" className="orbit-anchor-dot" />
-                          <circle cx={ring.radius - 14} cy="0" r="2" className="orbit-badge-dot" />
+                          <circle cx={lineOffset} cy="0" r="2.5" className="orbit-anchor-dot" />
+                          <circle cx={orbitRadius - 14} cy="0" r="2" className="orbit-badge-dot" />
                         </svg>
 
                         {/* Feature Label Counter-Rotating so text stays horizontally upright */}
