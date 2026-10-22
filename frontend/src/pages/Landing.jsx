@@ -148,7 +148,10 @@ export default function Landing() {
             </div>
 
             <h1 className="hero-heading">
-              AI Examination & <span className="highlight-text">Academic Management System</span>
+              <span className="title-segment-ai">AI</span>{' '}
+              <span className="title-segment-exam">Examination</span>{' '}
+              <img src="/title-ampersand.png" alt="&" className="title-ampersand-img" />{' '}
+              <span className="title-segment-academic">Academic Management System</span>
             </h1>
 
             <p className="hero-subtitle">

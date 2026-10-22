@@ -286,12 +286,13 @@ export default function Login() {
               </div>
             </div>
 
-            {/* Project Header matching AI Examination System */}
+            {/* Project Header: AI Examination & Academic Management System */}
             <div className="project-hero-header">
               <h1 className="project-main-title">
-                <span className="project-title-ai">AI</span>{' '}
-                <span className="project-title-exam">Examination</span>{' '}
-                <span className="highlight-ai-gradient">System</span>
+                <span className="title-segment-ai">AI</span>{' '}
+                <span className="title-segment-exam">Examination</span>{' '}
+                <img src="/title-ampersand.png" alt="&" className="title-ampersand-img" />{' '}
+                <span className="title-segment-academic">Academic Management System</span>
               </h1>
               <p className="project-hero-desc">
                 Autonomous AI Question Paper Generation, Handwritten Answer Script Evaluation & Academic Portal
@@ -539,7 +540,7 @@ export default function Login() {
             <span className="footer-dot">•</span>
             <span>Autonomous Institute Affiliated to VTU</span>
             <span className="footer-dot">•</span>
-            <span>AI Examination & Autonomous Evaluation System</span>
+            <span>AI Examination and Autonomous Evaluation System</span>
           </div>
         </footer>
       </div>

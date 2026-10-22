@@ -735,41 +735,17 @@
 }
 
 .project-main-title {
-  font-size: 42px;
+  font-family: 'Outfit', 'Plus Jakarta Sans', -apple-system, sans-serif;
+  font-size: clamp(26px, 2.7vw, 36px);
   font-weight: 900;
   color: #0f172a;
   letter-spacing: -0.6px;
-  line-height: 1.15;
-  margin: 0 0 8px 0;
+  line-height: 1.22;
+  margin: 0 0 10px 0;
   display: flex;
-  align-items: center;
+  align-items: baseline;
   flex-wrap: wrap;
-  gap: 8px;
-}
-
-/* Dynamic Attractive Colors for the Project Name */
-.project-title-ai {
-  background: linear-gradient(135deg, #0284c7 0%, #2563eb 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  filter: drop-shadow(0 2px 8px rgba(2, 132, 199, 0.25));
-  font-weight: 900;
-}
-
-.project-title-exam {
-  background: linear-gradient(135deg, #0f172a 0%, #1e3a8a 65%, #1d4ed8 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  filter: drop-shadow(0 2px 6px rgba(15, 23, 42, 0.1));
-  font-weight: 900;
-}
-
-.highlight-ai-gradient {
-  background: linear-gradient(135deg, #7c3aed 0%, #ec4899 50%, #f59e0b 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  filter: drop-shadow(0 2px 12px rgba(124, 58, 237, 0.25));
-  font-weight: 900;
+  gap: 4px 8px;
 }
 
 .project-hero-desc {

@@ -93,12 +93,17 @@
 }
 
 .hero-heading {
+  font-family: 'Outfit', 'Plus Jakarta Sans', -apple-system, sans-serif;
   font-size: clamp(32px, 4.4vw, 50px);
   font-weight: 900;
-  line-height: 1.15;
-  margin-bottom: 16px;
+  line-height: 1.18;
+  margin-bottom: 18px;
   letter-spacing: -0.6px;
   color: #0f172a;
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 4px 8px;
 }
 
 .highlight-text {
@@ -140,20 +145,133 @@
 .hero-metric-box {
   display: flex;
   align-items: center;
-  gap: 10px;
-  padding: 14px 12px;
+  gap: 12px;
+  padding: 12px 14px;
   border-radius: 16px;
-  background: #f8fafc;
-  border: 2px solid #0f172a;
-  transition: all 0.25s ease;
-  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.05);
+  backdrop-filter: blur(8px);
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
   min-width: 0;
 }
 
-.hero-metric-box:hover {
-  transform: translateY(-4px);
+/* Light pastel color themes for each metric card matching Login page */
+.hero-metric-box.metric-blue {
+  background: linear-gradient(135deg, #ffffff 0%, #eff6ff 45%, #dbeafe 100%);
+  border: 1.5px solid #bfdbfe;
+  box-shadow: 0 4px 14px rgba(37, 99, 235, 0.08), 0 1px 3px rgba(37, 99, 235, 0.04);
+}
+.hero-metric-box.metric-blue:hover {
+  background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
+  border-color: #3b82f6;
+  box-shadow: 0 8px 24px rgba(37, 99, 235, 0.18);
+  transform: translateY(-3px);
+}
+.hero-metric-box.metric-blue .metric-num { color: #1d4ed8; }
+.hero-metric-box.metric-blue .metric-lbl { color: #2563eb; }
+.hero-metric-box.metric-blue .metric-icon-wrap {
   background: #ffffff;
-  box-shadow: 0 12px 28px rgba(15, 23, 42, 0.12);
+  border: 1.5px solid #93c5fd;
+  color: #2563eb;
+  box-shadow: 0 2px 8px rgba(37, 99, 235, 0.12);
+}
+
+.hero-metric-box.metric-cyan {
+  background: linear-gradient(135deg, #ffffff 0%, #ecfeff 45%, #cffafe 100%);
+  border: 1.5px solid #a5f3fc;
+  box-shadow: 0 4px 14px rgba(6, 182, 212, 0.08), 0 1px 3px rgba(6, 182, 212, 0.04);
+}
+.hero-metric-box.metric-cyan:hover {
+  background: linear-gradient(135deg, #ecfeff 0%, #cffafe 100%);
+  border-color: #06b6d4;
+  box-shadow: 0 8px 24px rgba(6, 182, 212, 0.18);
+  transform: translateY(-3px);
+}
+.hero-metric-box.metric-cyan .metric-num { color: #0e7490; }
+.hero-metric-box.metric-cyan .metric-lbl { color: #0891b2; }
+.hero-metric-box.metric-cyan .metric-icon-wrap {
+  background: #ffffff;
+  border: 1.5px solid #67e8f9;
+  color: #0891b2;
+  box-shadow: 0 2px 8px rgba(6, 182, 212, 0.12);
+}
+
+.hero-metric-box.metric-emerald {
+  background: linear-gradient(135deg, #ffffff 0%, #ecfdf5 45%, #d1fae5 100%);
+  border: 1.5px solid #a7f3d0;
+  box-shadow: 0 4px 14px rgba(16, 185, 129, 0.08), 0 1px 3px rgba(16, 185, 129, 0.04);
+}
+.hero-metric-box.metric-emerald:hover {
+  background: linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%);
+  border-color: #10b981;
+  box-shadow: 0 8px 24px rgba(16, 185, 129, 0.18);
+  transform: translateY(-3px);
+}
+.hero-metric-box.metric-emerald .metric-num { color: #047857; }
+.hero-metric-box.metric-emerald .metric-lbl { color: #059669; }
+.hero-metric-box.metric-emerald .metric-icon-wrap {
+  background: #ffffff;
+  border: 1.5px solid #6ee7b7;
+  color: #059669;
+  box-shadow: 0 2px 8px rgba(16, 185, 129, 0.12);
+}
+
+.hero-metric-box.metric-purple {
+  background: linear-gradient(135deg, #ffffff 0%, #f5f3ff 45%, #ede9fe 100%);
+  border: 1.5px solid #ddd6fe;
+  box-shadow: 0 4px 14px rgba(139, 92, 246, 0.08), 0 1px 3px rgba(139, 92, 246, 0.04);
+}
+.hero-metric-box.metric-purple:hover {
+  background: linear-gradient(135deg, #f5f3ff 0%, #ede9fe 100%);
+  border-color: #8b5cf6;
+  box-shadow: 0 8px 24px rgba(139, 92, 246, 0.18);
+  transform: translateY(-3px);
+}
+.hero-metric-box.metric-purple .metric-num { color: #6d28d9; }
+.hero-metric-box.metric-purple .metric-lbl { color: #7c3aed; }
+.hero-metric-box.metric-purple .metric-icon-wrap {
+  background: #ffffff;
+  border: 1.5px solid #c4b5fd;
+  color: #7c3aed;
+  box-shadow: 0 2px 8px rgba(139, 92, 246, 0.12);
+}
+
+.hero-metric-box.metric-amber {
+  background: linear-gradient(135deg, #ffffff 0%, #fffbeb 45%, #fef3c7 100%);
+  border: 1.5px solid #fde68a;
+  box-shadow: 0 4px 14px rgba(245, 158, 11, 0.08), 0 1px 3px rgba(245, 158, 11, 0.04);
+}
+.hero-metric-box.metric-amber:hover {
+  background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%);
+  border-color: #f59e0b;
+  box-shadow: 0 8px 24px rgba(245, 158, 11, 0.18);
+  transform: translateY(-3px);
+}
+.hero-metric-box.metric-amber .metric-num { color: #b45309; }
+.hero-metric-box.metric-amber .metric-lbl { color: #d97706; }
+.hero-metric-box.metric-amber .metric-icon-wrap {
+  background: #ffffff;
+  border: 1.5px solid #fcd34d;
+  color: #d97706;
+  box-shadow: 0 2px 8px rgba(245, 158, 11, 0.12);
+}
+
+.hero-metric-box.metric-rose {
+  background: linear-gradient(135deg, #ffffff 0%, #fff1f2 45%, #ffe4e6 100%);
+  border: 1.5px solid #fecdd3;
+  box-shadow: 0 4px 14px rgba(244, 63, 94, 0.08), 0 1px 3px rgba(244, 63, 94, 0.04);
+}
+.hero-metric-box.metric-rose:hover {
+  background: linear-gradient(135deg, #fff1f2 0%, #ffe4e6 100%);
+  border-color: #f43f5e;
+  box-shadow: 0 8px 24px rgba(244, 63, 94, 0.18);
+  transform: translateY(-3px);
+}
+.hero-metric-box.metric-rose .metric-num { color: #e11d48; }
+.hero-metric-box.metric-rose .metric-lbl { color: #f43f5e; }
+.hero-metric-box.metric-rose .metric-icon-wrap {
+  background: #ffffff;
+  border: 1.5px solid #fda4af;
+  color: #f43f5e;
+  box-shadow: 0 2px 8px rgba(244, 63, 94, 0.12);
 }
 
 .metric-icon-wrap {
@@ -165,34 +283,17 @@
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
-  border: 1.5px solid #0f172a;
 }
-
-.metric-blue .metric-icon-wrap { background: #eff6ff; color: #1d4ed8; }
-.metric-cyan .metric-icon-wrap { background: #e0f2fe; color: #0369a1; }
-.metric-emerald .metric-icon-wrap { background: #ecfdf5; color: #047857; }
-.metric-purple .metric-icon-wrap { background: #f3e8ff; color: #6d28d9; }
-.metric-amber .metric-icon-wrap { background: #fef3c7; color: #b45309; }
-.metric-rose .metric-icon-wrap { background: #ffe4e6; color: #be123c; }
 
 .metric-num {
   font-size: 22px;
   font-weight: 900;
   line-height: 1;
-  color: #0f172a;
   margin-bottom: 3px;
 }
 
-.metric-blue .metric-num { color: #1d4ed8; }
-.metric-cyan .metric-num { color: #0284c7; }
-.metric-emerald .metric-num { color: #059669; }
-.metric-purple .metric-num { color: #7c3aed; }
-.metric-amber .metric-num { color: #d97706; }
-.metric-rose .metric-num { color: #e11d48; }
-
 .metric-lbl {
   font-size: 10.5px;
-  color: #475569;
   font-weight: 800;
   text-transform: uppercase;
   letter-spacing: 0.4px;

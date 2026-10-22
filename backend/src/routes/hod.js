@@ -439,6 +439,26 @@ router.put("/public-info", async (req, res) => {
   }
 });
 
+router.delete("/public-info", async (req, res) => {
+  try {
+    const departmentId = await getHodDepartmentId(req.user.id);
+    if (!departmentId) {
+      return res.status(400).json({ error: "No department is assigned to your account." });
+    }
+
+    const { error } = await supabaseAdmin
+      .from("department_public_info")
+      .delete()
+      .eq("department_id", departmentId);
+
+    if (error) throw error;
+
+    res.json({ message: "Department public information, fees, and toppers deleted successfully." });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 // ---------------------------------------------------------------------------
 // Faculty Management
 // ---------------------------------------------------------------------------
