@@ -27,6 +27,24 @@ def fetch_public_data() -> dict:
             "highest_package, average_package, achievements, facilities, departments(name)"
         ).eq("published", True).execute().data or []
 
+        formatted_depts = []
+        for d in dept_rows:
+            fees_obj = d.get("fees") or {}
+            toppers = fees_obj.get("toppers") if isinstance(fees_obj, dict) else []
+            formatted_depts.append({
+                "department_name": (d.get("departments") or {}).get("name", "Department"),
+                "about": d.get("about", ""),
+                "student_count": d.get("student_count", 0),
+                "courses": d.get("courses", []),
+                "fees": fees_obj,
+                "toppers": toppers,
+                "placement_percentage": d.get("placement_percentage"),
+                "highest_package": d.get("highest_package"),
+                "average_package": d.get("average_package"),
+                "achievements": d.get("achievements") or [],
+                "facilities": d.get("facilities") or []
+            })
+
         return {
             "institution": "Dayananda Sagar Academy of Technology and Management (DSATM)",
             "campus_location": {
@@ -37,7 +55,7 @@ def fetch_public_data() -> dict:
             },
             "college_info": college_info,
             "all_academic_departments": [d["name"] for d in all_depts if "name" in d],
-            "published_departments": dept_rows,
+            "published_departments": formatted_depts,
             "nearby_accommodations": [
                 {"name": "Sri Sai Comforts PG", "distance": "300m", "rent": "₹6,500-9,500/mo", "contact": "+91 98451 22344"},
                 {"name": "Sri Venkateshwara Luxury PG", "distance": "500m", "rent": "₹7,000-11,000/mo", "contact": "+91 99805 77890"},
@@ -58,10 +76,11 @@ async def public_chat(payload: PublicChatRequest, authorization: str = Header(No
     data = fetch_public_data()
 
     system_prompt = """You are the official Public AI Assistant for Dayananda Sagar Academy of Technology and Management (DSATM).
-Your job is to answer prospective students, parents, and visitors accurately using ONLY the published RAG college and department data provided.
-- Always use the exact placement percentages, fee structures, highest/average packages, and course names from the context.
-- Never invent numbers or hallucinate facts not in the published data.
-- If asked about something private (individual student marks, private phone numbers), politely explain that private records are protected.
+Your job is to answer prospective students, parents, and visitors accurately using ONLY the live published RAG college and department data provided.
+- Dynamic Departments: Different academic departments (MCA, CSE, ISE, AIML, ECE, EEE, ME, Civil, MBA, etc.) independently publish their profiles. Answer based strictly on the department requested.
+- Unpublished / Deleted Data: If asked about a department not present in 'published_departments' (or if its info/toppers were deleted), clearly inform the user that this department has not published official public details yet.
+- Toppers & Fees: Never cite sample or outdated student names (like Ananya Sharma or Rohan Verma) unless they are explicitly present in 'published_departments'. Always state the exact fees and rank holders from the context.
+- Grounding: The GROUNDED RAG KNOWLEDGE BASE takes priority over any earlier conversation history.
 - Maintain a warm, welcoming, and professional tone."""
 
     history_lines = []

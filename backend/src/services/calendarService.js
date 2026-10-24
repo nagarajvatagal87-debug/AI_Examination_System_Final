@@ -1516,11 +1516,13 @@ async function createAcademicCalendarEvent(eventPayload) {
     await supabaseAdmin.from("academic_calendar_events").insert(newEvent);
   } catch (e) {}
 
-  // Dispatch notifications if published immediately
+  // Dispatch notifications asynchronously in the background if published immediately
   if (status === "PUBLISHED") {
-    await dispatchEventNotifications(newEvent, "NEW_EVENT", {
-      title: `📅 New Academic Event: ${newEvent.title}`,
-      body: `Official Event Published: ${newEvent.title} (${newEvent.event_type}) on ${newEvent.start_date}. Location: ${newEvent.location}.`,
+    setImmediate(() => {
+      dispatchEventNotifications(newEvent, "NEW_EVENT", {
+        title: `📅 New Academic Event: ${newEvent.title}`,
+        body: `Official Event Published: ${newEvent.title} (${newEvent.event_type}) on ${newEvent.start_date}. Location: ${newEvent.location || 'DSATM Campus'}.`,
+      }).catch((e) => console.warn("Background calendar notification error:", e.message));
     });
   }
 
@@ -1595,20 +1597,24 @@ async function updateAcademicCalendarEvent(eventId, updatePayload, userPayload =
     await supabaseAdmin.from("academic_calendar_events").update(updatedEvent).eq("id", eventId);
   } catch (e) {}
 
-  // Dispatch change notification if event was already published
+  // Dispatch change notification asynchronously in the background if event was already published
   if (oldEvent.status === "PUBLISHED" && updatedEvent.status === "PUBLISHED") {
     if (dateChanged) {
-      await dispatchEventNotifications(updatedEvent, "EVENT_CHANGED", {
-        title: `📢 Academic Calendar Update: ${updatedEvent.title}`,
-        body: `The date of "${updatedEvent.title}" has been changed from ${oldEvent.start_date} to ${updatedEvent.start_date}. Changed by: ${userPayload.userRole || 'HOD'}.`,
-        oldDate: oldEvent.start_date,
-        newDate: updatedEvent.start_date,
+      setImmediate(() => {
+        dispatchEventNotifications(updatedEvent, "EVENT_CHANGED", {
+          title: `📢 Academic Calendar Update: ${updatedEvent.title}`,
+          body: `The date of "${updatedEvent.title}" has been changed from ${oldEvent.start_date} to ${updatedEvent.start_date}. Changed by: ${userPayload.userRole || 'HOD'}.`,
+          oldDate: oldEvent.start_date,
+          newDate: updatedEvent.start_date,
+        }).catch((e) => console.warn("Background calendar update error:", e.message));
       });
     }
   } else if (oldEvent.status !== "PUBLISHED" && updatedEvent.status === "PUBLISHED") {
-    await dispatchEventNotifications(updatedEvent, "NEW_EVENT", {
-      title: `📅 Official Academic Event Published: ${updatedEvent.title}`,
-      body: `A new official event "${updatedEvent.title}" (${updatedEvent.event_type}) has been published for ${updatedEvent.start_date}.`,
+    setImmediate(() => {
+      dispatchEventNotifications(updatedEvent, "NEW_EVENT", {
+        title: `📅 Official Academic Event Published: ${updatedEvent.title}`,
+        body: `A new official event "${updatedEvent.title}" (${updatedEvent.event_type}) has been published for ${updatedEvent.start_date}.`,
+      }).catch((e) => console.warn("Background calendar publish error:", e.message));
     });
   }
 
@@ -1617,7 +1623,40 @@ async function updateAcademicCalendarEvent(eventId, updatePayload, userPayload =
 
 // Publish draft event
 async function publishAcademicCalendarEvent(eventId, userPayload = {}) {
-  return await updateAcademicCalendarEvent(eventId, { status: "PUBLISHED" }, userPayload);
+  const index = memoryCalendarEvents.findIndex((e) => e.id === eventId);
+  if (index === -1) throw new Error("Calendar event not found");
+
+  const now = new Date().toISOString();
+  const updatedEvent = {
+    ...memoryCalendarEvents[index],
+    status: "PUBLISHED",
+    published_by: userPayload.userId || "HOD",
+    published_at: now,
+    updated_by: userPayload.userId || "HOD",
+    updated_at: now,
+  };
+
+  memoryCalendarEvents[index] = updatedEvent;
+  saveCalendarToDisk();
+
+  try {
+    await supabaseAdmin.from("academic_calendar_events").update({
+      status: "PUBLISHED",
+      published_by: updatedEvent.published_by,
+      published_at: now,
+      updated_at: now,
+    }).eq("id", eventId);
+  } catch (e) {}
+
+  // Explicitly dispatch publish notification
+  setImmediate(() => {
+    dispatchEventNotifications(updatedEvent, "NEW_EVENT", {
+      title: `📅 Official Academic Event Published: ${updatedEvent.title}`,
+      body: `Official Event Published: ${updatedEvent.title} (${updatedEvent.event_type}) scheduled for ${updatedEvent.start_date}. Location: ${updatedEvent.location || 'DSATM Campus'}.`,
+    }).catch((e) => console.warn("Background calendar publish error:", e.message));
+  });
+
+  return updatedEvent;
 }
 
 // Cancel published event
@@ -1657,9 +1696,11 @@ async function cancelAcademicCalendarEvent(eventId, reason = "Cancelled by Depar
   } catch (e) {}
 
   if (oldEvent.status === "PUBLISHED") {
-    await dispatchEventNotifications(updatedEvent, "EVENT_CANCELLED", {
-      title: `⚠️ CANCELLED: Academic Calendar Event - ${updatedEvent.title}`,
-      body: `Official Notice: The event "${updatedEvent.title}" scheduled for ${updatedEvent.start_date} has been CANCELLED. Reason: ${reason}.`,
+    setImmediate(() => {
+      dispatchEventNotifications(updatedEvent, "EVENT_CANCELLED", {
+        title: `⚠️ CANCELLED: Academic Calendar Event - ${updatedEvent.title}`,
+        body: `Official Notice: The event "${updatedEvent.title}" scheduled for ${updatedEvent.start_date} has been CANCELLED. Reason: ${reason}.`,
+      }).catch((e) => console.warn("Background calendar cancel error:", e.message));
     });
   }
 
@@ -1697,6 +1738,249 @@ async function duplicateAcademicCalendarEvent(eventId, userPayload = {}) {
   return await createAcademicCalendarEvent(duplicatedPayload);
 }
 
+// Official DSATM Academic & Holiday Email HTML Template Generator
+function generateAcademicCalendarHtml({ event, recipientName, recipientRole, notificationType, notifData }) {
+  const portalUrl = process.env.FRONTEND_ORIGIN || "http://localhost:5173";
+  const dsiLogoUrl = `${portalUrl}/dsi-logo.png`;
+
+  const isHoliday = (event.event_type || "").toUpperCase().includes("HOLIDAY");
+  const isExam = (event.event_type || "").toUpperCase().includes("EXAM");
+  const isCancelled = notificationType === "EVENT_CANCELLED";
+  const isChanged = notificationType === "EVENT_CHANGED";
+
+  let badgeColor = "#2563eb";
+  let badgeBg = "#eff6ff";
+  let badgeBorder = "#bfdbfe";
+  let badgeText = "📅 OFFICIAL ACADEMIC EVENT";
+  let bannerHeader = "Academic Calendar Notification";
+
+  if (isCancelled) {
+    badgeColor = "#dc2626";
+    badgeBg = "#fef2f2";
+    badgeBorder = "#fecaca";
+    badgeText = "⚠️ EVENT CANCELLED";
+    bannerHeader = "Academic Event Cancellation";
+  } else if (isHoliday) {
+    badgeColor = "#059669";
+    badgeBg = "#ecfdf5";
+    badgeBorder = "#a7f3d0";
+    badgeText = "🌴 OFFICIAL GENERAL HOLIDAY";
+    bannerHeader = "General Holiday Announcement";
+  } else if (isExam) {
+    badgeColor = "#7c3aed";
+    badgeBg = "#f5f3ff";
+    badgeBorder = "#ddd6fe";
+    badgeText = "📝 EXAMINATION SCHEDULE";
+    bannerHeader = "Examination Schedule Alert";
+  } else if (isChanged) {
+    badgeColor = "#d97706";
+    badgeBg = "#fffbeb";
+    badgeBorder = "#fde68a";
+    badgeText = "📢 SCHEDULE REVISION";
+    bannerHeader = "Academic Calendar Revision";
+  }
+
+  const startDateFormatted = new Date(event.start_date).toLocaleDateString("en-IN", {
+    weekday: "long",
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+  });
+
+  const endDateFormatted = event.end_date && event.end_date !== event.start_date
+    ? new Date(event.end_date).toLocaleDateString("en-IN", {
+        weekday: "long",
+        year: "numeric",
+        month: "long",
+        day: "numeric",
+      })
+    : null;
+
+  const dateDisplay = endDateFormatted
+    ? `${startDateFormatted} &rarr; ${endDateFormatted}`
+    : startDateFormatted;
+
+  const audienceLabel = Array.isArray(event.audience)
+    ? event.audience.map(a => a.replace("_", " ").toUpperCase()).join(", ")
+    : "ALL (STUDENTS & FACULTY)";
+
+  const deptLabel = event.department_id || "All Academic Departments";
+
+  return `
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>${event.title}</title>
+</head>
+<body style="margin: 0; padding: 0; background-color: #f1f5f9; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;">
+  <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="background-color: #f1f5f9; padding: 32px 12px;">
+    <tr>
+      <td align="center">
+        <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="max-width: 620px; background: #ffffff; border-radius: 14px; overflow: hidden; box-shadow: 0 10px 30px rgba(15,23,42,0.08); border: 1px solid #e2e8f0;">
+          
+          <!-- Header with College Logo -->
+          <tr>
+            <td style="background: linear-gradient(135deg, #0f172a 0%, #1e3a8a 100%); padding: 26px 30px; text-align: center; color: #ffffff;">
+              <div style="margin-bottom: 12px;">
+                <img src="${dsiLogoUrl}" alt="DSATM College Logo" style="height: 56px; width: auto; max-width: 200px; object-fit: contain; display: inline-block; filter: drop-shadow(0 2px 6px rgba(0,0,0,0.35));" />
+              </div>
+              <div style="font-size: 11px; font-weight: 800; letter-spacing: 1.5px; text-transform: uppercase; color: #38bdf8; margin-bottom: 6px;">
+                🎓 ${bannerHeader}
+              </div>
+              <h1 style="margin: 0; font-size: 18px; font-weight: 900; letter-spacing: 0.5px; color: #ffffff; line-height: 1.3;">
+                DAYANANDA SAGAR ACADEMY OF TECHNOLOGY & MANAGEMENT
+              </h1>
+              <p style="margin: 6px 0 0 0; font-size: 12px; color: #94a3b8; font-weight: 500;">
+                Autonomous Institute under VTU | Approved by AICTE, New Delhi
+              </p>
+            </td>
+          </tr>
+
+          <!-- Category Badge & Event Title Banner -->
+          <tr>
+            <td style="padding: 24px 30px 10px 30px;">
+              <div style="background: ${badgeBg}; border: 1px solid ${badgeBorder}; border-left: 5px solid ${badgeColor}; padding: 14px 18px; border-radius: 0 8px 8px 0;">
+                <div style="font-size: 11px; text-transform: uppercase; color: ${badgeColor}; font-weight: 900; letter-spacing: 0.8px;">${badgeText}</div>
+                <h2 style="margin: 4px 0 0 0; color: #0f172a; font-size: 19px; font-weight: 900; line-height: 1.35;">${event.title}</h2>
+              </div>
+            </td>
+          </tr>
+
+          <!-- Content Body -->
+          <tr>
+            <td style="padding: 14px 30px 24px 30px; color: #334155;">
+              <p style="font-size: 14px; line-height: 1.6; margin-top: 0;">
+                Dear <strong>${recipientName || 'Student/Faculty'}</strong>,
+              </p>
+
+              ${
+                isCancelled
+                  ? `<p style="font-size: 14px; line-height: 1.6; color: #dc2626;">
+                      <strong>OFFICIAL NOTICE:</strong> The scheduled event <strong>"${event.title}"</strong> has been <span style="text-decoration: underline;">CANCELLED</span> by the Department Authority.
+                    </p>`
+                  : isHoliday
+                  ? `<p style="font-size: 14px; line-height: 1.6; color: #047857;">
+                      <strong>GENERAL HOLIDAY NOTICE:</strong> The institution has officially declared a general holiday on the date(s) specified below:
+                    </p>`
+                  : isChanged
+                  ? `<p style="font-size: 14px; line-height: 1.6; color: #b45309;">
+                      <strong>SCHEDULE UPDATE:</strong> The scheduled date/details for <strong>"${event.title}"</strong> have been revised:
+                    </p>`
+                  : `<p style="font-size: 14px; line-height: 1.6;">
+                      A new official academic event has been published on the Institutional Academic Calendar:
+                    </p>`
+              }
+
+              <!-- Event Details Card -->
+              <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; margin: 18px 0; overflow: hidden;">
+                <tr>
+                  <td style="padding: 12px 18px; border-bottom: 1px solid #e2e8f0; width: 140px; font-weight: 700; font-size: 13px; color: #475569;">
+                    🗓️ Date(s):
+                  </td>
+                  <td style="padding: 12px 18px; border-bottom: 1px solid #e2e8f0; font-weight: 800; font-size: 14px; color: #0f172a;">
+                    ${dateDisplay}
+                  </td>
+                </tr>
+                ${
+                  event.start_time
+                    ? `<tr>
+                        <td style="padding: 12px 18px; border-bottom: 1px solid #e2e8f0; font-weight: 700; font-size: 13px; color: #475569;">
+                          ⏰ Timings:
+                        </td>
+                        <td style="padding: 12px 18px; border-bottom: 1px solid #e2e8f0; font-size: 13px; color: #0f172a;">
+                          ${event.start_time} ${event.end_time ? `&ndash; ${event.end_time}` : ''}
+                        </td>
+                      </tr>`
+                    : ''
+                }
+                <tr>
+                  <td style="padding: 12px 18px; border-bottom: 1px solid #e2e8f0; font-weight: 700; font-size: 13px; color: #475569;">
+                    🏷️ Category:
+                  </td>
+                  <td style="padding: 12px 18px; border-bottom: 1px solid #e2e8f0; font-size: 13px; color: #0f172a;">
+                    ${event.event_type || 'Academic Activity'}
+                  </td>
+                </tr>
+                <tr>
+                  <td style="padding: 12px 18px; border-bottom: 1px solid #e2e8f0; font-weight: 700; font-size: 13px; color: #475569;">
+                    📍 Venue:
+                  </td>
+                  <td style="padding: 12px 18px; border-bottom: 1px solid #e2e8f0; font-size: 13px; color: #0f172a;">
+                    ${event.location || 'DSATM Campus'}
+                  </td>
+                </tr>
+                <tr>
+                  <td style="padding: 12px 18px; border-bottom: 1px solid #e2e8f0; font-weight: 700; font-size: 13px; color: #475569;">
+                    🏛️ Department:
+                  </td>
+                  <td style="padding: 12px 18px; border-bottom: 1px solid #e2e8f0; font-size: 13px; color: #0f172a;">
+                    ${deptLabel} ${event.semester ? `(Semester ${event.semester})` : ''}
+                  </td>
+                </tr>
+                <tr>
+                  <td style="padding: 12px 18px; font-weight: 700; font-size: 13px; color: #475569;">
+                    👥 Visible To:
+                  </td>
+                  <td style="padding: 12px 18px; font-size: 13px; color: #0f172a;">
+                    ${audienceLabel}
+                  </td>
+                </tr>
+              </table>
+
+              ${
+                event.description
+                  ? `<div style="background: #ffffff; border: 1px solid #cbd5e1; border-radius: 8px; padding: 14px 16px; margin: 16px 0;">
+                      <div style="font-size: 12px; font-weight: 800; color: #334155; text-transform: uppercase; margin-bottom: 6px;">📝 Description & Notes:</div>
+                      <div style="font-size: 13px; line-height: 1.6; color: #475569;">${event.description.replace(/\n/g, '<br/>')}</div>
+                    </div>`
+                  : ''
+              }
+
+              ${
+                isCancelled && event.remarks
+                  ? `<div style="background: #fef2f2; border: 1px solid #fecaca; border-radius: 8px; padding: 14px 16px; margin: 16px 0; color: #991b1b;">
+                      <div style="font-size: 12px; font-weight: 800; text-transform: uppercase; margin-bottom: 6px;">⚠️ Cancellation Reason:</div>
+                      <div style="font-size: 13px; line-height: 1.6;">${event.remarks}</div>
+                    </div>`
+                  : ''
+              }
+
+              <!-- Action Button -->
+              <div style="text-align: center; margin-top: 28px; margin-bottom: 10px;">
+                <a href="${portalUrl}" target="_blank" style="background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%); color: #ffffff; text-decoration: none; padding: 13px 32px; border-radius: 8px; font-size: 14px; font-weight: 800; display: inline-block; box-shadow: 0 4px 14px rgba(37,99,235,0.3);">
+                  🚀 View Full Academic Calendar &rarr;
+                </a>
+              </div>
+
+              <p style="font-size: 12px; line-height: 1.6; color: #64748b; margin-top: 24px; text-align: center;">
+                Please log in to your DSATM portal to view the dynamic interactive calendar and download exported schedules.
+              </p>
+            </td>
+          </tr>
+
+          <!-- Footer -->
+          <tr>
+            <td style="background: #f8fafc; padding: 20px 30px; text-align: center; font-size: 12px; color: #64748b; border-top: 1px solid #e2e8f0;">
+              <div style="font-weight: 800; color: #334155; margin-bottom: 4px;">Dayananda Sagar Academy of Technology & Management (DSATM)</div>
+              <div>Opp. Art of Living, Kanakapura Main Road, Bangalore - 560082</div>
+              <div style="margin-top: 8px; font-size: 11px; color: #94a3b8; line-height: 1.4;">
+                This is an official automated alert from the DSATM Academic & Examination Management System.<br/>
+                &copy; 2026 Dayananda Sagar Institutions. All rights reserved.
+              </div>
+            </td>
+          </tr>
+
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>
+  `.trim();
+}
+
 // Notification & Email Dispatch Service with Idempotency
 async function dispatchEventNotifications(event, notificationType, notifData) {
   try {
@@ -1705,22 +1989,65 @@ async function dispatchEventNotifications(event, notificationType, notifData) {
     // Fetch target audience users
     const { data: users } = await supabaseAdmin
       .from("profiles")
-      .select("id, email, full_name, role");
+      .select("id, email, full_name, role, department_id, semester");
 
-    let recipientList = users || [
+    let recipientList = (users && users.length > 0) ? users : [
       { id: "demo-student-id", email: "student@dsatm.edu.in", full_name: "MCA Student", role: "student" },
       { id: "demo-faculty-id", email: "faculty@dsatm.edu.in", full_name: "MCA Faculty", role: "faculty" },
     ];
 
-    // Filter recipients by audience
-    const audience = Array.isArray(event.audience) ? event.audience.map(a => a.toLowerCase()) : ["students", "faculty"];
+    // Normalize audience
+    let audience = [];
+    if (Array.isArray(event.audience)) {
+      audience = event.audience.map((a) => String(a).toLowerCase().trim());
+    } else if (typeof event.audience === "string") {
+      audience = event.audience.toLowerCase().split(/[, ]+/).filter(Boolean);
+    }
+    if (audience.length === 0) {
+      audience = ["students", "student", "faculty", "hod", "exam_dept", "examdept", "principal", "all"];
+    }
+
+    const isGeneralHoliday = (event.event_type || "").toUpperCase().includes("HOLIDAY");
+    const isCollegeWide =
+      isGeneralHoliday ||
+      audience.includes("all") ||
+      !event.department_id ||
+      event.department_id === "ALL" ||
+      event.department_id === "all";
+
+    // Filter recipients by audience & department
     recipientList = recipientList.filter((u) => {
-      if (u.role === "student" && (audience.includes("students") || audience.includes("all"))) return true;
-      if (u.role === "faculty" && (audience.includes("faculty") || audience.includes("all"))) return true;
-      if (u.role === "hod" && (audience.includes("hod") || audience.includes("all"))) return true;
-      if (u.role === "examdept" && (audience.includes("exam_dept") || audience.includes("all"))) return true;
-      if (u.role === "principal" && (audience.includes("principal") || audience.includes("all"))) return true;
-      return false;
+      if (!u.email) return false;
+      const role = (u.role || "").toLowerCase().trim();
+
+      let roleEligible = false;
+      if (role === "student" && (isGeneralHoliday || audience.includes("students") || audience.includes("student") || audience.includes("all"))) {
+        roleEligible = true;
+      } else if (role === "faculty" && (isGeneralHoliday || audience.includes("faculty") || audience.includes("all"))) {
+        roleEligible = true;
+      } else if (role === "hod" && (isGeneralHoliday || audience.includes("hod") || audience.includes("all"))) {
+        roleEligible = true;
+      } else if (
+        (role === "examdept" || role === "exam_dept") &&
+        (isGeneralHoliday || audience.includes("exam_dept") || audience.includes("examdept") || audience.includes("all"))
+      ) {
+        roleEligible = true;
+      } else if (role === "principal" && (isGeneralHoliday || audience.includes("principal") || audience.includes("all"))) {
+        roleEligible = true;
+      } else if (role === "admin") {
+        roleEligible = true;
+      }
+
+      if (!roleEligible) return false;
+
+      // Department filter for non-holiday department-specific events
+      if (!isCollegeWide && event.department_id && u.department_id && role === "student") {
+        if (String(u.department_id).toLowerCase() !== String(event.department_id).toLowerCase()) {
+          return false;
+        }
+      }
+
+      return true;
     });
 
     const eventDateFormatted = new Date(event.start_date).toLocaleDateString("en-IN", {
@@ -1733,14 +2060,13 @@ async function dispatchEventNotifications(event, notificationType, notifData) {
     for (const u of recipientList) {
       const idempotencyKey = `${event.id}:${u.id}:${notificationType}:${event.updated_at || event.created_at}`;
 
-      // Check if already dispatched to avoid duplicate emails
-      const existingLog = memoryNotifLogs.find((l) => l.key === idempotencyKey);
+      // Check if already dispatched successfully to avoid duplicate emails
+      const existingLog = memoryNotifLogs.find((l) => l.key === idempotencyKey && l.status === "SENT");
       if (existingLog) {
-        console.log(`Skipping duplicate calendar email for user ${u.email} (${idempotencyKey})`);
         continue;
       }
 
-      // Send In-App Notification
+      // Send In-App Notification (non-blocking)
       notify(u.id, "academic_calendar", notifData.title, notifData.body).catch(() => {});
 
       // Send Email Notification
@@ -1752,19 +2078,32 @@ async function dispatchEventNotifications(event, notificationType, notifData) {
         let emailContent = "";
 
         if (notificationType === "EVENT_CHANGED") {
-          emailContent = `Dear ${u.full_name || "Student/Faculty"},\n\nACADEMIC CALENDAR UPDATE:\n\nThe scheduled date for the official event "${event.title}" has been revised.\n\n📌 Event: ${event.title}\n🏷️ Category: ${event.event_type}\n🗓️ Old Date: ${notifData.oldDate}\n📅 New Date: ${eventDateFormatted}\n📍 Location: ${event.location || "DSATM Campus"}\n${event.description ? "📝 Notes: " + event.description + "\n" : ""}\nPlease log in to the LMS Academic Portal to view the complete updated calendar.\n\nRegards,\nDepartment MCA & Academic Management System\nDSATM`;
+          emailContent = `Dear ${u.full_name || "Student/Faculty"},\n\nACADEMIC CALENDAR UPDATE:\n\nThe scheduled date for the official event "${event.title}" has been revised.\n\n📌 Event: ${event.title}\n🏷️ Category: ${event.event_type}\n🗓️ Old Date: ${notifData.oldDate}\n📅 New Date: ${eventDateFormatted}\n📍 Location: ${event.location || "DSATM Campus"}\n${event.description ? "📝 Notes: " + event.description + "\n" : ""}\nPlease log in to the LMS Academic Portal to view the complete updated calendar.\n\nRegards,\nDayananda Sagar Academy of Technology & Management (DSATM)`;
         } else if (notificationType === "EVENT_CANCELLED") {
-          emailContent = `Dear ${u.full_name || "Student/Faculty"},\n\nACADEMIC CALENDAR NOTICE:\n\nPlease note that the following event has been CANCELLED:\n\n📌 Event: ${event.title}\n🗓️ Originally Scheduled Date: ${eventDateFormatted}\n⚠️ Status: CANCELLED\n📝 Reason: ${event.remarks || "Cancelled by Department Authority"}\n\nPlease check your Academic Dashboard for the latest schedule.\n\nRegards,\nDepartment MCA\nDSATM`;
+          emailContent = `Dear ${u.full_name || "Student/Faculty"},\n\nACADEMIC CALENDAR NOTICE:\n\nPlease note that the following event has been CANCELLED:\n\n📌 Event: ${event.title}\n🗓️ Originally Scheduled Date: ${eventDateFormatted}\n⚠️ Status: CANCELLED\n📝 Reason: ${event.remarks || "Cancelled by Department Authority"}\n\nPlease check your Academic Dashboard for the latest schedule.\n\nRegards,\nDayananda Sagar Academy of Technology & Management (DSATM)`;
         } else {
-          emailContent = `Dear ${u.full_name || "Student/Faculty"},\n\nA new official academic event has been published on the Department Academic Calendar:\n\n📌 Event: ${event.title}\n🏷️ Category: ${event.event_type}\n📅 Scheduled Date: ${eventDateFormatted}\n📍 Location: ${event.location || "DSATM Campus"}\n${event.description ? "📝 Details: " + event.description + "\n" : ""}\nPlease log in to the LMS Academic Portal to view the full academic schedule.\n\nRegards,\nDepartment MCA\nDayananda Sagar Academy of Technology and Management (DSATM)`;
+          emailContent = `Dear ${u.full_name || "Student/Faculty"},\n\nA new official academic event has been published on the Institutional Academic Calendar:\n\n📌 Event: ${event.title}\n🏷️ Category: ${event.event_type}\n📅 Scheduled Date: ${eventDateFormatted}\n📍 Location: ${event.location || "DSATM Campus"}\n${event.description ? "📝 Details: " + event.description + "\n" : ""}\nPlease log in to the LMS Academic Portal to view the full academic schedule.\n\nRegards,\nDayananda Sagar Academy of Technology & Management (DSATM)`;
         }
 
+        const emailHtml = generateAcademicCalendarHtml({
+          event,
+          recipientName: u.full_name,
+          recipientRole: u.role,
+          notificationType,
+          notifData,
+        });
+
         try {
-          await sendEmail(u.email, emailSubject, emailContent);
+          await sendEmail(u.email, emailSubject, emailContent, emailHtml);
+          console.log(`[CALENDAR EMAIL SENT] To: ${u.email} (${u.role})`);
         } catch (err) {
           emailStatus = "FAILED";
           failureReason = err.message;
+          console.warn(`[CALENDAR EMAIL FAILED] To: ${u.email} (${u.role}) Reason: ${err.message}`);
         }
+
+        // Small pacing delay to avoid SMTP rate limiting on bulk sends
+        await new Promise((r) => setTimeout(r, 60));
       }
 
       // Log notification entry

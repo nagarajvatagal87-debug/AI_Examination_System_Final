@@ -80,29 +80,24 @@ router.get("/all-info", async (req, res) => {
     }
 
     const formatted = (data || []).map((row) => {
-      const deptName = row.departments?.name || "MCA";
-      const toppersList = row.toppers || row.fees?.toppers || [];
+      const deptName = row.departments?.name || "Department";
+      const toppersList = Array.isArray(row.toppers) && row.toppers.length > 0
+        ? row.toppers
+        : (Array.isArray(row.fees?.toppers) ? row.fees.toppers : []);
 
       return {
         id: row.department_id,
         name: deptName,
-        about: row.about,
-        student_count: row.student_count || 120,
+        about: row.about || "",
+        student_count: row.student_count || 0,
         courses: row.courses || [deptName],
-        fees: row.fees || {
-          tuition_fee: "1,25,000",
-          lab_fee: "25,000",
-          exam_fee: "8,500",
-          total_fee: "1,58,500",
-          quota: "PGCET & Management Quota",
-          notes: "Scholarships applicable"
-        },
+        fees: row.fees || null,
         toppers: toppersList,
-        placement_percentage: row.placement_percentage || 95,
-        highest_package: row.highest_package || 1800000,
-        average_package: row.average_package || 650000,
-        achievements: row.achievements || ["100% Placements in Top MNCs"],
-        facilities: row.facilities || ["Advanced Labs"]
+        placement_percentage: row.placement_percentage ?? null,
+        highest_package: row.highest_package ?? null,
+        average_package: row.average_package ?? null,
+        achievements: Array.isArray(row.achievements) ? row.achievements : [],
+        facilities: Array.isArray(row.facilities) ? row.facilities : []
       };
     });
 
@@ -179,33 +174,36 @@ router.post("/chat", async (req, res) => {
       all_offered_academic_departments: allDepts.map((d) => d.name),
       published_department_profiles: deptRows.map((d) => {
         const feesObj = d.fees || {};
-        const toppersList = feesObj.toppers || [];
+        const toppersList = Array.isArray(d.toppers) && d.toppers.length > 0
+          ? d.toppers
+          : (Array.isArray(feesObj.toppers) ? feesObj.toppers : []);
         return {
-          department_name: d.departments?.name,
-          about: d.about,
-          student_count: d.student_count || 120,
-          offered_courses: d.courses || [d.departments?.name],
+          department_name: d.departments?.name || "Department",
+          about: d.about || "",
+          student_count: d.student_count || 0,
+          offered_courses: d.courses || [d.departments?.name || "Program"],
           annual_fee_breakdown: {
-            tuition_fee: feesObj.tuition_fee ? `₹${feesObj.tuition_fee}` : "₹1,25,000",
-            lab_and_development_fee: feesObj.lab_fee ? `₹${feesObj.lab_fee}` : "₹25,000",
-            university_exam_fee: feesObj.exam_fee ? `₹${feesObj.exam_fee}` : "₹8,500",
-            total_annual_fee: feesObj.total_fee ? `₹${feesObj.total_fee}` : "₹1,58,500",
-            quota: feesObj.quota || "Govt. PGCET, KEA & Management Quotas",
-            scholarship_notes: feesObj.notes || "Merit and VTU category scholarships applicable."
+            tuition_fee: feesObj.tuition_fee ? `₹${feesObj.tuition_fee}` : null,
+            lab_and_development_fee: feesObj.lab_fee ? `₹${feesObj.lab_fee}` : null,
+            university_exam_fee: feesObj.exam_fee ? `₹${feesObj.exam_fee}` : null,
+            total_annual_fee: feesObj.total_fee ? `₹${feesObj.total_fee}` : null,
+            quota: feesObj.quota || "Govt. PGCET / KEA & Management Quotas",
+            scholarship_notes: feesObj.notes || ""
           },
           placement_stats: {
-            placement_rate: d.placement_percentage ? `${d.placement_percentage}%` : "90%",
-            highest_package: d.highest_package ? `₹${(d.highest_package / 100000).toFixed(1)} LPA` : "₹18.0 LPA",
-            average_package: d.average_package ? `₹${(d.average_package / 100000).toFixed(1)} LPA` : "₹6.5 LPA"
+            placement_rate: d.placement_percentage ? `${d.placement_percentage}%` : null,
+            highest_package: d.highest_package ? `₹${(d.highest_package / 100000).toFixed(1)} LPA` : null,
+            average_package: d.average_package ? `₹${(d.average_package / 100000).toFixed(1)} LPA` : null
           },
           toppers_and_rank_holders: toppersList.map((t) => ({
             name: t.name,
             usn: t.usn,
             cgpa: t.cgpa,
             class_sem: t.class_sem,
-            rank: t.rank_title
+            rank: t.rank_title,
+            year: t.year
           })),
-          achievements: d.achievements || ["100% Placement Record in Top Tier MNCs"]
+          achievements: Array.isArray(d.achievements) ? d.achievements : []
         };
       }),
       nearby_verified_pgs_and_hostels: [
@@ -220,13 +218,14 @@ router.post("/chat", async (req, res) => {
     const groqApiKey = process.env.GROQ_API_KEY;
     if (groqApiKey) {
       const systemPrompt = `You are the official, friendly Public AI Assistant for Dayananda Sagar Academy of Technology and Management (DSATM).
-Your goal is to answer prospective students, parents, and visitors accurately, politely, and informatively using the provided college and department RAG data.
-Key guidelines:
-1. When asked about departments, mention the full spectrum of undergraduate and postgraduate programs offered at DSATM.
-2. When asked about fees, placements, toppers, location, or nearby PGs, provide the exact figures, packages, contacts, and breakdown from the knowledge base.
-3. Keep the layout clean, readable, and structured with concise bullet points or bold labels.
-4. If asked about something not in the knowledge base, politely provide the admissions helpline (+91 80 2843 2999) or email (principal@dsatm.edu.in).
-5. Never hallucinate facts outside the provided college information.`;
+Your goal is to answer prospective students, parents, and visitors accurately, politely, and informatively using ONLY the provided live college and department RAG data.
+CRITICAL RULES FOR ACCURACY AND DYNAMISM:
+1. Grounding: Answer strictly using facts from the CURRENT COLLEGE RAG DATA. If information is not in the data or a department is not listed in 'published_department_profiles', it means that department has NOT published or has deleted its public disclosure.
+2. Department Flexibility: Support inquiries for any academic department (e.g. MCA, CSE, ISE, AI&ML, ECE, EEE, Mechanical, Civil, MBA, BCA, etc.). Quote their specific fees, packages, and toppers only if present in their published profile.
+3. Deleted / Unpublished Departments: If asked about fees, placements, or toppers for a department that is NOT in 'published_department_profiles', clearly inform the visitor that this department's public disclosure is currently pending publication by its HOD or Principal.
+4. Toppers: Only mention student rank holders who are explicitly listed in 'toppers_and_rank_holders' in the current data. NEVER mention outdated or sample names like Ananya Sharma or Rohan Verma unless they are in the current data.
+5. If asked about something not in the knowledge base, politely provide the admissions helpline (+91 80 2843 2999) or email (principal@dsatm.edu.in).
+6. Prioritize current COLLEGE RAG DATA over any prior conversation history.`;
 
       const messagesPayload = [{ role: "system", content: systemPrompt }];
 
@@ -294,6 +293,43 @@ Key guidelines:
     const qLower = cleanQ.toLowerCase();
     const publishedProfiles = publicContext.published_department_profiles;
 
+    // Helper to dynamically resolve department matching from question
+    function resolveDepartmentMatch(query) {
+      const q = query.toLowerCase();
+
+      // Check published profiles first
+      for (const prof of publishedProfiles) {
+        const name = (prof.department_name || "").toLowerCase();
+        const acronymMatch = name.match(/\(([a-z0-9\s&]+)\)/i);
+        const acronym = acronymMatch ? acronymMatch[1].toLowerCase().replace(/\s+/g, "") : "";
+        const cleanName = name.replace(/\([^)]*\)/g, "").trim();
+
+        if (acronym && (q.includes(acronym) || (acronym === "aiml" && (q.includes("ai & ml") || q.includes("ai/ml"))))) {
+          return { profile: prof, isPublished: true, name: prof.department_name };
+        }
+        if (cleanName && cleanName.split(/\s+/).some((word) => word.length > 3 && q.includes(word))) {
+          return { profile: prof, isPublished: true, name: prof.department_name };
+        }
+      }
+
+      // Check all departments in DB
+      for (const d of allDepts) {
+        const name = (d.name || "").toLowerCase();
+        const acronymMatch = name.match(/\(([a-z0-9\s&]+)\)/i);
+        const acronym = acronymMatch ? acronymMatch[1].toLowerCase().replace(/\s+/g, "") : "";
+        const cleanName = name.replace(/\([^)]*\)/g, "").trim();
+
+        if (acronym && (q.includes(acronym) || (acronym === "aiml" && (q.includes("ai & ml") || q.includes("ai/ml"))))) {
+          return { profile: null, isPublished: false, name: d.name };
+        }
+        if (cleanName && cleanName.split(/\s+/).some((word) => word.length > 3 && q.includes(word))) {
+          return { profile: null, isPublished: false, name: d.name };
+        }
+      }
+
+      return null;
+    }
+
     // Check Location & Directions
     if (qLower.includes("location") || qLower.includes("address") || qLower.includes("where") || qLower.includes("map") || qLower.includes("reach") || qLower.includes("bus") || qLower.includes("metro")) {
       return res.json({
@@ -308,74 +344,170 @@ Key guidelines:
       });
     }
 
+    const deptMatch = resolveDepartmentMatch(cleanQ);
+
     // Check Toppers & Rank Holders
-    if (qLower.includes("topper") || qLower.includes("rank") || qLower.includes("gold medalist")) {
-      return res.json({
-        answer: `🏆 **Official DSATM VTU Rank Holders & Toppers:**\n\n• **Ananya Sharma** (USN: 1DT22MC045) — **9.84 CGPA** (1st Rank - VTU Gold Medalist)\n• **Rohan K. Verma** (USN: 1DT22MC088) — **9.72 CGPA** (2nd Rank - Department Topper)\n\nBoth rank holders received campus placement in Tier-1 product companies.`
-      });
-    }
-
-    // Fuzzy matching for department-specific inquiries
-    const deptKeywords = [
-      { key: "mca", names: ["mca", "master of computer applications", "computer applications"] },
-      { key: "mba", names: ["mba", "master of business administration", "management"] },
-      { key: "cse", names: ["cse", "computer science & engineering", "computer science and engineering"] },
-      { key: "ise", names: ["ise", "information science"] },
-      { key: "aiml", names: ["aiml", "ai & ml", "artificial intelligence", "machine learning"] },
-      { key: "cs", names: ["cyber security", "data science"] },
-      { key: "ece", names: ["ece", "electronics & communication", "electronics and communication"] },
-      { key: "eee", names: ["eee", "electrical & electronics", "electrical"] },
-      { key: "me", names: ["me", "mechanical"] },
-      { key: "civil", names: ["civil"] },
-      { key: "bca", names: ["bca", "bachelor of computer applications"] },
-      { key: "bba", names: ["bba", "bachelor of business administration"] }
-    ];
-
-    const matchedKeyword = deptKeywords.find((dk) => dk.names.some((alias) => qLower.includes(alias)));
-    const matchedProfile = publishedProfiles.find((p) => {
-      const pName = (p.department_name || "").toLowerCase();
-      if (!matchedKeyword) return false;
-      return matchedKeyword.names.some((alias) => pName.includes(alias));
-    });
-
-    if (matchedProfile) {
-      if (qLower.includes("placement") || qLower.includes("package") || qLower.includes("salary") || qLower.includes("job") || qLower.includes("rate")) {
-        return res.json({
-          answer: `📈 **${matchedProfile.department_name} Placement Profile:**\n\n• **Placement Rate:** ${matchedProfile.placement_stats?.placement_rate || "90%"}\n• **Highest Package:** ${matchedProfile.placement_stats?.highest_package || "₹18.0 LPA"}\n• **Average Package:** ${matchedProfile.placement_stats?.average_package || "₹6.5 LPA"}\n• **Key Accolades:** ${matchedProfile.achievements?.join(", ") || "100% Placement in Top Tier MNCs"}\n\nFor more details, contact Admissions at **+91 80 2843 2999**.`
-        });
+    if (qLower.includes("topper") || qLower.includes("rank") || qLower.includes("gold medalist") || qLower.includes("achiever")) {
+      if (deptMatch) {
+        if (deptMatch.isPublished && deptMatch.profile) {
+          const tops = deptMatch.profile.toppers_and_rank_holders || [];
+          if (tops.length > 0) {
+            const list = tops.map((t) => `• **${t.name}** (USN: ${t.usn || 'N/A'}${t.class_sem ? ' • ' + t.class_sem : ''}) — **${t.cgpa || 'N/A'} CGPA** (${t.rank || 'Rank Holder'})`).join("\n");
+            return res.json({
+              answer: `🏆 **Official ${deptMatch.name} Rank Holders & Toppers:**\n\n${list}\n\nCongratulations to our high-achieving students!`
+            });
+          } else {
+            return res.json({
+              answer: `🏆 **${deptMatch.name} Toppers:**\n\nNo student rank holders or toppers have been published yet for the ${deptMatch.name} department. Please check back soon or contact the department HOD.`
+            });
+          }
+        } else {
+          return res.json({
+            answer: `🏆 **${deptMatch.name} Toppers:**\n\nOfficial public disclosures and student rank holders for the ${deptMatch.name} department have not been published yet by the department head. For official records, please contact Admissions at **+91 80 2843 2999**.`
+          });
+        }
       }
 
-      if (qLower.includes("fee") || qLower.includes("cost") || qLower.includes("tuition") || qLower.includes("quota")) {
-        const fees = matchedProfile.annual_fee_breakdown || {};
+      // General Toppers across all published departments
+      const allPublishedToppers = [];
+      publishedProfiles.forEach((p) => {
+        (p.toppers_and_rank_holders || []).forEach((t) => {
+          allPublishedToppers.push({ ...t, dept: p.department_name });
+        });
+      });
+
+      if (allPublishedToppers.length > 0) {
+        const list = allPublishedToppers.map((t) => `• **${t.name}** (${t.dept}) — **${t.cgpa || 'N/A'} CGPA** (${t.rank || 'Rank Holder'}) [USN: ${t.usn || 'N/A'}]`).join("\n");
         return res.json({
-          answer: `💳 **${matchedProfile.department_name} Fee Structure:**\n\n• **Tuition Fee:** ${fees.tuition_fee || "₹1,25,000"}/year\n• **Lab & Development Fee:** ${fees.lab_and_development_fee || "₹25,000"}/year\n• **University / Exam Fee:** ${fees.university_exam_fee || "₹8,500"}/year\n• **Total Annual Fee:** ${fees.total_annual_fee || "₹1,58,500"}/year\n• **Quota & Scholarships:** ${fees.quota || "PGCET & Management Quota"}. ${fees.scholarship_notes || "Merit scholarships applicable."}`
+          answer: `🏆 **Official DSATM VTU Rank Holders & Toppers:**\n\n${list}\n\nAsk me about any specific department for more detailed academic records!`
         });
       }
 
       return res.json({
-        answer: `🎓 **${matchedProfile.department_name} at DSATM:**\n\n${matchedProfile.about}\n\n• **Placement Rate:** ${matchedProfile.placement_stats?.placement_rate || "90%"}\n• **Highest Package:** ${matchedProfile.placement_stats?.highest_package || "₹18.0 LPA"} (Average: ${matchedProfile.placement_stats?.average_package || "₹6.5 LPA"})\n• **Annual Fee:** ${matchedProfile.annual_fee_breakdown?.total_annual_fee || "₹1,58,500"}\n• **Enrolled Students:** ${matchedProfile.student_count || 120}\n• **Admissions Helpline:** +91 80 2843 2999`
+        answer: `🏆 **DSATM Student Rank Holders & Toppers:**\n\nOfficial student rank holders are currently being updated by the respective academic departments. You can check back shortly or reach Admissions at **+91 80 2843 2999**.`
       });
     }
 
+    // Check Fees & Structure
+    if (qLower.includes("fee") || qLower.includes("cost") || qLower.includes("tuition") || qLower.includes("quota")) {
+      if (deptMatch) {
+        if (deptMatch.isPublished && deptMatch.profile) {
+          const fees = deptMatch.profile.annual_fee_breakdown || {};
+          if (fees.total_annual_fee || fees.tuition_fee) {
+            let breakdown = [];
+            if (fees.tuition_fee) breakdown.push(`• **Tuition Fee:** ${fees.tuition_fee} / year`);
+            if (fees.lab_and_development_fee) breakdown.push(`• **Lab & Development Fee:** ${fees.lab_and_development_fee} / year`);
+            if (fees.university_exam_fee) breakdown.push(`• **University Exam Fee:** ${fees.university_exam_fee} / year`);
+            if (fees.total_annual_fee) breakdown.push(`• **Total Annual Fee:** ${fees.total_annual_fee} / year`);
+            if (fees.quota) breakdown.push(`• **Quota Applicable:** ${fees.quota}`);
+            if (fees.scholarship_notes) breakdown.push(`• **Scholarships:** ${fees.scholarship_notes}`);
+
+            return res.json({
+              answer: `💳 **${deptMatch.name} Fee Structure:**\n\n${breakdown.join("\n")}\n\n*Note:* Fees may vary depending on KEA PGCET / KCET allotment versus Management Quota seats.`
+            });
+          } else {
+            return res.json({
+              answer: `💳 **${deptMatch.name} Fee Structure:**\n\nDetailed annual fee breakdown for ${deptMatch.name} is currently being updated. Please call Admissions at **+91 80 2843 2999** for the official fee schedule.`
+            });
+          }
+        } else {
+          return res.json({
+            answer: `💳 **${deptMatch.name} Fee Structure:**\n\nOfficial public fee information for ${deptMatch.name} has not been published yet by the department head. Please contact the DSATM Admissions Helpline at **+91 80 2843 2999** for exact quota-wise fee details.`
+          });
+        }
+      }
+
+      // General college fees
+      const publishedWithFees = publishedProfiles.filter((p) => p.annual_fee_breakdown?.total_annual_fee || p.annual_fee_breakdown?.tuition_fee);
+      if (publishedWithFees.length > 0) {
+        const feeList = publishedWithFees.map((p) => `• **${p.department_name}:** ${p.annual_fee_breakdown.total_annual_fee || p.annual_fee_breakdown.tuition_fee || 'Contact Dept'} / year (Quota: ${p.annual_fee_breakdown.quota || 'Govt / Management'})`).join("\n");
+        return res.json({
+          answer: `💳 **DSATM Department Fee Overview:**\n\n${feeList}\n\n*Note:* Specific government seat matrix fees (KEA KCET / PGCET) and scholarships apply. Call **+91 80 2843 2999** for detailed quota consultations.`
+        });
+      }
+
+      return res.json({
+        answer: `💳 **DSATM Annual Fee Information:**\n\nStandard fees vary depending on the degree program and admission quota (Karnataka Govt. KCET/PGCET quota vs. Management quota). Merit and category scholarships are available.\n\nPlease contact Admissions at **+91 80 2843 2999** or email **principal@dsatm.edu.in** for the latest fee schedules.`
+      });
+    }
+
+    // Check Placements & Packages
+    if (qLower.includes("placement") || qLower.includes("package") || qLower.includes("salary") || qLower.includes("job") || qLower.includes("rate")) {
+      if (deptMatch) {
+        if (deptMatch.isPublished && deptMatch.profile) {
+          const stats = deptMatch.profile.placement_stats || {};
+          let items = [];
+          if (stats.placement_rate) items.push(`• **Placement Rate:** ${stats.placement_rate}`);
+          if (stats.highest_package) items.push(`• **Highest Package:** ${stats.highest_package}`);
+          if (stats.average_package) items.push(`• **Average Package:** ${stats.average_package}`);
+          if (deptMatch.profile.achievements && deptMatch.profile.achievements.length > 0) {
+            items.push(`• **Key Highlights:** ${deptMatch.profile.achievements.join("; ")}`);
+          }
+
+          return res.json({
+            answer: `📈 **${deptMatch.name} Placement Record:**\n\n${items.join("\n") || "Placement details are being compiled for the latest academic session."}\n\nTop recruiters include leading Tier-1 MNCs and global technology firms.`
+          });
+        } else {
+          return res.json({
+            answer: `📈 **${deptMatch.name} Placements:**\n\nOfficial placement disclosures for ${deptMatch.name} have not been published yet by the department head. For placement statistics, contact the DSATM Placement Cell at **+91 80 2843 2999**.`
+          });
+        }
+      }
+
+      // General placements across published departments
+      const publishedWithPlacements = publishedProfiles.filter((p) => p.placement_stats?.placement_rate || p.placement_stats?.highest_package);
+      if (publishedWithPlacements.length > 0) {
+        const plList = publishedWithPlacements.map((p) => `• **${p.department_name}:** ${p.placement_stats.placement_rate || '90%+'} placement rate | Highest: ${p.placement_stats.highest_package || 'N/A'} (Avg: ${p.placement_stats.average_package || 'N/A'})`).join("\n");
+        return res.json({
+          answer: `📈 **DSATM Department Placement Highlights:**\n\n${plList}\n\nDSATM maintains an active Corporate Relations and Placement division partnering with 200+ recruiters.`
+        });
+      }
+    }
+
+    // Check Specific Department Overview
+    if (deptMatch) {
+      if (deptMatch.isPublished && deptMatch.profile) {
+        const p = deptMatch.profile;
+        let details = [];
+        if (p.about) details.push(p.about);
+        if (p.student_count) details.push(`• **Enrolled Students:** ${p.student_count}`);
+        if (p.placement_stats?.placement_rate) details.push(`• **Placement Rate:** ${p.placement_stats.placement_rate} (Highest Package: ${p.placement_stats.highest_package || 'N/A'})`);
+        if (p.annual_fee_breakdown?.total_annual_fee) details.push(`• **Annual Fee:** ${p.annual_fee_breakdown.total_annual_fee}`);
+        if (p.offered_courses && p.offered_courses.length > 0) details.push(`• **Courses:** ${p.offered_courses.join(", ")}`);
+
+        return res.json({
+          answer: `🎓 **${deptMatch.name} at DSATM:**\n\n${details.join("\n\n")}\n\nAdmissions Helpline: **+91 80 2843 2999**`
+        });
+      } else {
+        return res.json({
+          answer: `🎓 **${deptMatch.name} at DSATM:**\n\nThis department is offered at DSATM affiliated with VTU Belagavi. The department's public disclosure profile is currently pending publication by the department head.\n\nFor syllabus and admission inquiries, contact Admissions at **+91 80 2843 2999**.`
+        });
+      }
+    }
+
+    // Check All Academic Departments list
     if (qLower.includes("department") || qLower.includes("branch") || qLower.includes("courses") || qLower.includes("programs")) {
+      const publishedNames = new Set(publishedProfiles.map((p) => (p.department_name || "").toLowerCase()));
       const deptsList = publicContext.all_offered_academic_departments.length > 0
-        ? publicContext.all_offered_academic_departments.map((d) => `• ${d}`).join("\n")
+        ? publicContext.all_offered_academic_departments.map((d) => {
+            const isPub = publishedNames.has(d.toLowerCase());
+            return `• ${d} ${isPub ? '*(Live Profile Published)*' : ''}`;
+          }).join("\n")
         : "• Computer Science & Engineering (CSE)\n• Information Science & Engineering (ISE)\n• Artificial Intelligence & Machine Learning (AI & ML)\n• Cyber Security & Data Science (CS)\n• Electronics & Communication Engineering (ECE)\n• Electrical & Electronics Engineering (EEE)\n• Mechanical Engineering (ME)\n• Civil Engineering (CIVIL)\n• Master of Computer Applications (MCA)\n• Master of Business Administration (MBA)\n• Bachelor of Computer Applications (BCA)";
 
       return res.json({
-        answer: `🏛️ **Academic Departments & Programs Offered at DSATM:**\n\n${deptsList}\n\nAll programs are affiliated with Visvesvaraya Technological University (VTU) and approved by AICTE. Ask me for specific department fees, placements, or admission requirements!`
+        answer: `🏛️ **Academic Departments & Programs Offered at DSATM:**\n\n${deptsList}\n\nAll programs are affiliated with Visvesvaraya Technological University (VTU) and approved by AICTE. Ask me for specific department fees, placements, or rank holders!`
       });
     }
 
-    if (qLower.includes("fee") || qLower.includes("cost") || qLower.includes("tuition")) {
-      return res.json({
-        answer: `💳 **DSATM Standard Annual Fee Overview:**\n\n• **Tuition Fee:** ₹1,25,000 / year\n• **Lab & Infrastructure Fee:** ₹25,000 / year\n• **University Exam Fee:** ₹8,500 / year\n• **Estimated Total Annual Fee:** ~ ₹1,58,500 / year\n\n*Note:* Exact fees vary by quota (Karnataka CET / PGCET Govt. quota vs. Management quota). Merit scholarships are awarded to eligible rank holders. Call **+91 80 2843 2999** for detailed quota-specific admissions.`
-      });
-    }
+    // Default dynamic response
+    const pubDeptNames = publishedProfiles.map((p) => p.department_name).filter(Boolean);
+    const pubNote = pubDeptNames.length > 0
+      ? `Live published departments available: **${pubDeptNames.join(", ")}**.`
+      : "Department profiles are currently being updated by department heads.";
 
-    // Default RAG response from published overview
     return res.json({
-      answer: `🎓 **Dayananda Sagar Academy of Technology and Management (DSATM)**\n\nDSATM is a premier VTU-affiliated autonomous institution in Bengaluru offering high-ranking Engineering, MCA, and Management programs with 90%+ placement records, state-of-the-art research labs, and top-tier recruiters.\n\nYou can ask me about:\n1. 🏢 Available Academic Departments\n2. 📈 Placement Records & Highest Packages\n3. 💳 Department Fee Structures\n4. 📍 Campus Location, Metro & Bus Routes\n5. 🏡 Nearby Student PGs & Hostels\n\nAdmissions Helpline: **+91 80 2843 2999** | Email: **principal@dsatm.edu.in**`
+      answer: `🎓 **Dayananda Sagar Academy of Technology and Management (DSATM)**\n\nDSATM is an autonomous VTU-affiliated premier institution in Bengaluru offering top-ranked Engineering, MCA, and Management programs.\n\n${pubNote}\n\nYou can ask me about:\n1. 🏢 Available Academic Departments\n2. 📈 Department Placement Records & Highest Packages\n3. 💳 Department Fee Structures & Quotas\n4. 🏆 Student Rank Holders & Toppers\n5. 📍 Campus Location, Metro & BMTC Bus Routes\n6. 🏡 Nearby Student PGs & Hostels\n\nAdmissions Helpline: **+91 80 2843 2999** | Email: **principal@dsatm.edu.in**`
     });
   } catch (err) {
     console.error("Error in public chat handler:", err);

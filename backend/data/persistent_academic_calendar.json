@@ -578,8 +578,12 @@
     "created_by": "HOD MCA",
     "published_by": "HOD MCA",
     "published_at": "2026-08-20T00:00:00.000Z",
-    "version": 1,
-    "visibility": "all"
+    "version": 2,
+    "visibility": "all",
+    "start_time": "",
+    "end_time": "",
+    "updated_by": "9e9f16a4-a622-4121-b6e1-b7075f947b25",
+    "updated_at": "2026-10-23T20:27:31.318Z"
   },
   {
     "id": "mca-cal-024",

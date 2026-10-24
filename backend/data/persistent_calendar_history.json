@@ -583,5 +583,185 @@
     "changed_by": "9e9f16a4-a622-4121-b6e1-b7075f947b25",
     "changed_at": "2026-10-20T19:33:19.052Z",
     "reason": "Event details updated"
+  },
+  {
+    "id": "hist-1792787098192",
+    "event_id": "mca-cal-1792787098187-zgku0",
+    "action": "CREATED",
+    "old_value": null,
+    "new_value": {
+      "id": "mca-cal-1792787098187-zgku0",
+      "title": "Copy of Idea Pitch Presentation on Deep Learning and Generative AI",
+      "event_type": "STUDENT_ACTIVITY",
+      "department_id": "37909cba-a75d-428e-9181-fddf9920fb0b",
+      "program": "MCA",
+      "semester": "III",
+      "academic_year": "2026-27",
+      "start_date": "2026-10-24",
+      "end_date": "2026-10-24",
+      "start_time": null,
+      "end_time": null,
+      "description": "Student Innovation & AI Project Pitching Session judged by Industry Experts.",
+      "remarks": "Certificates & cash prizes for winning teams.",
+      "location": "DSATM Main Auditorium",
+      "audience": [
+        "students",
+        "faculty",
+        "hod"
+      ],
+      "priority": "MEDIUM",
+      "status": "DRAFT",
+      "created_by": "9e9f16a4-a622-4121-b6e1-b7075f947b25",
+      "created_at": "2026-10-23T20:24:58.187Z",
+      "updated_by": "9e9f16a4-a622-4121-b6e1-b7075f947b25",
+      "updated_at": "2026-10-23T20:24:58.187Z",
+      "published_by": null,
+      "published_at": null,
+      "linked_exam_id": null,
+      "version": 1
+    },
+    "changed_by": "9e9f16a4-a622-4121-b6e1-b7075f947b25",
+    "changed_at": "2026-10-23T20:24:58.187Z",
+    "reason": "Initial calendar entry creation"
+  },
+  {
+    "id": "hist-1792787127605",
+    "event_id": "mca-cal-1792787098187-zgku0",
+    "action": "STATUS_CHANGED_PUBLISHED",
+    "old_value": {
+      "start_date": "2026-10-24",
+      "end_date": "2026-10-24",
+      "title": "Copy of Idea Pitch Presentation on Deep Learning and Generative AI",
+      "status": "DRAFT"
+    },
+    "new_value": {
+      "start_date": "2026-10-24",
+      "end_date": "2026-10-24",
+      "title": "Copy of Idea Pitch Presentation on Deep Learning and Generative AI",
+      "status": "PUBLISHED"
+    },
+    "changed_by": "9e9f16a4-a622-4121-b6e1-b7075f947b25",
+    "changed_at": "2026-10-23T20:25:27.603Z",
+    "reason": "Event details updated"
+  },
+  {
+    "id": "hist-1792787193170",
+    "event_id": "mca-cal-1792787193167-s1fny",
+    "action": "CREATED",
+    "old_value": null,
+    "new_value": {
+      "id": "mca-cal-1792787193167-s1fny",
+      "title": "Copy of Idea Pitch Presentation on Deep Learning and Generative AI",
+      "event_type": "STUDENT_ACTIVITY",
+      "department_id": "37909cba-a75d-428e-9181-fddf9920fb0b",
+      "program": "MCA",
+      "semester": "III",
+      "academic_year": "2026-27",
+      "start_date": "2026-10-24",
+      "end_date": "2026-10-24",
+      "start_time": null,
+      "end_time": null,
+      "description": "Student Innovation & AI Project Pitching Session judged by Industry Experts.",
+      "remarks": "Certificates & cash prizes for winning teams.",
+      "location": "DSATM Main Auditorium",
+      "audience": [
+        "students",
+        "faculty",
+        "hod"
+      ],
+      "priority": "MEDIUM",
+      "status": "DRAFT",
+      "created_by": "9e9f16a4-a622-4121-b6e1-b7075f947b25",
+      "created_at": "2026-10-23T20:26:33.167Z",
+      "updated_by": "9e9f16a4-a622-4121-b6e1-b7075f947b25",
+      "updated_at": "2026-10-23T20:26:33.167Z",
+      "published_by": null,
+      "published_at": null,
+      "linked_exam_id": null,
+      "version": 1
+    },
+    "changed_by": "9e9f16a4-a622-4121-b6e1-b7075f947b25",
+    "changed_at": "2026-10-23T20:26:33.167Z",
+    "reason": "Initial calendar entry creation"
+  },
+  {
+    "id": "hist-1792787251321",
+    "event_id": "mca-cal-023",
+    "action": "UPDATED",
+    "old_value": {
+      "start_date": "2026-10-24",
+      "end_date": "2026-10-24",
+      "title": "Idea Pitch Presentation on Deep Learning and Generative AI",
+      "status": "PUBLISHED"
+    },
+    "new_value": {
+      "start_date": "2026-10-24",
+      "end_date": "2026-10-24",
+      "title": "Idea Pitch Presentation on Deep Learning and Generative AI",
+      "status": "PUBLISHED"
+    },
+    "changed_by": "9e9f16a4-a622-4121-b6e1-b7075f947b25",
+    "changed_at": "2026-10-23T20:27:31.318Z",
+    "reason": "Event details updated"
+  },
+  {
+    "id": "hist-1792787261608",
+    "event_id": "mca-cal-1792787261605-3rfpm",
+    "action": "CREATED",
+    "old_value": null,
+    "new_value": {
+      "id": "mca-cal-1792787261605-3rfpm",
+      "title": "Copy of Idea Pitch Presentation on Deep Learning and Generative AI",
+      "event_type": "STUDENT_ACTIVITY",
+      "department_id": "37909cba-a75d-428e-9181-fddf9920fb0b",
+      "program": "MCA",
+      "semester": "III",
+      "academic_year": "2026-27",
+      "start_date": "2026-10-24",
+      "end_date": "2026-10-24",
+      "start_time": null,
+      "end_time": null,
+      "description": "Student Innovation & AI Project Pitching Session judged by Industry Experts.",
+      "remarks": "Certificates & cash prizes for winning teams.",
+      "location": "DSATM Main Auditorium",
+      "audience": [
+        "students",
+        "faculty",
+        "hod"
+      ],
+      "priority": "MEDIUM",
+      "status": "DRAFT",
+      "created_by": "9e9f16a4-a622-4121-b6e1-b7075f947b25",
+      "created_at": "2026-10-23T20:27:41.605Z",
+      "updated_by": "9e9f16a4-a622-4121-b6e1-b7075f947b25",
+      "updated_at": "2026-10-23T20:27:41.605Z",
+      "published_by": null,
+      "published_at": null,
+      "linked_exam_id": null,
+      "version": 1
+    },
+    "changed_by": "9e9f16a4-a622-4121-b6e1-b7075f947b25",
+    "changed_at": "2026-10-23T20:27:41.605Z",
+    "reason": "Initial calendar entry creation"
+  },
+  {
+    "id": "hist-1792787269742",
+    "event_id": "mca-cal-1792787261605-3rfpm",
+    "action": "STATUS_CHANGED_PUBLISHED",
+    "old_value": {
+      "start_date": "2026-10-24",
+      "end_date": "2026-10-24",
+      "title": "Copy of Idea Pitch Presentation on Deep Learning and Generative AI",
+      "status": "DRAFT"
+    },
+    "new_value": {
+      "start_date": "2026-10-24",
+      "end_date": "2026-10-24",
+      "title": "Copy of Idea Pitch Presentation on Deep Learning and Generative AI",
+      "status": "PUBLISHED"
+    },
+    "changed_by": "9e9f16a4-a622-4121-b6e1-b7075f947b25",
+    "changed_at": "2026-10-23T20:27:49.739Z",
+    "reason": "Event details updated"
   }
 ]

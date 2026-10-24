@@ -308,65 +308,29 @@ router.get("/public-info", async (req, res) => {
       return res.json({
         department_id: departmentId,
         department_name: deptName,
-        about: `${deptName} Department at DSATM provides cutting-edge technical education, industry-aligned labs, and top placement opportunities.`,
-        student_count: 120,
+        about: "",
+        student_count: 0,
         courses: [`${deptName} Program`],
         fees: {
-          tuition_fee: "1,25,000",
-          lab_fee: "25,000",
-          exam_fee: "8,500",
-          total_fee: "1,58,500",
-          quota: "Govt. PGCET / KEA & Management Quota",
-          notes: "Scholarships available for eligible VTU & merit candidates."
+          tuition_fee: "",
+          lab_fee: "",
+          exam_fee: "",
+          total_fee: "",
+          quota: "",
+          notes: ""
         },
-        toppers: [
-          {
-            id: "top-1",
-            name: "Ananya Sharma",
-            usn: "1DT22MC045",
-            cgpa: "9.84",
-            class_sem: "4th Sem MCA",
-            rank_title: "🏆 1st Rank - VTU Gold Medalist",
-            year: "2025",
-            photo_url: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=300"
-          },
-          {
-            id: "top-2",
-            name: "Rohan K. Verma",
-            usn: "1DT22MC088",
-            cgpa: "9.72",
-            class_sem: "4th Sem MCA",
-            rank_title: "🥈 2nd Rank - Department Topper",
-            year: "2025",
-            photo_url: "https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?auto=format&fit=crop&q=80&w=300"
-          }
-        ],
-        placement_percentage: 95,
-        highest_package: 1800000,
-        average_package: 650000,
-        achievements: [
-          "100% Placement Record in Top Tier MNCs",
-          "1st Prize in VTU State Level Hackathon 2025",
-          "Published 15+ Scopus Indexed AI Research Papers"
-        ],
-        facilities: ["AI & Cloud Computing Lab", "High Performance GPU Compute Server"],
-        published: true,
+        toppers: [],
+        placement_percentage: 0,
+        highest_package: 0,
+        average_package: 0,
+        achievements: [],
+        facilities: [],
+        published: false,
       });
     }
 
-    // Extract toppers from toppers column or fees.toppers fallback
-    const toppersList = data.toppers || data.fees?.toppers || [
-      {
-        id: "top-1",
-        name: "Ananya Sharma",
-        usn: "1DT22MC045",
-        cgpa: "9.84",
-        class_sem: "4th Sem MCA",
-        rank_title: "🏆 1st Rank - VTU Gold Medalist",
-        year: "2025",
-        photo_url: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=300"
-      }
-    ];
+    // Extract toppers from toppers column or fees.toppers
+    const toppersList = Array.isArray(data.toppers) ? data.toppers : (Array.isArray(data.fees?.toppers) ? data.fees.toppers : []);
 
     res.json({
       ...data,

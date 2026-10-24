@@ -206,7 +206,7 @@ export default function CollegeInfo() {
                 <div className="dept-metrics-grid">
                   <div className="dept-metric-box">
                     <div className="dept-metric-val val-emerald">
-                      {currentDeptData.placement_percentage ? `${currentDeptData.placement_percentage}%` : '95%'}
+                      {currentDeptData.placement_percentage ? `${currentDeptData.placement_percentage}%` : 'N/A'}
                     </div>
                     <div className="dept-metric-label">Placement Rate</div>
                   </div>
@@ -215,7 +215,7 @@ export default function CollegeInfo() {
                     <div className="dept-metric-val val-amber">
                       {currentDeptData.highest_package
                         ? `₹${(currentDeptData.highest_package / 100000).toFixed(1)} LPA`
-                        : '₹18.0 LPA'}
+                        : 'N/A'}
                     </div>
                     <div className="dept-metric-label">Highest Package</div>
                   </div>
@@ -224,7 +224,7 @@ export default function CollegeInfo() {
                     <div className="dept-metric-val val-purple">
                       {currentDeptData.average_package
                         ? `₹${(currentDeptData.average_package / 100000).toFixed(1)} LPA`
-                        : '₹6.5 LPA'}
+                        : 'N/A'}
                     </div>
                     <div className="dept-metric-label">Average Package</div>
                   </div>
@@ -237,19 +237,19 @@ export default function CollegeInfo() {
                     <div className="fee-summary-table">
                       <div className="fee-cell">
                         <span>Tuition Fee / Year:</span>
-                        <strong>₹{currentDeptData.fees?.tuition_fee || '1,25,000'}</strong>
+                        <strong>{currentDeptData.fees?.tuition_fee ? `₹${currentDeptData.fees.tuition_fee}` : 'Contact Dept'}</strong>
                       </div>
                       <div className="fee-cell">
                         <span>Lab & Development Fee:</span>
-                        <strong>₹{currentDeptData.fees?.lab_fee || '25,000'}</strong>
+                        <strong>{currentDeptData.fees?.lab_fee ? `₹${currentDeptData.fees.lab_fee}` : 'Contact Dept'}</strong>
                       </div>
                       <div className="fee-cell">
                         <span>University / Exam Fee:</span>
-                        <strong>₹{currentDeptData.fees?.exam_fee || '8,500'}</strong>
+                        <strong>{currentDeptData.fees?.exam_fee ? `₹${currentDeptData.fees.exam_fee}` : 'Contact Dept'}</strong>
                       </div>
                       <div className="fee-cell fee-total">
                         <span>Total Annual Fee:</span>
-                        <strong>₹{currentDeptData.fees?.total_fee || '1,58,500'}</strong>
+                        <strong>{currentDeptData.fees?.total_fee ? `₹${currentDeptData.fees.total_fee}` : 'Contact Dept'}</strong>
                       </div>
                     </div>
                     {currentDeptData.fees?.notes && (

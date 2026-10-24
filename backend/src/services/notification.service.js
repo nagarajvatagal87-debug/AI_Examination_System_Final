@@ -51,7 +51,7 @@ function wrapInHtmlTemplate(subject, bodyText) {
                 DAYANANDA SAGAR ACADEMY OF TECHNOLOGY & MANAGEMENT
               </h1>
               <p style="margin: 6px 0 0 0; font-size: 12px; color: #94a3b8; font-weight: 500;">
-                Autonomous Institute under VTU | Department of Computer Applications
+                Autonomous Institute under VTU | Approved by AICTE, New Delhi
               </p>
             </td>
           </tr>
@@ -117,19 +117,37 @@ async function sendEmail(to, subject, body, html = null) {
       });
       console.log(`[EMAIL DISPATCH via Resend] Sent to ${to}: ${subject}`);
     } else if (transporter) {
+      const path = require("path");
+      const fs = require("fs");
+      const logoPath = path.resolve(__dirname, "../../../frontend/public/dsi-logo.png");
+      const attachments = [];
+      let emailHtml = finalHtml;
+      if (fs.existsSync(logoPath)) {
+        attachments.push({
+          filename: "dsi-logo.png",
+          path: logoPath,
+          cid: "dsilogo",
+        });
+        const portalUrl = process.env.FRONTEND_ORIGIN || "http://localhost:5173";
+        const dsiLogoUrl = `${portalUrl}/dsi-logo.png`;
+        emailHtml = emailHtml.split(dsiLogoUrl).join("cid:dsilogo");
+      }
+
       await transporter.sendMail({
         from: process.env.EMAIL_FROM || process.env.SMTP_USER,
         to,
         subject,
         text: body,
-        html: finalHtml,
+        html: emailHtml,
+        attachments: attachments.length > 0 ? attachments : undefined,
       });
       console.log(`[EMAIL DISPATCH via SMTP] Sent to ${to}: ${subject}`);
     } else {
-      console.log(`[EMAIL DISPATCH LOGGED] To: ${to} | Subject: ${subject}`);
+      console.log(`[EMAIL DISPATCH LOGGED - NO SMTP CONFIG] To: ${to} | Subject: ${subject}`);
     }
   } catch (err) {
-    console.error("sendEmail failed (handled):", err.message);
+    console.error(`[EMAIL DISPATCH ERROR] Failed to send to ${to}:`, err.message);
+    throw err;
   }
 }
 

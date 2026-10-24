@@ -19,18 +19,18 @@ export default function HodPublicPublishSection() {
 
   const [deptName, setDeptName] = useState('')
   const [about, setAbout] = useState('')
-  const [studentCount, setStudentCount] = useState(120)
-  const [placementPct, setPlacementPct] = useState(95)
-  const [highestPkg, setHighestPkg] = useState(18)
-  const [avgPkg, setAvgPkg] = useState(6.5)
+  const [studentCount, setStudentCount] = useState(0)
+  const [placementPct, setPlacementPct] = useState(0)
+  const [highestPkg, setHighestPkg] = useState(0)
+  const [avgPkg, setAvgPkg] = useState(0)
 
   // Fees Structure State
   const [fees, setFees] = useState({
-    tuition_fee: '1,25,000',
-    lab_fee: '25,000',
-    exam_fee: '8,500',
-    quota: 'Govt. PGCET / KEA & Management Quota',
-    notes: 'Scholarships available for eligible VTU & merit candidates.'
+    tuition_fee: '',
+    lab_fee: '',
+    exam_fee: '',
+    quota: '',
+    notes: ''
   })
 
   // Toppers State
@@ -39,25 +39,23 @@ export default function HodPublicPublishSection() {
     name: '',
     usn: '',
     cgpa: '9.50',
-    class_sem: '4th Sem MCA',
-    rank_title: '🏆 1st Rank - Department Topper',
-    year: '2025',
+    class_sem: '',
+    rank_title: '🏆 Department Topper',
+    year: '2026',
     photo_url: PRESET_AVATARS[0]
   })
 
   // Achievements State
-  const [achievementsText, setAchievementsText] = useState(
-    '100% Placement Record in Top Tier MNCs\n1st Prize in VTU State Level Hackathon 2025\nPublished 15+ Scopus Indexed AI Research Papers'
-  )
+  const [achievementsText, setAchievementsText] = useState('')
 
-  const [published, setPublished] = useState(true)
+  const [published, setPublished] = useState(false)
 
   useEffect(() => {
     async function loadData() {
       try {
         const { data } = await api.get('/hod/public-info')
         if (data) {
-          setDeptName(data.department_name || 'MCA')
+          setDeptName(data.department_name || '')
           setAbout(data.about || '')
           setStudentCount(data.student_count || 0)
           setPlacementPct(data.placement_percentage || 0)
@@ -66,11 +64,19 @@ export default function HodPublicPublishSection() {
 
           if (data.fees && typeof data.fees === 'object') {
             setFees({
-              tuition_fee: data.fees.tuition_fee || '1,25,000',
-              lab_fee: data.fees.lab_fee || '25,000',
-              exam_fee: data.fees.exam_fee || '8,500',
-              quota: data.fees.quota || 'Govt. PGCET & Management Quota',
-              notes: data.fees.notes || 'Scholarships available for VTU & merit candidates.'
+              tuition_fee: data.fees.tuition_fee || '',
+              lab_fee: data.fees.lab_fee || '',
+              exam_fee: data.fees.exam_fee || '',
+              quota: data.fees.quota || '',
+              notes: data.fees.notes || ''
+            })
+          } else {
+            setFees({
+              tuition_fee: '',
+              lab_fee: '',
+              exam_fee: '',
+              quota: '',
+              notes: ''
             })
           }
 
@@ -82,9 +88,11 @@ export default function HodPublicPublishSection() {
 
           if (Array.isArray(data.achievements)) {
             setAchievementsText(data.achievements.join('\n'))
+          } else {
+            setAchievementsText('')
           }
 
-          setPublished(data.published !== false)
+          setPublished(data.published === true)
         }
       } catch (err) {
         console.warn('Could not load public info:', err)
@@ -223,7 +231,7 @@ export default function HodPublicPublishSection() {
 
       const feesObj = {
         ...fees,
-        total_fee: totalNum > 0 ? totalNum.toLocaleString('en-IN') : '1,58,500',
+        total_fee: totalNum > 0 ? totalNum.toLocaleString('en-IN') : (fees.total_fee || ''),
         toppers: toppers
       }
 
