@@ -13,6 +13,8 @@ export default function CreateExamination() {
   const [pattern, setPattern] = useState([{ marks: 10, count: 5 }])
   const [difficulty, setDifficulty] = useState('medium')
   const [instructions, setInstructions] = useState('')
+  const [securityCode, setSecurityCode] = useState('')
+  const [showSecurityCode, setShowSecurityCode] = useState(false)
   const [msg, setMsg] = useState('')
   const [loading, setLoading] = useState(false)
   const navigate = useNavigate()
@@ -53,6 +55,10 @@ export default function CreateExamination() {
 
   async function handleGenerate() {
     if (!subjectId) return setMsg('Please create or select a subject first.')
+    const cleanSecCode = securityCode.trim()
+    if (!cleanSecCode || (cleanSecCode.length !== 4 && cleanSecCode.length !== 6)) {
+      return setMsg('🔒 Please set a confidential 4 or 6-digit security code to protect this question paper before generating.')
+    }
     if (patternTotal !== Number(totalMarks)) {
       return setMsg(`Question pattern totals ${patternTotal} marks, but Total Marks is specified as ${totalMarks} marks. They must match.`)
     }
@@ -73,8 +79,12 @@ export default function CreateExamination() {
         questionPattern: pattern,
         difficulty,
         instructions,
+        securityCode: cleanSecCode,
       })
       setMsg('Question paper generated successfully!')
+      if (data?.exam?.id) {
+        sessionStorage.setItem(`exam_sec_${data.exam.id}`, cleanSecCode)
+      }
       navigate(`/faculty/examinations/${data.exam.id}/preview`)
     } catch (err) {
       setMsg(err.response?.data?.error || 'Generation failed')
@@ -167,6 +177,55 @@ export default function CreateExamination() {
           value={instructions}
           onChange={(e) => setInstructions(e.target.value)}
         />
+      </div>
+
+      <div className="ce-section-title">🔒 4. Confidential Question Paper Security Passcode</div>
+      <div className="ce-field">
+        <label>Set 4 or 6-Digit Security Passcode (Required)</label>
+        <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
+          <input
+            type={showSecurityCode ? 'text' : 'password'}
+            placeholder="Enter 4 or 6-digit security code (e.g. 7492 or 849201)"
+            value={securityCode}
+            onChange={(e) => setSecurityCode(e.target.value.replace(/[^0-9a-zA-Z]/g, '').slice(0, 6))}
+            maxLength={6}
+            style={{ paddingRight: 45, letterSpacing: showSecurityCode ? '3px' : '4px', fontWeight: 'bold' }}
+          />
+          <button
+            type="button"
+            onClick={() => setShowSecurityCode(!showSecurityCode)}
+            style={{
+              position: 'absolute',
+              right: 12,
+              background: 'none',
+              border: 'none',
+              cursor: 'pointer',
+              fontSize: 16,
+              color: '#64748b',
+              padding: 4,
+            }}
+            title={showSecurityCode ? 'Hide Code' : 'Show Code'}
+          >
+            {showSecurityCode ? '👁️' : '🔒'}
+          </button>
+        </div>
+
+        <div style={{ marginTop: 8, display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: 12 }}>
+          <span style={{ color: securityCode.length === 4 || securityCode.length === 6 ? '#059669' : '#d97706', fontWeight: 700 }}>
+            {securityCode.length === 0
+              ? 'ℹ️ Code must be exactly 4 or 6 digits'
+              : securityCode.length === 4
+              ? '✓ 4-Digit Security Code (Standard Protection)'
+              : securityCode.length === 6
+              ? '✓ 6-Digit Security Code (High Security Protection)'
+              : `⚠️ Must be 4 or 6 digits (currently ${securityCode.length} digits)`}
+          </span>
+          <span style={{ color: '#64748b', fontWeight: 600 }}>{securityCode.length} / 6 digits</span>
+        </div>
+
+        <div style={{ marginTop: 10, padding: '10px 14px', borderRadius: 10, background: '#f8fafc', border: '1px solid #e2e8f0', fontSize: 12, color: '#475569', lineHeight: 1.5 }}>
+          🛡️ <strong>Main Examination Confidentiality Protocol:</strong> Question papers are encrypted upon generation. Once configured, only authorized personnel entering this 4 or 6-digit security code will be granted access to view, preview, or print this paper.
+        </div>
       </div>
 
       <button className="ce-generate" onClick={handleGenerate} disabled={loading}>

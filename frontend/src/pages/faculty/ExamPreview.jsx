@@ -14,21 +14,144 @@ export default function ExamPreview({ examId }) {
   const [editRbt, setEditRbt] = useState('L1')
   const [exporting, setExporting] = useState(false)
 
-  function load() {
+  // Question Paper Security States
+  const [securityStatus, setSecurityStatus] = useState(null)
+  const [verifiedCode, setVerifiedCode] = useState(() => sessionStorage.getItem(`exam_sec_${examId}`) || '')
+  const [isLocked, setIsLocked] = useState(false)
+  const [inputCode, setInputCode] = useState('')
+  const [showInputCode, setShowInputCode] = useState(false)
+  const [passcodeError, setPasscodeError] = useState('')
+  const [verifying, setVerifying] = useState(false)
+
+  // Configure / Change Passcode Modal
+  const [showConfigModal, setShowConfigModal] = useState(false)
+  const [configNewCode, setConfigNewCode] = useState('')
+  const [configOldCode, setConfigOldCode] = useState('')
+  const [showConfigCode, setShowConfigCode] = useState(false)
+  const [configMsg, setConfigMsg] = useState({ text: '', error: false })
+  const [savingCode, setSavingCode] = useState(false)
+
+  async function load(codeOverride) {
     setLoading(true)
-    Promise.all([
-      api.get(`/exams/${examId}`).catch(() => ({ data: null })),
-      api.get(`/faculty/exams/${examId}/questions`)
-    ])
-      .then(([examRes, qRes]) => {
-        if (examRes?.data) setExam(examRes.data)
-        setQuestions(qRes.data || [])
-      })
-      .catch((err) => setError(err.response?.data?.error || 'Failed to load question paper preview'))
-      .finally(() => setLoading(false))
+    setError('')
+    setPasscodeError('')
+
+    const codeToUse = codeOverride !== undefined ? codeOverride : (verifiedCode || sessionStorage.getItem(`exam_sec_${examId}`) || '')
+
+    try {
+      // 1. Fetch exam metadata and security status
+      const [examRes, secRes] = await Promise.all([
+        api.get(`/exams/${examId}`).catch(() => ({ data: null })),
+        api.get(`/faculty/exams/${examId}/security-status`).catch(() => ({ data: null }))
+      ])
+
+      if (examRes?.data) setExam(examRes.data)
+      const secInfo = secRes?.data || { hasSecurityCode: examRes?.data?.hasSecurityCode || false, isSecured: examRes?.data?.isSecured || false }
+      setSecurityStatus(secInfo)
+
+      // 2. If paper is locked with security code and no verified passcode is provided yet
+      if (secInfo.hasSecurityCode && !codeToUse) {
+        setIsLocked(true)
+        setLoading(false)
+        return
+      }
+
+      // 3. Fetch questions with security header
+      const headers = codeToUse ? { 'x-security-code': codeToUse } : {}
+      const qRes = await api.get(`/faculty/exams/${examId}/questions`, { headers })
+
+      setQuestions(qRes.data || [])
+      setIsLocked(false)
+      if (codeToUse) {
+        setVerifiedCode(codeToUse)
+        sessionStorage.setItem(`exam_sec_${examId}`, codeToUse)
+      }
+    } catch (err) {
+      if (err.response?.status === 401 || err.response?.status === 403 || err.response?.data?.error === 'SECURED_QUESTION_PAPER') {
+        setIsLocked(true)
+        setPasscodeError(err.response?.data?.message || 'Confidential question paper: 4 or 6-digit security code required.')
+        sessionStorage.removeItem(`exam_sec_${examId}`)
+        setVerifiedCode('')
+      } else {
+        setError(err.response?.data?.error || 'Failed to load question paper preview')
+      }
+    } finally {
+      setLoading(false)
+    }
   }
 
-  useEffect(() => { if (examId) load() }, [examId])
+  useEffect(() => {
+    if (examId) load()
+  }, [examId])
+
+  async function handleUnlockPasscode(e) {
+    if (e) e.preventDefault()
+    const clean = inputCode.trim()
+    if (!clean || (clean.length !== 4 && clean.length !== 6)) {
+      setPasscodeError('Please enter a valid 4 or 6-digit security code.')
+      return
+    }
+
+    setVerifying(true)
+    setPasscodeError('')
+    try {
+      const res = await api.post(`/faculty/exams/${examId}/verify-security-code`, { securityCode: clean })
+      if (res.data?.verified) {
+        setVerifiedCode(clean)
+        sessionStorage.setItem(`exam_sec_${examId}`, clean)
+        setIsLocked(false)
+        setInputCode('')
+        await load(clean)
+      } else {
+        setPasscodeError(res.data?.error || 'Incorrect security code. Access denied.')
+      }
+    } catch (err) {
+      setPasscodeError(err.response?.data?.error || err.response?.data?.message || 'Incorrect security code. Access denied.')
+    } finally {
+      setVerifying(false)
+    }
+  }
+
+  async function handleSaveSecurityCode(e) {
+    if (e) e.preventDefault()
+    const cleanNew = configNewCode.trim()
+    if (!cleanNew || (cleanNew.length !== 4 && cleanNew.length !== 6)) {
+      setConfigMsg({ text: 'Security code must be exactly 4 or 6 digits / characters.', error: true })
+      return
+    }
+
+    setSavingCode(true)
+    setConfigMsg({ text: 'Saving confidential security code...', error: false })
+    try {
+      await api.post(`/faculty/exams/${examId}/set-security-code`, {
+        securityCode: cleanNew,
+        oldSecurityCode: configOldCode.trim(),
+      })
+      sessionStorage.setItem(`exam_sec_${examId}`, cleanNew)
+      setVerifiedCode(cleanNew)
+      setIsLocked(false)
+      setConfigMsg({ text: '✓ Security code configured successfully! Question paper is now secured.', error: false })
+      setTimeout(() => {
+        setShowConfigModal(false)
+        setConfigNewCode('')
+        setConfigOldCode('')
+        setConfigMsg({ text: '', error: false })
+        load(cleanNew)
+      }, 700)
+    } catch (err) {
+      setConfigMsg({ text: err.response?.data?.error || 'Failed to update security code', error: true })
+    } finally {
+      setSavingCode(false)
+    }
+  }
+
+  function handleLockView() {
+    sessionStorage.removeItem(`exam_sec_${examId}`)
+    setVerifiedCode('')
+    setIsLocked(true)
+    setInputCode('')
+    setPasscodeError('')
+  }
 
   function startEdit(q) {
     setEditingId(q.id)
@@ -40,12 +163,13 @@ export default function ExamPreview({ examId }) {
 
   async function saveEdit(id) {
     try {
+      const headers = verifiedCode ? { 'x-security-code': verifiedCode } : {}
       await api.patch(`/faculty/questions/${id}`, {
         questionText: editText,
         marks: Number(editMarks),
         co: editCo,
         rbt: editRbt
-      })
+      }, { headers })
       setEditingId(null)
       load()
     } catch (err) {
@@ -56,7 +180,8 @@ export default function ExamPreview({ examId }) {
   async function handleReject(id) {
     if (!confirm('Reject this question? It will be removed from the paper.')) return
     try {
-      await api.delete(`/faculty/questions/${id}`)
+      const headers = verifiedCode ? { 'x-security-code': verifiedCode } : {}
+      await api.delete(`/faculty/questions/${id}`, { headers })
       load()
     } catch (err) {
       setError(err.response?.data?.error || 'Failed to reject question')
@@ -67,7 +192,8 @@ export default function ExamPreview({ examId }) {
     setExporting(true)
     setError('')
     try {
-      const { data } = await api.post(`/faculty/exams/${examId}/export-pdf`)
+      const headers = verifiedCode ? { 'x-security-code': verifiedCode } : {}
+      const { data } = await api.post(`/faculty/exams/${examId}/export-pdf`, { securityCode: verifiedCode }, { headers })
       const url = data.download_url
       
       const win = window.open(url, '_blank')
@@ -80,30 +206,269 @@ export default function ExamPreview({ examId }) {
       a.click()
       document.body.removeChild(a)
     } catch (err) {
-      setError(err.response?.data?.error || 'PDF export failed')
+      setError(err.response?.data?.error || err.response?.data?.message || 'PDF export failed')
     } finally {
       setExporting(false)
     }
   }
-
-  if (loading) return <p className="ep-empty-text">Loading question paper preview...</p>
 
   const subjectName = exam?.subjects?.name || exam?.subjectName || 'Subject'
   const subjectCode = exam?.subjects?.code || exam?.subjectCode || 'ACAD'
   const examTitle = exam?.title || 'Second Internal Assessment Test (IAT-2)'
   const maxMarks = exam?.total_marks || 50
 
+  // Render Configure / Reset Security Code Modal
+  const renderConfigModal = () => {
+    if (!showConfigModal) return null
+    return (
+      <div className="ep-modal-overlay" onClick={() => setShowConfigModal(false)}>
+        <div className="ep-modal-card" onClick={(e) => e.stopPropagation()}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+            <h3 style={{ margin: 0, fontSize: 18, fontWeight: 900, color: '#0f172a' }}>
+              🔒 {securityStatus?.hasSecurityCode ? 'Change Question Paper Security Code' : 'Set 4 or 6-Digit Security Code'}
+            </h3>
+            <button
+              onClick={() => setShowConfigModal(false)}
+              style={{ background: 'none', border: 'none', fontSize: 20, cursor: 'pointer', color: '#64748b' }}
+            >
+              ✕
+            </button>
+          </div>
+
+          <p style={{ fontSize: 13, color: '#64748b', margin: '0 0 16px 0', lineHeight: 1.5 }}>
+            Configure a confidential 4 or 6-digit passcode for <strong>{examTitle} ({subjectCode})</strong>. Only users with this code can view or print the questions.
+          </p>
+
+          {configMsg.text && (
+            <div style={{ padding: '10px 14px', borderRadius: 8, marginBottom: 16, background: configMsg.error ? '#fef2f2' : '#ecfdf5', color: configMsg.error ? '#b91c1c' : '#047857', border: `1px solid ${configMsg.error ? '#fecaca' : '#a7f3d0'}`, fontSize: 13, fontWeight: 700 }}>
+              {configMsg.text}
+            </div>
+          )}
+
+          <form onSubmit={handleSaveSecurityCode}>
+            {securityStatus?.hasSecurityCode && (
+              <div style={{ marginBottom: 14 }}>
+                <label style={{ display: 'block', fontSize: 12, fontWeight: 700, color: '#475569', marginBottom: 6 }}>
+                  Current Security Code (if already set)
+                </label>
+                <input
+                  type="password"
+                  placeholder="Enter current code"
+                  value={configOldCode}
+                  onChange={(e) => setConfigOldCode(e.target.value)}
+                  style={{ width: '100%', padding: '10px 14px', borderRadius: 8, border: '1px solid #cbd5e1', fontSize: 14, fontWeight: 600 }}
+                />
+              </div>
+            )}
+
+            <div style={{ marginBottom: 16 }}>
+              <label style={{ display: 'block', fontSize: 12, fontWeight: 700, color: '#475569', marginBottom: 6 }}>
+                New Security Code (4 or 6 Digits)
+              </label>
+              <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
+                <input
+                  type={showConfigCode ? 'text' : 'password'}
+                  placeholder="e.g. 8492 or 749201"
+                  value={configNewCode}
+                  onChange={(e) => setConfigNewCode(e.target.value.replace(/[^0-9a-zA-Z]/g, '').slice(0, 6))}
+                  maxLength={6}
+                  required
+                  style={{ width: '100%', padding: '10px 42px 10px 14px', borderRadius: 8, border: '1px solid #cbd5e1', fontSize: 16, fontWeight: 800, letterSpacing: showConfigCode ? '3px' : '4px' }}
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowConfigCode(!showConfigCode)}
+                  style={{ position: 'absolute', right: 10, background: 'none', border: 'none', cursor: 'pointer', fontSize: 16, color: '#64748b' }}
+                >
+                  {showConfigCode ? '👁️' : '🔒'}
+                </button>
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 6, fontSize: 11, color: '#64748b' }}>
+                <span style={{ color: configNewCode.length === 4 || configNewCode.length === 6 ? '#059669' : '#d97706', fontWeight: 700 }}>
+                  {configNewCode.length === 4 || configNewCode.length === 6 ? '✓ Valid (4 or 6 digits)' : 'Must be 4 or 6 digits'}
+                </span>
+                <span>{configNewCode.length} / 6 digits</span>
+              </div>
+            </div>
+
+            <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-end' }}>
+              <button
+                type="button"
+                onClick={() => setShowConfigModal(false)}
+                style={{ padding: '9px 18px', borderRadius: 8, border: '1px solid #cbd5e1', background: '#f8fafc', color: '#475569', fontWeight: 700, fontSize: 13, cursor: 'pointer' }}
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                disabled={savingCode || (configNewCode.length !== 4 && configNewCode.length !== 6)}
+                style={{ padding: '9px 20px', borderRadius: 8, border: 'none', background: '#2563eb', color: '#ffffff', fontWeight: 800, fontSize: 13, cursor: 'pointer' }}
+              >
+                {savingCode ? 'Saving...' : '🔒 Save Security Code'}
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    )
+  }
+
+  // 1. Loading State
+  if (loading) return <p className="ep-empty-text">Loading question paper preview...</p>
+
+  // 2. High-Security Clearance Gate Screen (When Paper is Locked)
+  if (isLocked) {
+    return (
+      <div className="ep-container">
+        <div className="ep-lock-wrapper">
+          <div className="ep-lock-card">
+            <div className="ep-lock-icon-bubble">🛡️</div>
+            <span className="ep-lock-badge">🔒 CONFIDENTIAL QUESTION PAPER REPOSITORY</span>
+            
+            <h3 className="ep-lock-title">Security Code Clearance Required</h3>
+            <p className="ep-lock-subtitle">
+              This internal assessment question paper is confidential. To prevent unauthorized student or peer viewing, you must enter the 4 or 6-digit security code configured for this paper.
+            </p>
+
+            <div className="ep-lock-meta-box">
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}>
+                <span style={{ fontSize: 12, color: '#64748b', fontWeight: 600 }}>Subject:</span>
+                <span style={{ fontSize: 12, color: '#0f172a', fontWeight: 800 }}>{subjectName} ({subjectCode})</span>
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}>
+                <span style={{ fontSize: 12, color: '#64748b', fontWeight: 600 }}>Examination:</span>
+                <span style={{ fontSize: 12, color: '#1e3a8a', fontWeight: 700 }}>{examTitle}</span>
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                <span style={{ fontSize: 12, color: '#64748b', fontWeight: 600 }}>Security Status:</span>
+                <span style={{ fontSize: 12, color: '#059669', fontWeight: 800 }}>
+                  🔒 {securityStatus?.codeLength ? `${securityStatus.codeLength}-Digit Passcode Protected` : 'Passcode Protected'}
+                </span>
+              </div>
+            </div>
+
+            {passcodeError && (
+              <div style={{ padding: '10px 14px', borderRadius: 10, background: '#fef2f2', border: '1px solid #fecaca', color: '#b91c1c', fontSize: 13, fontWeight: 700, marginBottom: 16, textAlign: 'left' }}>
+                ⚠️ {passcodeError}
+              </div>
+            )}
+
+            <form onSubmit={handleUnlockPasscode}>
+              <div style={{ marginBottom: 18 }}>
+                <label style={{ display: 'block', fontSize: 13, fontWeight: 800, color: '#1e293b', marginBottom: 8, textAlign: 'left' }}>
+                  Enter 4 or 6-Digit Security Code
+                </label>
+                <div className="ep-lock-pin-wrap">
+                  <input
+                    type={showInputCode ? 'text' : 'password'}
+                    className="ep-lock-pin-input"
+                    placeholder="• • • •"
+                    value={inputCode}
+                    onChange={(e) => setInputCode(e.target.value.replace(/[^0-9a-zA-Z]/g, '').slice(0, 6))}
+                    maxLength={6}
+                    autoFocus
+                    required
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowInputCode(!showInputCode)}
+                    style={{ position: 'absolute', right: 14, background: 'none', border: 'none', cursor: 'pointer', fontSize: 18, color: '#64748b' }}
+                    title={showInputCode ? 'Hide Code' : 'Show Code'}
+                  >
+                    {showInputCode ? '👁️' : '🔒'}
+                  </button>
+                </div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 11, color: '#64748b', padding: '0 4px' }}>
+                  <span>Must match code set during paper generation</span>
+                  <span>{inputCode.length} / 6 digits</span>
+                </div>
+              </div>
+
+              <button type="submit" className="ep-lock-btn" disabled={verifying || (inputCode.length !== 4 && inputCode.length !== 6)}>
+                {verifying ? '🔒 Verifying Security Passcode...' : '🔓 Unlock & View Question Paper →'}
+              </button>
+            </form>
+
+            <div style={{ marginTop: 20, paddingTop: 16, borderTop: '1px solid #e2e8f0', display: 'flex', justifyContent: 'center', gap: 16 }}>
+              <button
+                type="button"
+                onClick={() => setShowConfigModal(true)}
+                style={{ background: 'none', border: 'none', color: '#2563eb', fontSize: 12, fontWeight: 700, cursor: 'pointer', textDecoration: 'underline' }}
+              >
+                ⚙️ Set or Reset Security Passcode
+              </button>
+            </div>
+          </div>
+        </div>
+
+        {renderConfigModal()}
+      </div>
+    )
+  }
+
+  // 3. Unlocked Official Paper Sheet View
   return (
     <div className="ep-container">
+      {/* Top Action Bar with Security Controls */}
       <div className="ep-top-bar">
-        <h2 className="ep-title">
-          📋 Internal Assessment Question Paper
-          <span className="ep-count-pill">{questions.length} Questions</span>
-        </h2>
-        <button className="ep-btn-download" onClick={handleExportPdf} disabled={exporting || questions.length === 0}>
-          {exporting ? 'Generating PDF...' : '🖨️ Download / Print Official Paper PDF'}
-        </button>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
+          <h2 className="ep-title">
+            📋 Internal Assessment Question Paper
+            <span className="ep-count-pill">{questions.length} Questions</span>
+          </h2>
+          {securityStatus?.hasSecurityCode ? (
+            <span style={{ fontSize: 12, fontWeight: 800, padding: '4px 10px', background: '#ecfdf5', color: '#047857', border: '1px solid #a7f3d0', borderRadius: 20, display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+              🔒 Passcode Verified (Confidential)
+            </span>
+          ) : (
+            <span style={{ fontSize: 12, fontWeight: 700, padding: '4px 10px', background: '#fffbeb', color: '#b45309', border: '1px solid #fde68a', borderRadius: 20, display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+              ⚠️ Security Code Not Set
+            </span>
+          )}
+        </div>
+
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+          <button className="ep-btn-download" onClick={handleExportPdf} disabled={exporting || questions.length === 0}>
+            {exporting ? 'Generating PDF...' : '🖨️ Download / Print Official Paper PDF'}
+          </button>
+          
+          {securityStatus?.hasSecurityCode && (
+            <button
+              onClick={handleLockView}
+              style={{ padding: '10px 16px', background: '#fff1f2', color: '#e11d48', border: '1px solid #fecdd3', borderRadius: 8, fontWeight: 800, fontSize: 13, cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 6 }}
+              title="Lock view so questions cannot be seen by others"
+            >
+              🔒 Lock View
+            </button>
+          )}
+
+          <button
+            onClick={() => setShowConfigModal(true)}
+            style={{ padding: '10px 14px', background: '#f8fafc', color: '#334155', border: '1px solid #cbd5e1', borderRadius: 8, fontWeight: 700, fontSize: 13, cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 6 }}
+            title="Set or change 4/6-digit security code"
+          >
+            🔑 {securityStatus?.hasSecurityCode ? 'Change Code' : 'Set Code'}
+          </button>
+        </div>
       </div>
+
+      {/* Legacy paper security notice if code not set */}
+      {!securityStatus?.hasSecurityCode && (
+        <div style={{ marginBottom: 20, padding: '12px 18px', background: '#fffbeb', border: '1px solid #fde68a', borderRadius: 12, display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 12 }}>
+          <div>
+            <strong style={{ color: '#92400e', fontSize: 13, display: 'block' }}>🛡️ Protect This Question Paper:</strong>
+            <span style={{ color: '#b45309', fontSize: 12 }}>
+              This question paper currently has no 4 or 6-digit security code. Any logged-in user can view these questions. Set a security passcode to lock it.
+            </span>
+          </div>
+          <button
+            onClick={() => setShowConfigModal(true)}
+            style={{ padding: '6px 14px', background: '#d97706', color: '#ffffff', border: 'none', borderRadius: 8, fontWeight: 800, fontSize: 12, cursor: 'pointer' }}
+          >
+            🔒 Set 4 or 6-Digit Code Now
+          </button>
+        </div>
+      )}
 
       {error && <div className="ep-status-error">{error}</div>}
 
@@ -272,6 +637,9 @@ export default function ExamPreview({ examId }) {
           </table>
         )}
       </div>
+
+      {/* Change/Set Security Code Modal */}
+      {renderConfigModal()}
     </div>
   )
 }

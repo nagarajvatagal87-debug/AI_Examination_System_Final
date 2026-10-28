@@ -1,0 +1,13 @@
+[
+  {
+    "id": "sec-1793196216591-9qez",
+    "exam_id": "6122a693-6114-4609-8f36-a0b43dad6572",
+    "security_code": "886718",
+    "code_length": 6,
+    "created_by": "cc568ab9-9840-43e9-b581-9dcacea491a2",
+    "created_at": "2026-10-28T14:03:36.591Z",
+    "updated_at": "2026-10-28T14:03:36.591Z",
+    "failed_attempts": 0,
+    "locked_until": null
+  }
+]

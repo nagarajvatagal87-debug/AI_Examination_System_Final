@@ -113,10 +113,23 @@ export default function Examinations() {
               </div>
               <div className="ex-exam-title">{e.title}</div>
               <div className="ex-meta">{e.total_marks || 50} Marks · {e.studentCount || 0} Students Enrolled</div>
-              <span className={`dh-status-badge ${e.status}`}>{e.status || 'draft'}</span>
+              <div style={{ display: 'flex', gap: 6, alignItems: 'center', marginTop: 4, flexWrap: 'wrap' }}>
+                <span className={`dh-status-badge ${e.status}`}>{e.status || 'draft'}</span>
+                {e.hasSecurityCode ? (
+                  <span style={{ fontSize: 11, fontWeight: 800, padding: '3px 8px', borderRadius: 12, background: '#ecfdf5', color: '#047857', border: '1px solid #a7f3d0' }}>
+                    🔒 Code Protected
+                  </span>
+                ) : (
+                  <span style={{ fontSize: 11, fontWeight: 700, padding: '3px 8px', borderRadius: 12, background: '#fffbeb', color: '#b45309', border: '1px solid #fde68a' }}>
+                    ⚠️ No Passcode
+                  </span>
+                )}
+              </div>
             </div>
             <div className="ex-card-actions" style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-              <button className="fd-btn fd-btn-secondary" onClick={() => navigate(`/faculty/examinations/${e.id}/preview`)}>📄 View Paper</button>
+              <button className="fd-btn fd-btn-secondary" onClick={() => navigate(`/faculty/examinations/${e.id}/preview`)}>
+                {e.hasSecurityCode ? '🔒 View Paper' : '📄 View Paper'}
+              </button>
               <button className="fd-btn fd-btn-secondary" onClick={() => navigate(`/faculty/evaluation?examId=${e.id}`)}>✍️ Evaluate</button>
               <button className="fd-btn" onClick={() => navigate(`/faculty/results?examId=${e.id}`)}>📊 Results</button>
               <button

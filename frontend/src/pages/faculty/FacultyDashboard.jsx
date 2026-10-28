@@ -25,6 +25,8 @@ export default function FacultyDashboard() {
   const [examType, setExamType] = useState('internal')
   const [examTitle, setExamTitle] = useState('')
   const [totalMarks, setTotalMarks] = useState(50)
+  const [securityCode, setSecurityCode] = useState('')
+  const [showSecurityCode, setShowSecurityCode] = useState(false)
   const [examIdForActions, setExamIdForActions] = useState('')
 
   const [status, setStatus] = useState({ text: '', error: false })
@@ -83,17 +85,24 @@ export default function FacultyDashboard() {
   async function handleGenerateExam(e) {
     e.preventDefault()
     if (!subjectId) return setMsg('Select or create a subject first.', true)
+    const cleanCode = securityCode.trim()
+    if (!cleanCode || (cleanCode.length !== 4 && cleanCode.length !== 6)) {
+      return setMsg('🔒 Please set a confidential 4 or 6-digit security code to protect this question paper.', true)
+    }
     setMsg('Generating questions...')
     try {
       const { data } = await api.post('/faculty/exams', {
-        subjectId, type: examType, title: examTitle, totalMarks, instructions,
+        subjectId, type: examType, title: examTitle, totalMarks, instructions, securityCode: cleanCode,
       })
-      setExamIdForActions(data.exam.id)
-      const quality = data.generated.quality_check
+      if (data?.exam?.id) {
+        sessionStorage.setItem(`exam_sec_${data.exam.id}`, cleanCode)
+        setExamIdForActions(data.exam.id)
+      }
+      const quality = data.generated?.quality_check
       const issuesText = quality?.issues?.length
         ? `\n⚠️ Issues: ${quality.issues.join('; ')}`
         : '\n✅ No quality issues.'
-      setMsg(`Exam created: "${data.exam.title}" (ID copied below).${issuesText}`)
+      setMsg(`Exam created & secured: "${data.exam.title}" (ID copied below).${issuesText}`)
     } catch (err) {
       setMsg(err.response?.data?.error || 'Generation failed', true)
     }
@@ -187,6 +196,25 @@ export default function FacultyDashboard() {
                 <option value="main">Main</option>
               </select>
               <input type="number" value={totalMarks} onChange={(e) => setTotalMarks(Number(e.target.value))} placeholder="Total marks" />
+              <div style={{ position: 'relative', display: 'flex', alignItems: 'center', minWidth: 220 }}>
+                <input
+                  type={showSecurityCode ? 'text' : 'password'}
+                  placeholder="4 or 6-digit passcode"
+                  value={securityCode}
+                  onChange={(e) => setSecurityCode(e.target.value.replace(/[^0-9a-zA-Z]/g, '').slice(0, 6))}
+                  maxLength={6}
+                  style={{ width: '100%', paddingRight: 36, fontWeight: 'bold', letterSpacing: showSecurityCode ? '2px' : '3px' }}
+                  required
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowSecurityCode(!showSecurityCode)}
+                  style={{ position: 'absolute', right: 8, background: 'none', border: 'none', cursor: 'pointer', fontSize: 14, color: '#64748b' }}
+                  title={showSecurityCode ? 'Hide Code' : 'Show Code'}
+                >
+                  {showSecurityCode ? '👁️' : '🔒'}
+                </button>
+              </div>
             </div>
             <div className="fd-instruction-box">
               <label>💬 Tell the AI what to focus on (optional)</label>

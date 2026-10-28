@@ -2,6 +2,7 @@ const express = require("express");
 const { supabaseAdmin } = require("../../config/Supabase");
 const { requireAuth, requireRole } = require("../middleware/auth.js");
 const evaluationService = require("../services/evaluation.service.js");
+const examSecurityStore = require("../services/examSecurityStore.js");
 
 const router = express.Router();
 router.use(requireAuth);
@@ -45,6 +46,8 @@ router.get("/", async (req, res) => {
       subjectName: e.subjects?.name || 'Subject',
       subjectCode: e.subjects?.code || 'ACAD',
       studentCount: (allStudents || []).filter((s) => s.department_id === e.subjects?.department_id).length,
+      hasSecurityCode: examSecurityStore.hasSecurityCode(e.id),
+      isSecured: examSecurityStore.hasSecurityCode(e.id),
     }));
 
     res.json(withCounts);
@@ -69,7 +72,26 @@ router.get("/:id", async (req, res) => {
       data.questions.sort((a, b) => (a.question_no || 0) - (b.question_no || 0));
     }
 
-    res.json(data);
+    const hasSec = examSecurityStore.hasSecurityCode(data.id);
+    const incomingCode = req.headers["x-security-code"] || req.query.securityCode;
+    const isUnlocked = !hasSec || examSecurityStore.verifySecurityCode(data.id, incomingCode).verified;
+
+    const responseObj = {
+      ...data,
+      hasSecurityCode: hasSec,
+      isSecured: hasSec,
+      isUnlocked,
+      // If paper is secured with code and request is not unlocked, mask question contents
+      questions: isUnlocked ? data.questions : (data.questions || []).map(q => ({
+        id: q.id,
+        question_no: q.question_no,
+        marks: q.marks,
+        difficulty: q.difficulty,
+        question_text: "🔒 [CONFIDENTIAL: ENTER 4 OR 6-DIGIT SECURITY CODE TO VIEW QUESTION]",
+      })),
+    };
+
+    res.json(responseObj);
   } catch (err) {
     res.status(500).json({ error: err.message });
   }

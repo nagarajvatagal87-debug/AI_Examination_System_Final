@@ -13,6 +13,7 @@ const { evaluateWithRag } = require("../services/ragEvaluator.js");
 const { getSubjectAttendance, updateSubjectAttendance } = require("../services/academicStore.js");
 const { getStudentParents, getPrimaryParent, saveStudentParent } = require("../services/parentStore.js");
 const { createNotificationLog, isDuplicateAbsenceEmailSent } = require("../services/notificationLogStore.js");
+const examSecurityStore = require("../services/examSecurityStore.js");
 
 const router = express.Router();
 const upload = multer({ storage: multer.memoryStorage() });
@@ -509,7 +510,7 @@ router.post("/exams", async (req, res) => {
   try {
     const {
       subjectId, courseMaterialId, type, title, totalMarks,
-      questionPattern, difficulty, units, instructions,
+      questionPattern, difficulty, units, instructions, securityCode,
     } = req.body;
 
     if (!subjectId || !type || !title) {
@@ -739,18 +740,110 @@ CRITICAL REQUIREMENTS:
 
     await supabaseAdmin.from("exams").update({ status: "evaluation" }).eq("id", exam.id);
 
-    res.status(201).json({ exam, generated: generated || { status: "success" } });
+    if (securityCode && exam?.id) {
+      try {
+        await examSecurityStore.setSecurityCode({
+          examId: exam.id,
+          code: securityCode,
+          authorId: req.user?.id,
+          authorRole: req.user?.role,
+        });
+      } catch (secErr) {
+        console.warn("Security code setting error:", secErr.message);
+      }
+    }
+
+    const secStatus = examSecurityStore.getSecurityStatus(exam.id);
+    res.status(201).json({ exam, generated: generated || { status: "success" }, securityStatus: secStatus });
   } catch (err) {
     res.status(400).json({ error: err.response?.data?.error || err.message });
   }
 });
 
-// GET /api/faculty/exams/:examId/questions -> for Question Preview
+// ── Question Paper Security Management ──
+
+// GET /api/faculty/exams/:examId/security-status -> Check if paper is locked with a security code
+router.get("/exams/:examId/security-status", async (req, res) => {
+  try {
+    const status = examSecurityStore.getSecurityStatus(req.params.examId);
+    res.json(status);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// POST /api/faculty/exams/:examId/verify-security-code -> Verify 4 or 6 digit security code to view paper
+router.post("/exams/:examId/verify-security-code", async (req, res) => {
+  try {
+    const { securityCode } = req.body;
+    if (!securityCode) {
+      return res.status(400).json({ verified: false, error: "Please enter the security code" });
+    }
+    const result = examSecurityStore.verifySecurityCode(req.params.examId, securityCode);
+    if (!result.verified) {
+      return res.status(401).json(result);
+    }
+    res.json({ verified: true, isProtected: result.isProtected });
+  } catch (err) {
+    res.status(400).json({ error: err.message });
+  }
+});
+
+// POST /api/faculty/exams/:examId/set-security-code -> Set or change 4 or 6 digit security code
+router.post("/exams/:examId/set-security-code", async (req, res) => {
+  try {
+    const { securityCode, oldSecurityCode } = req.body;
+    if (!securityCode) {
+      return res.status(400).json({ error: "Security code is required (must be 4 or 6 digits / characters)" });
+    }
+
+    const { data: exam } = await supabaseAdmin
+      .from("exams")
+      .select("created_by")
+      .eq("id", req.params.examId)
+      .single();
+
+    const isOwner = exam?.created_by === req.user?.id || req.user?.role === "hod" || req.user?.role === "examdept" || req.user?.role === "principal";
+
+    const result = await examSecurityStore.changeSecurityCode({
+      examId: req.params.examId,
+      oldCode: oldSecurityCode,
+      newCode: securityCode,
+      authorId: req.user?.id,
+      authorRole: req.user?.role,
+      isOwner,
+    });
+
+    res.json(result);
+  } catch (err) {
+    res.status(400).json({ error: err.message });
+  }
+});
+
+// GET /api/faculty/exams/:examId/questions -> for Question Preview (Confidentiality Protected)
 router.get("/exams/:examId/questions", async (req, res) => {
+  const { examId } = req.params;
+
+  // Confidential Security Code Check:
+  // If exam is locked with a security code, require verified passcode header or query
+  if (examSecurityStore.hasSecurityCode(examId)) {
+    const incomingCode = req.headers["x-security-code"] || req.query.securityCode;
+    const verifyResult = examSecurityStore.verifySecurityCode(examId, incomingCode);
+    if (!verifyResult.verified) {
+      return res.status(403).json({
+        error: "SECURED_QUESTION_PAPER",
+        isSecured: true,
+        hasSecurityCode: true,
+        message: verifyResult.error || "A confidential 4 or 6-digit security code is required to view this question paper.",
+        rateLimited: verifyResult.rateLimited || false,
+      });
+    }
+  }
+
   const { data, error } = await supabaseAdmin
     .from("questions")
     .select("id, question_no, question_text, marks, difficulty, co_po, rubric")
-    .eq("exam_id", req.params.examId)
+    .eq("exam_id", examId)
     .order("question_no", { ascending: true });
   if (error) return res.status(500).json({ error: error.message });
 
@@ -862,6 +955,17 @@ function getVtuLogoHtml() {
 router.post("/exams/:examId/export-pdf", async (req, res) => {
   try {
     const { examId } = req.params;
+
+    if (examSecurityStore.hasSecurityCode(examId)) {
+      const incomingCode = req.headers["x-security-code"] || req.body?.securityCode || req.query?.securityCode;
+      const verifyResult = examSecurityStore.verifySecurityCode(examId, incomingCode);
+      if (!verifyResult.verified) {
+        return res.status(403).json({
+          error: "SECURED_QUESTION_PAPER",
+          message: "Confidential question paper: 4 or 6-digit security code verification required to export PDF.",
+        });
+      }
+    }
 
     const { data: exam } = await supabaseAdmin
       .from("exams")

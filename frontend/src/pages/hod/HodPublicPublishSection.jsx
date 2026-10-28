@@ -237,6 +237,8 @@ export default function HodPublicPublishSection() {
 
       await api.put('/hod/public-info', {
         about,
+
+
         studentCount: parseInt(studentCount),
         courses: [`${deptName} Program`],
         fees: feesObj,
