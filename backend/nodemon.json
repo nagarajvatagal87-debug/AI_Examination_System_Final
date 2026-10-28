@@ -1,5 +1,6 @@
 {
-  "watch": ["src"],
-  "ext": "js,json",
+  "watch": ["src", ".env"],
+  "ext": "js,json,env",
   "ignore": ["persistent_*.json", "*.json", "uploads/*", "scratch/*"]
 }
+

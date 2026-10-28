@@ -1738,21 +1738,98 @@ async function duplicateAcademicCalendarEvent(eventId, userPayload = {}) {
   return await createAcademicCalendarEvent(duplicatedPayload);
 }
 
-// Official DSATM Academic & Holiday Email HTML Template Generator
+const DEPARTMENT_NAMES = {
+  "37909cba-a75d-428e-9181-fddf9920fb0b": "Department of Computer Applications (MCA)",
+  "2d81ff48-375e-4653-970a-8485e365f379": "Department of Computer Science & Engineering (CSE)",
+  "93014f59-605b-46c1-b00f-9c9f5ba133a6": "Department of Information Science & Engineering (ISE)",
+  "adcef4b6-d777-4f39-91fb-b0ab01ff2bdf": "Department of AI & Machine Learning (AI & ML)",
+  "bbca09b5-3d93-45c0-b0bb-f1869036a2ae": "Department of Electronics & Communication (ECE)",
+  "fe6cdcf6-fb16-4b16-847d-ff80c76d7f23": "Department of Electrical & Electronics (EEE)",
+  "4323ce94-9116-484e-958a-91bbf6f67d0e": "Department of Mechanical Engineering (ME)",
+  "fece5a02-62ae-48e2-81ee-46a999788209": "Department of Civil Engineering (CIVIL)",
+  "b76b7f87-9bda-4eab-8517-7a862fe4a048": "Department of Computer Applications (BCA)",
+  "e79b98ba-807e-4ba3-aec6-0ed9bd9fe213": "Department of Management Studies (MBA)",
+  "227bdd38-39c6-485b-9b2d-aa46f57bdbb3": "Department of Computer Science (CS)",
+};
+
+// Official DSATM Academic & Examination Email HTML Template Generator
 function generateAcademicCalendarHtml({ event, recipientName, recipientRole, notificationType, notifData }) {
   const portalUrl = process.env.FRONTEND_ORIGIN || "http://localhost:5173";
   const dsiLogoUrl = `${portalUrl}/dsi-logo.png`;
 
   const isHoliday = (event.event_type || "").toUpperCase().includes("HOLIDAY");
-  const isExam = (event.event_type || "").toUpperCase().includes("EXAM");
+  const isExam = (event.event_type || "").toUpperCase().includes("EXAM") || (event.title || "").toLowerCase().includes("internal");
   const isCancelled = notificationType === "EVENT_CANCELLED";
   const isChanged = notificationType === "EVENT_CHANGED";
+
+  // Clean Title: strip accidental "Copy of "
+  const rawTitle = String(event.title || "Academic Event").trim();
+  const cleanTitle = rawTitle.replace(/^Copy\s+of\s+/i, "").trim();
+
+  // Clean recipient name: strip internal suffixes e.g. "Nagaraj_MCA" -> "Nagaraj"
+  const cleanRecipientName = (recipientName || "Student")
+    .replace(/_mca$/i, "")
+    .replace(/_/g, " ")
+    .trim();
+
+  const role = (recipientRole || "student").toLowerCase().trim();
+  const isFaculty = role === "faculty" || role === "teacher";
+  const isHod = role === "hod";
+  const isPrincipal = role === "principal";
+  const isStaff = isFaculty || isHod || isPrincipal;
+
+  // Role-appropriate Salutation
+  let salutation = `Dear <strong>${cleanRecipientName}</strong>,`;
+  if (isFaculty) {
+    salutation = `Dear Prof. <strong>${cleanRecipientName}</strong>,`;
+  } else if (isHod) {
+    salutation = `Respected Head of Department (Prof. <strong>${cleanRecipientName}</strong>),`;
+  } else if (isPrincipal) {
+    salutation = `Respected Principal,`;
+  }
+
+  // Role-appropriate Portal Button & Link
+  let buttonUrl = `${portalUrl}`;
+  let buttonText = "🚀 Open Student Portal & Exam Desk &rarr;";
+  let buttonSubtext = "Log in to your DSATM Student Portal to view detailed question patterns, course notes, and room seating allotments.";
+
+  if (isFaculty) {
+    buttonUrl = `${portalUrl}/faculty`;
+    buttonText = "🚀 Open Faculty Portal & Valuation Desk &rarr;";
+    buttonSubtext = "Log in to your DSATM Faculty Portal to view invigilation duties, course rubrics, and answer verification queue.";
+  } else if (isHod) {
+    buttonUrl = `${portalUrl}/hod`;
+    buttonText = "🚀 Open HOD Department Dashboard &rarr;";
+    buttonSubtext = "Log in to manage departmental exam schedules, faculty invigilators, and evaluation progress.";
+  } else if (isPrincipal) {
+    buttonUrl = `${portalUrl}/principal`;
+    buttonText = "🚀 Open Institutional Dashboard &rarr;";
+    buttonSubtext = "Log in to monitor institution-wide academic schedules and autonomous compliance.";
+  }
+
+  // Resolve Human-Readable Department Name
+  let deptName = "Department of Computer Applications (MCA)";
+  if (event.department_id && DEPARTMENT_NAMES[event.department_id]) {
+    deptName = DEPARTMENT_NAMES[event.department_id];
+  } else if (event.program) {
+    deptName = `Department of ${event.program}`;
+  } else if (event.department_name) {
+    deptName = event.department_name;
+  } else if (event.department_id && !event.department_id.includes("-")) {
+    deptName = event.department_id;
+  }
+
+  // Format Semester & Program
+  const semFormatted = event.semester
+    ? (event.semester.toUpperCase().startsWith("SEM") ? event.semester : `Semester ${event.semester}`)
+    : "Semester III";
+  const programFormatted = event.program || "MCA";
 
   let badgeColor = "#2563eb";
   let badgeBg = "#eff6ff";
   let badgeBorder = "#bfdbfe";
   let badgeText = "📅 OFFICIAL ACADEMIC EVENT";
-  let bannerHeader = "Academic Calendar Notification";
+  let bannerHeader = "Academic Notification";
 
   if (isCancelled) {
     badgeColor = "#dc2626";
@@ -1767,10 +1844,10 @@ function generateAcademicCalendarHtml({ event, recipientName, recipientRole, not
     badgeText = "🌴 OFFICIAL GENERAL HOLIDAY";
     bannerHeader = "General Holiday Announcement";
   } else if (isExam) {
-    badgeColor = "#7c3aed";
-    badgeBg = "#f5f3ff";
-    badgeBorder = "#ddd6fe";
-    badgeText = "📝 EXAMINATION SCHEDULE";
+    badgeColor = "#4f46e5";
+    badgeBg = "#eef2ff";
+    badgeBorder = "#c7d2fe";
+    badgeText = "📝 OFFICIAL EXAMINATION NOTICE";
     bannerHeader = "Examination Schedule Alert";
   } else if (isChanged) {
     badgeColor = "#d97706";
@@ -1800,11 +1877,9 @@ function generateAcademicCalendarHtml({ event, recipientName, recipientRole, not
     ? `${startDateFormatted} &rarr; ${endDateFormatted}`
     : startDateFormatted;
 
-  const audienceLabel = Array.isArray(event.audience)
-    ? event.audience.map(a => a.replace("_", " ").toUpperCase()).join(", ")
-    : "ALL (STUDENTS & FACULTY)";
-
-  const deptLabel = event.department_id || "All Academic Departments";
+  const startTimeDisplay = event.start_time
+    ? event.start_time
+    : (isExam ? "10:00 AM" : "10:00 AM");
 
   return `
 <!DOCTYPE html>
@@ -1812,15 +1887,15 @@ function generateAcademicCalendarHtml({ event, recipientName, recipientRole, not
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>${event.title}</title>
+  <title>${cleanTitle}</title>
 </head>
 <body style="margin: 0; padding: 0; background-color: #f1f5f9; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;">
   <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="background-color: #f1f5f9; padding: 32px 12px;">
     <tr>
       <td align="center">
-        <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="max-width: 620px; background: #ffffff; border-radius: 14px; overflow: hidden; box-shadow: 0 10px 30px rgba(15,23,42,0.08); border: 1px solid #e2e8f0;">
+        <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="max-width: 640px; background: #ffffff; border-radius: 16px; overflow: hidden; box-shadow: 0 10px 30px rgba(15,23,42,0.1); border: 1px solid #e2e8f0;">
           
-          <!-- Header with College Logo -->
+          <!-- Header with College Crest & Branding -->
           <tr>
             <td style="background: linear-gradient(135deg, #0f172a 0%, #1e3a8a 100%); padding: 26px 30px; text-align: center; color: #ffffff;">
               <div style="margin-bottom: 12px;">
@@ -1838,12 +1913,12 @@ function generateAcademicCalendarHtml({ event, recipientName, recipientRole, not
             </td>
           </tr>
 
-          <!-- Category Badge & Event Title Banner -->
+          <!-- Notice Banner Card -->
           <tr>
             <td style="padding: 24px 30px 10px 30px;">
-              <div style="background: ${badgeBg}; border: 1px solid ${badgeBorder}; border-left: 5px solid ${badgeColor}; padding: 14px 18px; border-radius: 0 8px 8px 0;">
+              <div style="background: ${badgeBg}; border: 1px solid ${badgeBorder}; border-left: 5px solid ${badgeColor}; padding: 16px 20px; border-radius: 0 10px 10px 0;">
                 <div style="font-size: 11px; text-transform: uppercase; color: ${badgeColor}; font-weight: 900; letter-spacing: 0.8px;">${badgeText}</div>
-                <h2 style="margin: 4px 0 0 0; color: #0f172a; font-size: 19px; font-weight: 900; line-height: 1.35;">${event.title}</h2>
+                <h2 style="margin: 6px 0 0 0; color: #0f172a; font-size: 21px; font-weight: 900; line-height: 1.3;">${cleanTitle}</h2>
               </div>
             </td>
           </tr>
@@ -1851,14 +1926,14 @@ function generateAcademicCalendarHtml({ event, recipientName, recipientRole, not
           <!-- Content Body -->
           <tr>
             <td style="padding: 14px 30px 24px 30px; color: #334155;">
-              <p style="font-size: 14px; line-height: 1.6; margin-top: 0;">
-                Dear <strong>${recipientName || 'Student/Faculty'}</strong>,
+              <p style="font-size: 15px; line-height: 1.6; margin-top: 0; color: #1e293b;">
+                ${salutation}
               </p>
 
               ${
                 isCancelled
                   ? `<p style="font-size: 14px; line-height: 1.6; color: #dc2626;">
-                      <strong>OFFICIAL NOTICE:</strong> The scheduled event <strong>"${event.title}"</strong> has been <span style="text-decoration: underline;">CANCELLED</span> by the Department Authority.
+                      <strong>OFFICIAL NOTICE:</strong> The scheduled event <strong>"${cleanTitle}"</strong> has been <span style="text-decoration: underline;">CANCELLED</span> by the Department Authority.
                     </p>`
                   : isHoliday
                   ? `<p style="font-size: 14px; line-height: 1.6; color: #047857;">
@@ -1866,96 +1941,160 @@ function generateAcademicCalendarHtml({ event, recipientName, recipientRole, not
                     </p>`
                   : isChanged
                   ? `<p style="font-size: 14px; line-height: 1.6; color: #b45309;">
-                      <strong>SCHEDULE UPDATE:</strong> The scheduled date/details for <strong>"${event.title}"</strong> have been revised:
+                      <strong>SCHEDULE UPDATE:</strong> The scheduled date/details for <strong>"${cleanTitle}"</strong> have been revised by the Controller of Examinations:
                     </p>`
-                  : `<p style="font-size: 14px; line-height: 1.6;">
-                      A new official academic event has been published on the Institutional Academic Calendar:
+                  : `<p style="font-size: 14px; line-height: 1.6; color: #334155;">
+                      ${isStaff ? 'Please find below the official schedule and faculty invigilation/valuation instructions for your department:' : 'Please find below the official schedule and guidelines for your upcoming academic examination released by the DSATM Academic Cell:'}
                     </p>`
               }
 
-              <!-- Event Details Card -->
-              <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; margin: 18px 0; overflow: hidden;">
+              <!-- Event Particulars Card -->
+              <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; margin: 18px 0; overflow: hidden; box-shadow: 0 2px 6px rgba(15,23,42,0.02);">
                 <tr>
-                  <td style="padding: 12px 18px; border-bottom: 1px solid #e2e8f0; width: 140px; font-weight: 700; font-size: 13px; color: #475569;">
-                    🗓️ Date(s):
+                  <td style="padding: 13px 20px; border-bottom: 1px solid #e2e8f0; width: 160px; font-weight: 700; font-size: 13px; color: #64748b;">
+                    ${isExam ? '🗓️ Examination Date:' : isHoliday ? '🌴 Holiday Date:' : '🗓️ Scheduled Date:'}
                   </td>
-                  <td style="padding: 12px 18px; border-bottom: 1px solid #e2e8f0; font-weight: 800; font-size: 14px; color: #0f172a;">
+                  <td style="padding: 13px 20px; border-bottom: 1px solid #e2e8f0; font-weight: 800; font-size: 14px; color: #0f172a;">
                     ${dateDisplay}
                   </td>
                 </tr>
+                <tr>
+                  <td style="padding: 13px 20px; border-bottom: 1px solid #e2e8f0; font-weight: 700; font-size: 13px; color: #64748b;">
+                    ${isExam ? '⏰ Session Start Time:' : isHoliday ? '⏰ Holiday Duration:' : '⏰ Event Start Time:'}
+                  </td>
+                  <td style="padding: 13px 20px; border-bottom: 1px solid #e2e8f0; font-weight: 800; font-size: 14px; color: #0f172a;">
+                    ${isHoliday ? 'Full Day Institutional Observance' : startTimeDisplay}
+                  </td>
+                </tr>
+                <tr>
+                  <td style="padding: 13px 20px; border-bottom: 1px solid #e2e8f0; font-weight: 700; font-size: 13px; color: #64748b;">
+                    🏷️ Category:
+                  </td>
+                  <td style="padding: 13px 20px; border-bottom: 1px solid #e2e8f0; font-size: 13px; color: #0f172a; font-weight: 600;">
+                    ${event.event_type || (isExam ? 'Internal Examination (CIE)' : 'Official Academic Event')}
+                  </td>
+                </tr>
+                <tr>
+                  <td style="padding: 13px 20px; border-bottom: 1px solid #e2e8f0; font-weight: 700; font-size: 13px; color: #64748b;">
+                    🏛️ Department:
+                  </td>
+                  <td style="padding: 13px 20px; border-bottom: 1px solid #e2e8f0; font-size: 13px; color: #1e3a8a; font-weight: 800;">
+                    ${isHoliday ? 'All College Departments & Administrative Offices' : deptName}
+                  </td>
+                </tr>
                 ${
-                  event.start_time
+                  !isHoliday
                     ? `<tr>
-                        <td style="padding: 12px 18px; border-bottom: 1px solid #e2e8f0; font-weight: 700; font-size: 13px; color: #475569;">
-                          ⏰ Timings:
+                        <td style="padding: 13px 20px; border-bottom: 1px solid #e2e8f0; font-weight: 700; font-size: 13px; color: #64748b;">
+                          🎓 Class / Semester:
                         </td>
-                        <td style="padding: 12px 18px; border-bottom: 1px solid #e2e8f0; font-size: 13px; color: #0f172a;">
-                          ${event.start_time} ${event.end_time ? `&ndash; ${event.end_time}` : ''}
+                        <td style="padding: 13px 20px; border-bottom: 1px solid #e2e8f0; font-size: 13px; color: #0f172a; font-weight: 700;">
+                          ${semFormatted} (${programFormatted}) &bull; Batch ${event.academic_year || '2026-27'}
                         </td>
                       </tr>`
                     : ''
                 }
                 <tr>
-                  <td style="padding: 12px 18px; border-bottom: 1px solid #e2e8f0; font-weight: 700; font-size: 13px; color: #475569;">
-                    🏷️ Category:
+                  <td style="padding: 13px 20px; font-weight: 700; font-size: 13px; color: #64748b;">
+                    ${isExam ? '📍 Exam Hall / Venue:' : isHoliday ? '📍 Scope / Campus:' : '📍 Venue / Hall:'}
                   </td>
-                  <td style="padding: 12px 18px; border-bottom: 1px solid #e2e8f0; font-size: 13px; color: #0f172a;">
-                    ${event.event_type || 'Academic Activity'}
-                  </td>
-                </tr>
-                <tr>
-                  <td style="padding: 12px 18px; border-bottom: 1px solid #e2e8f0; font-weight: 700; font-size: 13px; color: #475569;">
-                    📍 Venue:
-                  </td>
-                  <td style="padding: 12px 18px; border-bottom: 1px solid #e2e8f0; font-size: 13px; color: #0f172a;">
-                    ${event.location || 'DSATM Campus'}
-                  </td>
-                </tr>
-                <tr>
-                  <td style="padding: 12px 18px; border-bottom: 1px solid #e2e8f0; font-weight: 700; font-size: 13px; color: #475569;">
-                    🏛️ Department:
-                  </td>
-                  <td style="padding: 12px 18px; border-bottom: 1px solid #e2e8f0; font-size: 13px; color: #0f172a;">
-                    ${deptLabel} ${event.semester ? `(Semester ${event.semester})` : ''}
-                  </td>
-                </tr>
-                <tr>
-                  <td style="padding: 12px 18px; font-weight: 700; font-size: 13px; color: #475569;">
-                    👥 Visible To:
-                  </td>
-                  <td style="padding: 12px 18px; font-size: 13px; color: #0f172a;">
-                    ${audienceLabel}
+                  <td style="padding: 13px 20px; font-size: 13px; color: #0f172a; font-weight: 700;">
+                    ${isHoliday ? 'All Campuses & Academic Blocks' : (event.location || 'MCA Department Examination Halls, DSATM')}
                   </td>
                 </tr>
               </table>
 
               ${
                 event.description
-                  ? `<div style="background: #ffffff; border: 1px solid #cbd5e1; border-radius: 8px; padding: 14px 16px; margin: 16px 0;">
-                      <div style="font-size: 12px; font-weight: 800; color: #334155; text-transform: uppercase; margin-bottom: 6px;">📝 Description & Notes:</div>
-                      <div style="font-size: 13px; line-height: 1.6; color: #475569;">${event.description.replace(/\n/g, '<br/>')}</div>
+                  ? `<div style="background: #ffffff; border: 1px solid #cbd5e1; border-radius: 10px; padding: 14px 18px; margin: 16px 0;">
+                      <div style="font-size: 11px; font-weight: 900; color: #1e40af; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px;">📝 ${isExam ? 'Syllabus Coverage & Notes' : 'Event Description & Details'}:</div>
+                      <div style="font-size: 13px; line-height: 1.6; color: #334155;">${event.description.replace(/\n/g, '<br/>')}</div>
                     </div>`
                   : ''
               }
 
               ${
+                isExam
+                  ? isStaff
+                    ? `<!-- Mandatory Guidelines for Faculty & Invigilators -->
+              <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 16px 18px; margin: 20px 0;">
+                <div style="font-size: 11px; font-weight: 900; color: #1e3a8a; text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 8px;">
+                  📋 Faculty Invigilation & Evaluation Guidelines
+                </div>
+                <table width="100%" cellspacing="0" cellpadding="4" style="font-size: 12px; color: #334155; line-height: 1.55;">
+                  <tr>
+                    <td style="width: 22px; vertical-align: top;">📝</td>
+                    <td><strong>QP & Rubrics Readiness:</strong> Verify approved question papers and scheme of evaluation in the portal.</td>
+                  </tr>
+                  <tr>
+                    <td style="width: 22px; vertical-align: top;">⏱️</td>
+                    <td><strong>Duty Reporting:</strong> Invigilation faculty must report to the Exam Control Room 30 minutes prior to session commencement.</td>
+                  </tr>
+                  <tr>
+                    <td style="width: 22px; vertical-align: top;">📄</td>
+                    <td><strong>Script Collection & Sealing:</strong> Reconcile student attendance and seal collected answer booklets immediately upon session completion.</td>
+                  </tr>
+                  <tr>
+                    <td style="width: 22px; vertical-align: top;">🤖</td>
+                    <td><strong>AI Valuation Desk:</strong> Complete teacher-verification and scoring of AI-evaluated scripts within the scheduled valuation window.</td>
+                  </tr>
+                </table>
+              </div>`
+                    : `<!-- Mandatory Guidelines for Examinees -->
+              <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 16px 18px; margin: 20px 0;">
+                <div style="font-size: 11px; font-weight: 900; color: #1e3a8a; text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 8px;">
+                  📋 Mandatory Examinee Guidelines
+                </div>
+                <table width="100%" cellspacing="0" cellpadding="4" style="font-size: 12px; color: #334155; line-height: 1.55;">
+                  <tr>
+                    <td style="width: 22px; vertical-align: top;">🪪</td>
+                    <td><strong>Student Verification:</strong> Students must carry their valid College ID card and Hall Ticket to the exam hall.</td>
+                  </tr>
+                  <tr>
+                    <td style="width: 22px; vertical-align: top;">⏱️</td>
+                    <td><strong>Punctuality:</strong> Candidates must occupy their designated room and seat at least 15 minutes prior to the start time.</td>
+                  </tr>
+                  <tr>
+                    <td style="width: 22px; vertical-align: top;">🚫</td>
+                    <td><strong>Prohibited Devices:</strong> Smartwatches, mobile phones, and unauthorized study notes are strictly forbidden inside the hall.</td>
+                  </tr>
+                  <tr>
+                    <td style="width: 22px; vertical-align: top;">⚖️</td>
+                    <td><strong>Evaluation Protocol:</strong> Answer scripts are evaluated in accordance with VTU autonomous rubrics and verified by faculty.</td>
+                  </tr>
+                </table>
+              </div>`
+                  : isHoliday
+                  ? `<!-- Holiday Advisory -->
+              <div style="background: #ecfdf5; border: 1px solid #a7f3d0; border-radius: 12px; padding: 16px 18px; margin: 20px 0;">
+                <div style="font-size: 11px; font-weight: 900; color: #065f46; text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 6px;">
+                  🌴 Official Holiday Advisory
+                </div>
+                <p style="margin: 0; font-size: 13px; color: #047857; line-height: 1.6;">
+                  Dayananda Sagar Academy of Technology & Management will observe a general holiday on this date as per the official VTU academic calendar. All scheduled academic sessions, laboratory practicals, and administrative services will remain closed. Regular classes resume on the next working day.
+                </p>
+              </div>`
+                  : ''
+              }
+
+              ${
                 isCancelled && event.remarks
-                  ? `<div style="background: #fef2f2; border: 1px solid #fecaca; border-radius: 8px; padding: 14px 16px; margin: 16px 0; color: #991b1b;">
-                      <div style="font-size: 12px; font-weight: 800; text-transform: uppercase; margin-bottom: 6px;">⚠️ Cancellation Reason:</div>
+                  ? `<div style="background: #fef2f2; border: 1px solid #fecaca; border-radius: 10px; padding: 14px 18px; margin: 16px 0; color: #991b1b;">
+                      <div style="font-size: 11px; font-weight: 900; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px;">⚠️ Cancellation Reason:</div>
                       <div style="font-size: 13px; line-height: 1.6;">${event.remarks}</div>
                     </div>`
                   : ''
               }
 
-              <!-- Action Button -->
-              <div style="text-align: center; margin-top: 28px; margin-bottom: 10px;">
-                <a href="${portalUrl}" target="_blank" style="background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%); color: #ffffff; text-decoration: none; padding: 13px 32px; border-radius: 8px; font-size: 14px; font-weight: 800; display: inline-block; box-shadow: 0 4px 14px rgba(37,99,235,0.3);">
-                  🚀 View Full Academic Calendar &rarr;
+              <!-- Role-Tailored Portal Action Button -->
+              <div style="text-align: center; margin-top: 26px; margin-bottom: 8px;">
+                <a href="${buttonUrl}" target="_blank" style="background: linear-gradient(135deg, #1e40af 0%, #2563eb 100%); color: #ffffff; text-decoration: none; padding: 14px 34px; border-radius: 8px; font-size: 14px; font-weight: 800; display: inline-block; box-shadow: 0 4px 14px rgba(37,99,235,0.35); letter-spacing: 0.3px;">
+                  ${buttonText}
                 </a>
               </div>
 
-              <p style="font-size: 12px; line-height: 1.6; color: #64748b; margin-top: 24px; text-align: center;">
-                Please log in to your DSATM portal to view the dynamic interactive calendar and download exported schedules.
+              <p style="font-size: 12px; line-height: 1.5; color: #64748b; margin-top: 12px; text-align: center;">
+                ${buttonSubtext}
               </p>
             </td>
           </tr>
@@ -1964,9 +2103,10 @@ function generateAcademicCalendarHtml({ event, recipientName, recipientRole, not
           <tr>
             <td style="background: #f8fafc; padding: 20px 30px; text-align: center; font-size: 12px; color: #64748b; border-top: 1px solid #e2e8f0;">
               <div style="font-weight: 800; color: #334155; margin-bottom: 4px;">Dayananda Sagar Academy of Technology & Management (DSATM)</div>
-              <div>Opp. Art of Living, Kanakapura Main Road, Bangalore - 560082</div>
+              <div>Autonomous Institute under VTU | Approved by AICTE, New Delhi</div>
+              <div style="margin-top: 4px; font-size: 11px; color: #64748b;">Opp. Art of Living, Kanakapura Main Road, Bangalore - 560082</div>
               <div style="margin-top: 8px; font-size: 11px; color: #94a3b8; line-height: 1.4;">
-                This is an official automated alert from the DSATM Academic & Examination Management System.<br/>
+                This is an official automated notification from the DSATM Controller of Examinations & Academic Portal.<br/>
                 &copy; 2026 Dayananda Sagar Institutions. All rights reserved.
               </div>
             </td>
@@ -2074,15 +2214,37 @@ async function dispatchEventNotifications(event, notificationType, notifData) {
       let failureReason = null;
 
       if (u.email) {
-        const emailSubject = `📢 DSATM Academic Alert: ${event.event_type} - ${event.title}`;
+        const cleanSubjectTitle = String(event.title || "Academic Event").replace(/^Copy\s+of\s+/i, "").trim();
+        const role = (u.role || "student").toLowerCase().trim();
+        const isFaculty = role === "faculty" || role === "teacher";
+        const isHod = role === "hod";
+        const isPrincipal = role === "principal";
+
+        const salutationText = isFaculty
+          ? `Dear Prof. ${u.full_name || "Faculty"}`
+          : isHod
+          ? `Respected Head of Department (${u.full_name || "HOD"})`
+          : isPrincipal
+          ? `Respected Principal`
+          : `Dear ${u.full_name || "Student"}`;
+
+        const portalActionText = isFaculty
+          ? "Please log in to your DSATM Faculty Portal to view invigilation duties, course rubrics, and the answer verification queue."
+          : isHod
+          ? "Please log in to your HOD Department Dashboard to oversee invigilation allocations and exam conduct."
+          : isPrincipal
+          ? "Please log in to the Institutional Dashboard to review schedule status."
+          : "Please log in to your Student Portal to view full exam seating, hall allotment, and syllabus guidelines.";
+
+        const emailSubject = `📢 DSATM Academic Alert: ${event.event_type || 'Examination'} - ${cleanSubjectTitle}`;
         let emailContent = "";
 
         if (notificationType === "EVENT_CHANGED") {
-          emailContent = `Dear ${u.full_name || "Student/Faculty"},\n\nACADEMIC CALENDAR UPDATE:\n\nThe scheduled date for the official event "${event.title}" has been revised.\n\n📌 Event: ${event.title}\n🏷️ Category: ${event.event_type}\n🗓️ Old Date: ${notifData.oldDate}\n📅 New Date: ${eventDateFormatted}\n📍 Location: ${event.location || "DSATM Campus"}\n${event.description ? "📝 Notes: " + event.description + "\n" : ""}\nPlease log in to the LMS Academic Portal to view the complete updated calendar.\n\nRegards,\nDayananda Sagar Academy of Technology & Management (DSATM)`;
+          emailContent = `${salutationText},\n\nACADEMIC CALENDAR UPDATE:\n\nThe scheduled date for the official event "${cleanSubjectTitle}" has been revised.\n\n📌 Event: ${cleanSubjectTitle}\n🏷️ Category: ${event.event_type}\n🗓️ Old Date: ${notifData.oldDate}\n📅 New Date: ${eventDateFormatted}\n📍 Location: ${event.location || "DSATM Campus"}\n${event.description ? "📝 Notes: " + event.description + "\n" : ""}\n${portalActionText}\n\nRegards,\nDayananda Sagar Academy of Technology & Management (DSATM)`;
         } else if (notificationType === "EVENT_CANCELLED") {
-          emailContent = `Dear ${u.full_name || "Student/Faculty"},\n\nACADEMIC CALENDAR NOTICE:\n\nPlease note that the following event has been CANCELLED:\n\n📌 Event: ${event.title}\n🗓️ Originally Scheduled Date: ${eventDateFormatted}\n⚠️ Status: CANCELLED\n📝 Reason: ${event.remarks || "Cancelled by Department Authority"}\n\nPlease check your Academic Dashboard for the latest schedule.\n\nRegards,\nDayananda Sagar Academy of Technology & Management (DSATM)`;
+          emailContent = `${salutationText},\n\nACADEMIC CALENDAR NOTICE:\n\nPlease note that the following event has been CANCELLED:\n\n📌 Event: ${cleanSubjectTitle}\n🗓️ Originally Scheduled Date: ${eventDateFormatted}\n⚠️ Status: CANCELLED\n📝 Reason: ${event.remarks || "Cancelled by Department Authority"}\n\n${portalActionText}\n\nRegards,\nDayananda Sagar Academy of Technology & Management (DSATM)`;
         } else {
-          emailContent = `Dear ${u.full_name || "Student/Faculty"},\n\nA new official academic event has been published on the Institutional Academic Calendar:\n\n📌 Event: ${event.title}\n🏷️ Category: ${event.event_type}\n📅 Scheduled Date: ${eventDateFormatted}\n📍 Location: ${event.location || "DSATM Campus"}\n${event.description ? "📝 Details: " + event.description + "\n" : ""}\nPlease log in to the LMS Academic Portal to view the full academic schedule.\n\nRegards,\nDayananda Sagar Academy of Technology & Management (DSATM)`;
+          emailContent = `${salutationText},\n\nA new official academic event has been published on the DSATM Portal:\n\n📌 Event: ${cleanSubjectTitle}\n🏷️ Category: ${event.event_type}\n📅 Scheduled Date: ${eventDateFormatted}\n📍 Location: ${event.location || "DSATM Campus"}\n${event.description ? "📝 Details: " + event.description + "\n" : ""}\n${portalActionText}\n\nRegards,\nDayananda Sagar Academy of Technology & Management (DSATM)`;
         }
 
         const emailHtml = generateAcademicCalendarHtml({
@@ -2182,5 +2344,6 @@ module.exports = {
   importAcademicCalendarEvents,
   checkAndSendOneDayBeforeNotifications,
   getRelativeDateState,
+  generateAcademicCalendarHtml,
   OFFICIAL_MCA_SEED_EVENTS,
 };

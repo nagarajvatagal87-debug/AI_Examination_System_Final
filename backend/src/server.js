@@ -1,4 +1,5 @@
 const path = require("path");
+// Reload environment configuration - Port 465 SSL enabled
 require("dotenv").config({ path: path.resolve(__dirname, "../.env") });
 const express = require("express");
 const cors = require("cors");

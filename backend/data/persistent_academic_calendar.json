@@ -621,7 +621,7 @@
     "semester": "III",
     "academic_year": "2026-27",
     "start_date": "2026-10-27",
-    "end_date": "2026-10-28",
+    "end_date": "2026-10-29",
     "start_time": "09:30 AM",
     "end_time": "01:00 PM",
     "description": "First Continuous Internal Evaluation (CIE-1) Examinations for III Semester MCA.",
@@ -638,8 +638,10 @@
     "created_by": "HOD MCA",
     "published_by": "HOD MCA",
     "published_at": "2026-08-20T00:00:00.000Z",
-    "version": 1,
-    "visibility": "all"
+    "version": 2,
+    "visibility": "all",
+    "updated_by": "9e9f16a4-a622-4121-b6e1-b7075f947b25",
+    "updated_at": "2026-10-28T02:02:25.225Z"
   },
   {
     "id": "mca-cal-026",
@@ -1725,5 +1727,37 @@
     "published_at": "2026-10-20T19:30:32.449Z",
     "linked_exam_id": null,
     "version": 3
+  },
+  {
+    "id": "mca-cal-1793107343417-jd2km",
+    "title": "Internal Assessment 1 (IA-1)",
+    "event_type": "Internal Examination",
+    "department_id": "37909cba-a75d-428e-9181-fddf9920fb0b",
+    "program": "MCA",
+    "semester": "III",
+    "academic_year": "2026-27",
+    "start_date": "2026-10-27",
+    "end_date": "2026-10-28",
+    "start_time": "10:00 AM",
+    "end_time": "",
+    "description": "Continuous Internal Evaluation (CIE-1) for 3rd Semester MCA students covering Unit 1 & Unit 2 VTU curriculum.",
+    "remarks": "Official Autonomous Examination Schedule",
+    "location": "MCA Department, DSATM",
+    "audience": [
+      "students",
+      "faculty",
+      "hod",
+      "principal"
+    ],
+    "priority": "NORMAL",
+    "status": "PUBLISHED",
+    "created_by": "9e9f16a4-a622-4121-b6e1-b7075f947b25",
+    "created_at": "2026-10-27T13:22:23.417Z",
+    "updated_by": "9e9f16a4-a622-4121-b6e1-b7075f947b25",
+    "updated_at": "2026-10-28T02:03:55.895Z",
+    "published_by": "9e9f16a4-a622-4121-b6e1-b7075f947b25",
+    "published_at": "2026-10-27T13:22:36.210Z",
+    "linked_exam_id": null,
+    "version": 2
   }
 ]

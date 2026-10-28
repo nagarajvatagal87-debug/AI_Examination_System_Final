@@ -5,6 +5,11 @@ const nodemailer = require("nodemailer");
 const resend = process.env.RESEND_API_KEY ? new Resend(process.env.RESEND_API_KEY) : null;
 const hasSmtpConfig = Boolean(process.env.SMTP_USER && process.env.SMTP_PASS);
 const transporter = (resend || !hasSmtpConfig) ? null : nodemailer.createTransport({
+  pool: true,
+  maxConnections: 1,
+  maxMessages: 250,
+  rateDelta: 1000,
+  rateLimit: 2, // Maximum 2 emails per second to avoid Gmail 454 rate-limiting
   host: process.env.SMTP_HOST || "smtp.gmail.com",
   port: Number(process.env.SMTP_PORT) || 587,
   secure: Number(process.env.SMTP_PORT) === 465,
