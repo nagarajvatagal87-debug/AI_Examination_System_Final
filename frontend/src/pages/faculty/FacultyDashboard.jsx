@@ -189,31 +189,43 @@ export default function FacultyDashboard() {
         <div className="fd-section">
           <h2>🧠 Generate Exam Paper</h2>
           <form onSubmit={handleGenerateExam}>
-            <div className="fd-form-row">
-              <input placeholder="Exam title" value={examTitle} onChange={(e) => setExamTitle(e.target.value)} required />
-              <select value={examType} onChange={(e) => setExamType(e.target.value)}>
-                <option value="internal">Internal</option>
-                <option value="main">Main</option>
-              </select>
-              <input type="number" value={totalMarks} onChange={(e) => setTotalMarks(Number(e.target.value))} placeholder="Total marks" />
-              <div style={{ position: 'relative', display: 'flex', alignItems: 'center', minWidth: 220 }}>
-                <input
-                  type={showSecurityCode ? 'text' : 'password'}
-                  placeholder="4 or 6-digit passcode"
-                  value={securityCode}
-                  onChange={(e) => setSecurityCode(e.target.value.replace(/[^0-9a-zA-Z]/g, '').slice(0, 6))}
-                  maxLength={6}
-                  style={{ width: '100%', paddingRight: 36, fontWeight: 'bold', letterSpacing: showSecurityCode ? '2px' : '3px' }}
-                  required
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowSecurityCode(!showSecurityCode)}
-                  style={{ position: 'absolute', right: 8, background: 'none', border: 'none', cursor: 'pointer', fontSize: 14, color: '#64748b' }}
-                  title={showSecurityCode ? 'Hide Code' : 'Show Code'}
-                >
-                  {showSecurityCode ? '👁️' : '🔒'}
-                </button>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 14, marginBottom: 14 }}>
+              <div>
+                <label style={{ display: 'block', fontSize: 12, fontWeight: 700, color: '#475569', marginBottom: 4 }}>Exam Title</label>
+                <input placeholder="e.g. Database Management Test 1" value={examTitle} onChange={(e) => setExamTitle(e.target.value)} required style={{ width: '100%' }} />
+              </div>
+              <div>
+                <label style={{ display: 'block', fontSize: 12, fontWeight: 700, color: '#475569', marginBottom: 4 }}>Exam Category</label>
+                <select value={examType} onChange={(e) => setExamType(e.target.value)} style={{ width: '100%' }}>
+                  <option value="internal">Internal Assessment (IAT)</option>
+                  <option value="main">Main Examination</option>
+                </select>
+              </div>
+              <div>
+                <label style={{ display: 'block', fontSize: 12, fontWeight: 700, color: '#475569', marginBottom: 4 }}>Total Marks</label>
+                <input type="number" value={totalMarks} onChange={(e) => setTotalMarks(Number(e.target.value))} placeholder="Total marks" style={{ width: '100%' }} />
+              </div>
+              <div>
+                <label style={{ display: 'block', fontSize: 12, fontWeight: 700, color: '#475569', marginBottom: 4 }}>🔒 Security Code (4 or 6 Digits)</label>
+                <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
+                  <input
+                    type={showSecurityCode ? 'text' : 'password'}
+                    placeholder="e.g. 7492 or 849201"
+                    value={securityCode}
+                    onChange={(e) => setSecurityCode(e.target.value.replace(/[^0-9a-zA-Z]/g, '').slice(0, 6))}
+                    maxLength={6}
+                    style={{ width: '100%', paddingRight: 38, fontWeight: 'bold', letterSpacing: showSecurityCode ? '2px' : '3px' }}
+                    required
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowSecurityCode(!showSecurityCode)}
+                    style={{ position: 'absolute', right: 8, background: 'none', border: 'none', cursor: 'pointer', fontSize: 14, color: '#64748b' }}
+                    title={showSecurityCode ? 'Hide Code' : 'Show Code'}
+                  >
+                    {showSecurityCode ? '👁️' : '🔒'}
+                  </button>
+                </div>
               </div>
             </div>
             <div className="fd-instruction-box">

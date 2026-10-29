@@ -250,23 +250,238 @@
   border: 1px solid #cbd5e1 !important;
 }
 
-/* TOPBAR PROFILE MENU POPOVER CARD */
+/* =========================================
+   TOP HEADER BAR - STRUCTURED INSTITUTIONAL NAVBAR
+   ========================================= */
 
-.fl-topbar-profile-btn:hover {
-  background: rgba(255, 255, 255, 0.2) !important;
-  border-color: rgba(255, 255, 255, 0.4) !important;
-  transform: translateY(-1px);
+.eduexam-top-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 24px;
+  background: #ffffff !important;
+  border-bottom: 2px solid #1e293b !important;
+  box-shadow: 0 4px 14px rgba(15, 23, 42, 0.04);
+  color: #0f172a !important;
+  min-height: 68px;
+  gap: 16px;
+  position: sticky;
+  top: 0;
+  z-index: 100;
 }
+
+/* 1. Left: Search Bar */
+.search-bar-wrap {
+  display: flex;
+  align-items: center;
+  background: #f8fafc;
+  border: 1.5px solid #cbd5e1;
+  border-radius: 12px;
+  padding: 8px 14px;
+  width: 250px;
+  max-width: 250px;
+  flex-shrink: 0;
+  gap: 8px;
+  transition: all 0.2s ease;
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04);
+}
+
+.search-bar-wrap:focus-within {
+  border-color: #2563eb;
+  background: #ffffff;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
+}
+
+.search-bar-wrap .search-icon {
+  font-size: 14px;
+  color: #64748b;
+  line-height: 1;
+  user-select: none;
+}
+
+.search-bar-wrap input {
+  background: transparent !important;
+  border: none !important;
+  outline: none !important;
+  color: #0f172a !important;
+  font-size: 13px !important;
+  font-weight: 600 !important;
+  width: 100% !important;
+  padding: 0 !important;
+  box-shadow: none !important;
+}
+
+.search-bar-wrap input::placeholder {
+  color: #94a3b8;
+  font-weight: 500;
+}
+
+/* 2. Center: College Title & Subtitle */
+.top-header-center {
+  flex: 1;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-width: 0;
+  padding: 0 10px;
+}
+
+.header-college-title-center {
+  font-family: var(--font-heading, Inter, sans-serif);
+  font-size: 14.5px !important;
+  font-weight: 900 !important;
+  letter-spacing: 0.5px !important;
+  text-transform: uppercase !important;
+  color: #0f172a !important;
+  margin: 0 !important;
+  line-height: 1.25 !important;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+}
+
+.header-dashboard-subtitle-center {
+  font-size: 12px !important;
+  font-weight: 800 !important;
+  color: #2563eb !important;
+  margin: 2px 0 0 0 !important;
+  letter-spacing: 0.3px !important;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  line-height: 1.2 !important;
+}
+
+/* 3. Right: Action Controls & User Profile Badge */
+.top-header-right {
+  display: flex !important;
+  align-items: center !important;
+  gap: 12px !important;
+  flex-shrink: 0 !important;
+}
+
+.header-icon-btn {
+  width: 42px;
+  height: 42px;
+  border-radius: 12px;
+  background: #ffffff;
+  border: 2px solid #1e293b;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  color: #1e293b;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.08);
+  outline: none;
+  padding: 0;
+}
+
+.header-icon-btn:hover {
+  background: #f8fafc;
+  border-color: #0f172a;
+  transform: translateY(-1.5px);
+  box-shadow: 0 6px 18px rgba(15, 23, 42, 0.12);
+}
+
+.user-profile-badge {
+  display: flex !important;
+  align-items: center !important;
+  gap: 10px !important;
+  padding: 4px 12px 4px 5px !important;
+  background: #ffffff !important;
+  border: 2px solid #1e293b !important;
+  border-radius: 30px !important;
+  cursor: pointer !important;
+  transition: all 0.2s ease !important;
+  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.08) !important;
+  user-select: none;
+}
+
+.user-profile-badge:hover {
+  background: #f8fafc !important;
+  border-color: #0f172a !important;
+  transform: translateY(-1.5px);
+  box-shadow: 0 6px 18px rgba(15, 23, 42, 0.12) !important;
+}
+
+.user-avatar-circle {
+  width: 32px !important;
+  height: 32px !important;
+  border-radius: 50% !important;
+  overflow: hidden !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  background: linear-gradient(135deg, #2563eb 0%, #7c3aed 100%) !important;
+  color: #ffffff !important;
+  font-weight: 800 !important;
+  font-size: 13px !important;
+  flex-shrink: 0 !important;
+  border: 1.5px solid #1e293b !important;
+  box-shadow: 0 2px 6px rgba(37, 99, 235, 0.3);
+}
+
+.user-avatar-circle img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.user-profile-info {
+  display: flex;
+  flex-direction: column;
+  text-align: left;
+  max-width: 170px;
+}
+
+.user-name-title {
+  font-size: 12.5px !important;
+  font-weight: 800 !important;
+  color: #0f172a !important;
+  line-height: 1.2 !important;
+  white-space: nowrap !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+}
+
+.user-sub-title {
+  font-size: 10px !important;
+  font-weight: 600 !important;
+  color: #64748b !important;
+  line-height: 1.2 !important;
+  white-space: nowrap !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  margin-top: 1px !important;
+}
+
+.caret-down {
+  font-size: 11px !important;
+  color: #64748b !important;
+  margin-left: 2px !important;
+  transition: transform 0.2s ease !important;
+}
+
+.caret-down.open {
+  transform: rotate(180deg);
+}
+
+/* TOPBAR PROFILE MENU POPOVER CARD - CLEAN EXECUTIVE LIGHT THEME */
 
 .fl-profile-popover {
   position: absolute;
   right: 0;
-  top: 48px;
+  top: calc(100% + 10px);
   width: 320px;
-  background: #0f172a !important;
-  border: 1.5px solid rgba(255, 255, 255, 0.15) !important;
+  background: #ffffff !important;
+  border: 2px solid #1e293b !important;
   border-radius: 16px;
-  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.6);
+  box-shadow: 0 20px 45px rgba(15, 23, 42, 0.18);
   z-index: 1000;
   overflow: hidden;
   animation: profilePopIn 0.2s cubic-bezier(0.16, 1, 0.3, 1);
@@ -284,9 +499,9 @@
 }
 
 .fl-pop-header {
-  padding: 18px;
-  background: rgba(30, 41, 59, 0.6);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  padding: 16px 18px;
+  background: #f8fafc;
+  border-bottom: 1.5px solid #e2e8f0;
   display: flex;
   align-items: center;
   gap: 14px;
@@ -296,17 +511,17 @@
   width: 48px;
   height: 48px;
   border-radius: 50%;
-  background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
+  background: linear-gradient(135deg, #2563eb 0%, #7c3aed 100%);
   display: flex;
   align-items: center;
   justify-content: center;
   color: #ffffff;
   font-weight: 800;
-  font-size: 20px;
+  font-size: 19px;
   overflow: hidden;
-  border: 2px solid rgba(255, 255, 255, 0.3);
+  border: 2px solid #1e293b;
   flex-shrink: 0;
-  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4);
+  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
 }
 
 .fl-pop-avatar img {
@@ -322,14 +537,14 @@
 
 .fl-pop-name {
   font-size: 15px;
-  font-weight: 800;
-  color: #ffffff !important;
+  font-weight: 900;
+  color: #0f172a !important;
   margin: 0 0 2px 0;
 }
 
 .fl-pop-email {
   font-size: 12px;
-  color: #94a3b8 !important;
+  color: #64748b !important;
   margin: 0 0 6px 0;
   white-space: nowrap;
   overflow: hidden;
@@ -339,16 +554,17 @@
 .fl-pop-badge {
   display: inline-block;
   font-size: 11px;
-  font-weight: 700;
-  color: #38bdf8;
-  background: rgba(56, 189, 248, 0.12);
-  border: 1px solid rgba(56, 189, 248, 0.25);
+  font-weight: 800;
+  color: #1e40af;
+  background: #eff6ff;
+  border: 1px solid #bfdbfe;
   padding: 2px 8px;
   border-radius: 10px;
 }
 
 .fl-pop-menu {
   padding: 8px;
+  background: #ffffff;
 }
 
 .fl-pop-item {
@@ -356,10 +572,10 @@
   display: flex;
   align-items: center;
   gap: 12px;
-  padding: 10px 12px;
+  padding: 11px 14px;
   border: none;
   background: transparent;
-  color: #cbd5e1;
+  color: #1e293b;
   text-align: left;
   border-radius: 10px;
   cursor: pointer;
@@ -367,13 +583,18 @@
 }
 
 .fl-pop-item:hover {
-  background: rgba(30, 41, 59, 0.7);
-  color: #ffffff;
+  background: #f1f5f9;
+  color: #0f172a;
+}
+
+.fl-pop-item.logout {
+  color: #dc2626;
+  font-weight: 800;
 }
 
 .fl-pop-item.logout:hover {
-  background: rgba(239, 68, 68, 0.15);
-  color: #f87171;
+  background: #fef2f2;
+  color: #b91c1c;
 }
 
 .fl-pop-icon {
@@ -385,18 +606,18 @@
 .fl-pop-item strong {
   display: block;
   font-size: 13px;
-  font-weight: 700;
-  color: #f8fafc;
+  font-weight: 800;
+  color: #0f172a;
 }
 
 .fl-pop-item p {
   font-size: 11px;
-  color: #94a3b8 !important;
+  color: #64748b !important;
   margin: 2px 0 0 0;
 }
 
 .fl-pop-divider {
   height: 1px;
-  background: rgba(255, 255, 255, 0.08);
+  background: #e2e8f0;
   margin: 6px 0;
 }

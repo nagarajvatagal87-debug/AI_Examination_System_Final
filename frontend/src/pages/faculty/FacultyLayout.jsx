@@ -84,6 +84,16 @@ export default function FacultyLayout() {
     <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh', background: 'var(--bg-gradient)', color: 'var(--text-main)' }}>
       <div className="fl-wrap" style={{ flex: 1 }}>
         <aside className="fl-sidebar glass-card" style={{ borderRadius: 0, borderTop: 'none', borderBottom: 'none', borderLeft: 'none' }}>
+          <div className="fl-brand">
+            <div className="fl-logo-box">
+              <img src="/dsi-logo.png" alt="DSI Logo" className="fl-college-logo" />
+            </div>
+            <div className="fl-brand-text">
+              DAYANANDA SAGAR
+              <div style={{ fontSize: 11, color: '#1d4ed8', fontWeight: 700 }}>ACADEMY OF TECH & MGMT</div>
+            </div>
+          </div>
+
           <NavLink to="/faculty/settings" style={{ textDecoration: 'none' }}>
             <div className="fl-profile" style={{ cursor: 'pointer' }}>
               <div className="fl-avatar" style={{ overflow: 'hidden', padding: 0 }}>
@@ -130,22 +140,33 @@ export default function FacultyLayout() {
 
             <div className="top-header-right">
               <NotificationBell />
-              <div className="header-icon-btn" onClick={() => navigate('/faculty/settings')} style={{ cursor: 'pointer' }} title="Settings">⚙️</div>
+              <button
+                type="button"
+                className="header-icon-btn"
+                onClick={() => navigate('/faculty/settings')}
+                title="Settings & Profile"
+              >
+                ⚙️
+              </button>
 
               <div ref={profileRef} style={{ position: 'relative' }}>
                 <div
                   className="user-profile-badge"
                   onClick={() => setProfileMenuOpen(!profileMenuOpen)}
-                  style={{ cursor: 'pointer' }}
+                  title="Click to view account menu"
                 >
-                  <div className="user-avatar-circle" style={{ width: 36, height: 36, borderRadius: '50%', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#2563eb', color: '#fff', fontWeight: 800 }}>
-                    {avatarUrl ? <img src={avatarUrl} alt="Avatar" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : (facultyName[0]?.toUpperCase() || 'F')}
+                  <div className="user-avatar-circle">
+                    {avatarUrl && !avatarUrl.includes('dsi-logo') && !avatarUrl.includes('logo') ? (
+                      <img src={avatarUrl} alt="Avatar" />
+                    ) : (
+                      facultyName[0]?.toUpperCase() || 'F'
+                    )}
                   </div>
-                  <div>
+                  <div className="user-profile-info">
                     <div className="user-name-title">{facultyName}</div>
                     <div className="user-sub-title">{facultyRole}</div>
                   </div>
-                  <span className="caret-down">▾</span>
+                  <span className={`caret-down ${profileMenuOpen ? 'open' : ''}`}>▾</span>
                 </div>
 
                 {profileMenuOpen && (
