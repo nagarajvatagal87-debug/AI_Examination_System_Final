@@ -134,7 +134,7 @@ export default function Landing() {
 
       <main className="landing-container">
         {/* Hero Section */}
-        <section className="landing-hero-card glass-card">
+        <section className="landing-hero-card">
           <div className="hero-content">
             <div className="hero-badge-wrap">
               <span className="hero-badge">
@@ -246,12 +246,14 @@ export default function Landing() {
         {/* 5 Role Portals Grid */}
         <div className="portals-grid">
           {filteredRoles.map((r) => (
-            <div key={r.key} className={`portal-card portal-card-${r.color} glass-card`}>
-              {r.badge && <div className="portal-badge">★ {r.badge}</div>}
+            <div key={r.key} className={`portal-card portal-card-${r.color}`}>
               <div className="portal-header">
                 <div className="portal-icon-circle">{r.icon}</div>
-                <div>
-                  <div className="portal-label-tag">{r.label}</div>
+                <div className="portal-header-info">
+                  <div className="portal-label-tag-row">
+                    <span className="portal-label-tag">{r.label}</span>
+                    {r.badge && <span className="portal-badge-inline">★ {r.badge}</span>}
+                  </div>
                   <h3 className="portal-card-title">{r.title}</h3>
                 </div>
               </div>
@@ -274,7 +276,7 @@ export default function Landing() {
         </div>
 
         {/* Approved Public College Information (Centered as requested) */}
-        <section className="public-info-section glass-card">
+        <section className="public-info-section">
           <div className="public-info-header centered-pub-header">
             <div className="pub-header-center-wrap">
               <div className="public-info-tag">OFFICIAL PUBLIC DISCLOSURE</div>

@@ -145,144 +145,220 @@
   overflow-y: auto;
 }
 
-/* Top Header Bar - Premium Dark Theme */
+/* Top Header Bar - Structured Light Institutional Navbar (Matching Faculty Dashboard) */
 .eduexam-top-header {
-  background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
-  padding: 12px 24px;
-  border-bottom: 1.5px solid rgba(245, 158, 11, 0.35); /* Gold Accent */
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 16px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
-  width: 100%;
+  display: flex !important;
+  justify-content: space-between !important;
+  align-items: center !important;
+  padding: 0 24px !important;
+  background: #ffffff !important;
+  border-bottom: 1.5px solid #e2e8f0 !important;
+  box-shadow: 0 1px 4px rgba(15, 23, 42, 0.03) !important;
+  color: #0f172a !important;
+  height: 64px !important;
+  min-height: 64px !important;
+  max-height: 64px !important;
+  gap: 16px !important;
+  position: sticky !important;
+  top: 0 !important;
+  z-index: 100 !important;
 }
 
-.top-header-center {
-  text-align: center;
-  flex: 1;
-  padding: 0 12px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
+/* 1. Left: Search Bar (Height 40px) */
+.sd-search-bar-wrap {
+  display: flex !important;
+  align-items: center !important;
+  background: #f8fafc !important;
+  border: 1.5px solid #e2e8f0 !important;
+  border-radius: 12px !important;
+  height: 40px !important;
+  padding: 0 14px !important;
+  width: 260px !important;
+  max-width: 260px !important;
+  flex-shrink: 0 !important;
+  gap: 8px !important;
+  transition: all 0.2s ease !important;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.03) !important;
 }
 
-.eduexam-top-header .header-college-title-center {
-  font-size: 15.5px !important;
-  font-weight: 900 !important;
-  letter-spacing: 0.9px !important;
+.sd-search-bar-wrap:focus-within {
+  border-color: #3b82f6 !important;
+  background: #ffffff !important;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.12) !important;
+}
+
+.sd-search-icon {
+  font-size: 14px !important;
+  color: #64748b !important;
+  line-height: 1 !important;
+  user-select: none !important;
+}
+
+.sd-search-input {
+  background: transparent !important;
+  border: none !important;
+  outline: none !important;
+  color: #0f172a !important;
+  font-size: 13px !important;
+  font-weight: 500 !important;
+  width: 100% !important;
+  padding: 0 !important;
+  box-shadow: none !important;
+}
+
+.sd-search-input::placeholder {
+  color: #94a3b8 !important;
+  font-weight: 500 !important;
+}
+
+/* 2. Center: College Title & Subtitle */
+.sd-top-header-center {
+  flex: 1 !important;
+  text-align: center !important;
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  justify-content: center !important;
+  min-width: 0 !important;
+  padding: 0 8px !important;
+}
+
+.sd-header-college-title {
+  font-family: var(--font-heading, 'Inter', sans-serif) !important;
+  font-size: 14.5px !important;
+  font-weight: 800 !important;
+  letter-spacing: 0.45px !important;
   text-transform: uppercase !important;
-  color: #ffffff !important;
-  background: linear-gradient(135deg, #ffffff 0%, #fef08a 45%, #93c5fd 100%) !important;
-  -webkit-background-clip: text !important;
-  -webkit-text-fill-color: transparent !important;
+  color: #0f172a !important;
   margin: 0 !important;
   line-height: 1.25 !important;
-  filter: drop-shadow(0 2px 6px rgba(0, 0, 0, 0.6)) !important;
-  opacity: 1 !important;
-  visibility: visible !important;
+  white-space: nowrap !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  max-width: 100% !important;
 }
 
-.eduexam-top-header .header-dashboard-subtitle-center {
-  font-size: 13px !important;
-  font-weight: 800 !important;
-  color: #38bdf8 !important;
-  margin-top: 3px !important;
-  letter-spacing: 0.5px !important;
-  background: none !important;
-  -webkit-text-fill-color: #38bdf8 !important;
-  opacity: 1 !important;
-  visibility: visible !important;
+.sd-header-dashboard-subtitle {
+  font-size: 12px !important;
+  font-weight: 700 !important;
+  color: #2563eb !important;
+  margin: 2px 0 0 0 !important;
+  letter-spacing: 0.25px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 6px !important;
+  line-height: 1.2 !important;
 }
 
-.search-bar-wrap {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  background: rgba(255, 255, 255, 0.08);
-  border: 1px solid rgba(255, 255, 255, 0.18);
-  border-radius: 10px;
-  padding: 8px 16px;
-  width: 320px;
-  transition: all 0.2s ease;
+/* 3. Right: Action Controls (Notification + Settings + User Profile) */
+.sd-top-header-right {
+  display: flex !important;
+  align-items: center !important;
+  gap: 10px !important;
+  flex-shrink: 0 !important;
 }
 
-.search-bar-wrap:focus-within {
-  border-color: #38bdf8;
-  box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.2);
-}
-
-.search-bar-wrap input {
-  border: none !important;
-  background: transparent !important;
+/* Settings Icon Button (Height 40px) */
+.sd-header-icon-btn {
+  width: 40px !important;
+  height: 40px !important;
+  border-radius: 12px !important;
+  background: #ffffff !important;
+  border: 1.5px solid #e2e8f0 !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  font-size: 17px !important;
+  color: #475569 !important;
+  cursor: pointer !important;
+  transition: all 0.2s ease !important;
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04) !important;
   outline: none !important;
-  font-size: 13px !important;
+  padding: 0 !important;
+}
+
+.sd-header-icon-btn:hover {
+  background: #f8fafc !important;
+  border-color: #cbd5e1 !important;
+  color: #0f172a !important;
+  transform: translateY(-1px) !important;
+  box-shadow: 0 4px 10px rgba(15, 23, 42, 0.08) !important;
+}
+
+/* User Profile Badge Pill (Height 40px) */
+.sd-user-profile-badge {
+  height: 40px !important;
+  display: flex !important;
+  align-items: center !important;
+  gap: 10px !important;
+  padding: 3px 14px 3px 4px !important;
+  background: #ffffff !important;
+  border: 1.5px solid #e2e8f0 !important;
+  border-radius: 20px !important;
+  cursor: pointer !important;
+  transition: all 0.2s ease !important;
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04) !important;
+  user-select: none !important;
+}
+
+.sd-user-profile-badge:hover {
+  background: #f8fafc !important;
+  border-color: #cbd5e1 !important;
+  transform: translateY(-1px) !important;
+  box-shadow: 0 4px 10px rgba(15, 23, 42, 0.08) !important;
+}
+
+.sd-user-avatar-circle {
+  width: 32px !important;
+  height: 32px !important;
+  border-radius: 50% !important;
+  overflow: hidden !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%) !important;
   color: #ffffff !important;
+  font-weight: 800 !important;
+  font-size: 13px !important;
+  flex-shrink: 0 !important;
+  border: 1.5px solid #bfdbfe !important;
+  box-shadow: 0 2px 6px rgba(37, 99, 235, 0.2) !important;
+}
+
+.sd-user-profile-info {
+  display: flex !important;
+  flex-direction: column !important;
+  text-align: left !important;
+  max-width: 220px !important;
+}
+
+.sd-user-name-title {
+  font-size: 12.5px !important;
+  font-weight: 800 !important;
+  color: #0f172a !important;
+  line-height: 1.25 !important;
+  white-space: nowrap !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+}
+
+.sd-user-sub-title {
+  font-size: 10.5px !important;
   font-weight: 600 !important;
-  width: 100%;
+  color: #64748b !important;
+  line-height: 1.25 !important;
+  white-space: nowrap !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  margin-top: 1px !important;
 }
 
-.search-bar-wrap input::placeholder {
+.sd-caret-down {
+  font-size: 11px !important;
   color: #94a3b8 !important;
-}
-
-.top-header-right {
-  display: flex;
-  align-items: center;
-  gap: 16px;
-}
-
-.header-icon-btn {
-  font-size: 18px;
-  color: #cbd5e1;
-  cursor: pointer;
-  padding: 6px;
-  border-radius: 8px;
-  transition: background 0.15s ease;
-}
-
-.header-icon-btn:hover {
-  background: rgba(255, 255, 255, 0.1);
-  color: #ffffff;
-}
-
-.user-profile-badge {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  cursor: pointer;
-}
-
-.user-avatar-circle {
-  width: 38px;
-  height: 38px;
-  border-radius: 50%;
-  background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
-  color: #ffffff;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-weight: 800;
-  font-size: 15px;
-  box-shadow: 0 4px 10px rgba(37, 99, 235, 0.4);
-}
-
-.user-name-title {
-  font-size: 13px;
-  font-weight: 800;
-  color: #ffffff;
-}
-
-.user-sub-title {
-  font-size: 11px;
-  color: #94a3b8;
-  font-weight: 600;
-}
-
-.caret-down {
-  font-size: 12px;
-  color: #cbd5e1;
+  margin-left: 2px !important;
+  transition: transform 0.2s ease !important;
 }
 
 /* Body Content */
@@ -832,7 +908,7 @@
   button,
   .eduexam-logout-btn,
   .nav-btn,
-  .header-icon-btn,
+  .sd-header-icon-btn,
   .search-bar-wrap {
     display: none !important;
   }

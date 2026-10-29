@@ -554,9 +554,10 @@ export default function StudentDashboard() {
         <div className="eduexam-main-area">
           {/* Top Header Bar */}
           <header className="eduexam-top-header">
-            <div className="search-bar-wrap">
-              <span className="search-icon">🔍</span>
+            <div className="sd-search-bar-wrap">
+              <span className="sd-search-icon">🔍</span>
               <input
+                className="sd-search-input"
                 type="text"
                 placeholder="Search subjects, materials..."
                 value={searchQuery}
@@ -564,28 +565,48 @@ export default function StudentDashboard() {
               />
             </div>
 
-            <div className="top-header-center">
-              <h1 className="header-college-title-center">DAYANANDA SAGAR ACADEMY OF TECHNOLOGY AND MANAGEMENT</h1>
-              <p className="header-dashboard-subtitle-center">🎓 Student Dashboard</p>
+            <div className="sd-top-header-center">
+              <h1 className="sd-header-college-title">DAYANANDA SAGAR ACADEMY OF TECHNOLOGY AND MANAGEMENT</h1>
+              <p className="sd-header-dashboard-subtitle">🎓 Student Dashboard</p>
             </div>
 
-            <div className="top-header-right">
+            <div className="sd-top-header-right">
               <NotificationBell count={0} />
-              <div className="header-icon-btn" onClick={() => setActiveTab('settings')} style={{ cursor: 'pointer' }} title="Settings">⚙️</div>
 
-              <div className="user-profile-badge" onClick={() => setActiveTab('profile')} style={{ cursor: 'pointer' }}>
-                <div className="user-avatar-circle" style={{ width: 36, height: 36, borderRadius: '50%', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#2563eb', color: '#fff', fontWeight: 800 }}>
+              <button
+                type="button"
+                className="sd-header-icon-btn"
+                onClick={() => setActiveTab('settings')}
+                title="Settings & Profile"
+              >
+                ⚙️
+              </button>
+
+              <div
+                className="sd-user-profile-badge"
+                onClick={() => setActiveTab('profile')}
+                title="View Student Profile"
+              >
+                <div className="sd-user-avatar-circle">
                   {userProfile?.avatar_url || user?.avatarUrl || user?.avatar_url || localStorage.getItem('user_avatar') ? (
-                    <img src={userProfile?.avatar_url || user?.avatarUrl || user?.avatar_url || localStorage.getItem('user_avatar')} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                    <img
+                      src={userProfile?.avatar_url || user?.avatarUrl || user?.avatar_url || localStorage.getItem('user_avatar')}
+                      alt="Student Avatar"
+                      style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                    />
                   ) : (
-                    (userProfile?.full_name?.[0] || user?.fullName?.[0] || 'S')
+                    (userProfile?.full_name?.[0] || user?.fullName?.[0] || 'S').toUpperCase()
                   )}
                 </div>
-                <div>
-                  <div className="user-name-title">{userProfile?.full_name || user?.fullName || 'Student Candidate'}</div>
-                  <div className="user-sub-title">{userProfile?.departments?.name || userProfile?.department_name || user?.departmentName || 'MCA'} · Student</div>
+                <div className="sd-user-profile-info">
+                  <div className="sd-user-name-title">
+                    {(userProfile?.full_name || user?.fullName || user?.name || user?.email?.split('@')[0] || 'Student Candidate').trim()}
+                  </div>
+                  <div className="sd-user-sub-title">
+                    {userProfile?.departments?.name || userProfile?.department_name || user?.departmentName || 'Master of Computer Applications (MCA)'} · Student
+                  </div>
                 </div>
-                <span className="caret-down">▾</span>
+                <span className="sd-caret-down">▾</span>
               </div>
             </div>
           </header>

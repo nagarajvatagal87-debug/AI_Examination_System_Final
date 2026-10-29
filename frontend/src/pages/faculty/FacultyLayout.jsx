@@ -2,8 +2,6 @@ import React, { useState, useEffect, useRef } from 'react'
 import { NavLink, Outlet, useNavigate } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext.jsx'
 import NotificationBell from '../../components/NotificationBell.jsx'
-import HeaderBanner from '../../components/HeaderBanner.jsx'
-import '../student/StudentDashboard.css'
 import './FacultyLayout.css'
 
 class FacultyErrorBoundary extends React.Component {
@@ -23,14 +21,14 @@ class FacultyErrorBoundary extends React.Component {
   render() {
     if (this.state.hasError) {
       return (
-        <div style={{ padding: 40, background: 'rgba(30, 41, 59, 0.8)', borderRadius: 16, border: '1px solid rgba(239,68,68,0.3)', margin: 20, textAlign: 'center' }}>
-          <h3 style={{ color: '#f87171', margin: '0 0 10px 0', fontSize: 18 }}>⚠️ Section Temporarily Unavailable</h3>
-          <p style={{ color: '#cbd5e1', fontSize: 13, margin: '0 0 20px 0' }}>
+        <div style={{ padding: 36, background: '#ffffff', borderRadius: 16, border: '1.5px solid #fecaca', margin: 20, textAlign: 'center', boxShadow: '0 4px 16px rgba(239, 68, 68, 0.08)' }}>
+          <h3 style={{ color: '#dc2626', margin: '0 0 10px 0', fontSize: 18, fontWeight: 800 }}>⚠️ Section Temporarily Unavailable</h3>
+          <p style={{ color: '#475569', fontSize: 13, margin: '0 0 20px 0' }}>
             {this.state.error?.message || "An error occurred loading this workspace page."}
           </p>
           <button
             onClick={() => { this.setState({ hasError: false }); window.location.href = '/faculty'; }}
-            style={{ background: '#3b82f6', color: '#fff', border: 'none', padding: '10px 22px', borderRadius: 8, cursor: 'pointer', fontWeight: 600, fontSize: 13 }}
+            style={{ background: '#2563eb', color: '#fff', border: 'none', padding: '10px 22px', borderRadius: 10, cursor: 'pointer', fontWeight: 700, fontSize: 13, boxShadow: '0 2px 8px rgba(37, 99, 235, 0.25)' }}
           >
             🔄 Return to Faculty Dashboard
           </button>
@@ -63,8 +61,20 @@ export default function FacultyLayout() {
   const [profileMenuOpen, setProfileMenuOpen] = useState(false)
   const profileRef = useRef(null)
 
-  const facultyName = user?.full_name || user?.fullName || user?.name || user?.email?.split('@')[0] || 'Priya'
-  const facultyRole = (user?.designation || 'Assistant Professor') + ' · ' + (user?.departmentName || user?.department_id || 'MCA')
+  const facultyName = (
+    user?.fullName ||
+    user?.full_name ||
+    user?.name ||
+    (user?.email ? user.email.split('@')[0] : '') ||
+    'Dr. Priya'
+  ).trim() || 'Dr. Priya'
+
+  const facultyRole = (
+    (user?.designation || 'Assistant Professor') +
+    ' · ' +
+    (user?.departmentName || user?.department_id || 'Master of Computer Applications (MCA)')
+  ).trim()
+
   const facultyEmail = user?.email || 'priya@dsatm.edu.in'
   const avatarUrl = user?.avatarUrl || user?.avatar_url || localStorage.getItem('user_avatar')
 
@@ -81,9 +91,9 @@ export default function FacultyLayout() {
   }, [profileMenuOpen])
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh', background: 'var(--bg-gradient)', color: 'var(--text-main)' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh', background: 'linear-gradient(180deg, #f0f7ff 0%, #f8fafc 40%, #f8fafc 100%)', color: '#0f172a' }}>
       <div className="fl-wrap" style={{ flex: 1 }}>
-        <aside className="fl-sidebar glass-card" style={{ borderRadius: 0, borderTop: 'none', borderBottom: 'none', borderLeft: 'none' }}>
+        <aside className="fl-sidebar">
           <div className="fl-brand">
             <div className="fl-logo-box">
               <img src="/dsi-logo.png" alt="DSI Logo" className="fl-college-logo" />
@@ -127,53 +137,63 @@ export default function FacultyLayout() {
         </aside>
 
         <div className="fl-main">
+          {/* TOP INSTITUTIONAL NAVBAR */}
           <header className="eduexam-top-header">
-            <div className="search-bar-wrap">
-              <span className="search-icon">🔍</span>
-              <input type="text" placeholder="Search subjects, materials, students..." />
+            <div className="fl-search-bar-wrap">
+              <span className="fl-search-icon">🔍</span>
+              <input
+                className="fl-search-input"
+                type="text"
+                placeholder="Search subjects, materials, students..."
+              />
             </div>
 
-            <div className="top-header-center">
-              <h1 className="header-college-title-center">DAYANANDA SAGAR ACADEMY OF TECHNOLOGY AND MANAGEMENT</h1>
-              <p className="header-dashboard-subtitle-center">👨‍🏫 Faculty Dashboard — Academic LMS & AI</p>
+            <div className="fl-top-header-center">
+              <h1 className="fl-header-college-title">DAYANANDA SAGAR ACADEMY OF TECHNOLOGY AND MANAGEMENT</h1>
+              <p className="fl-header-dashboard-subtitle">👨‍🏫 Faculty Dashboard — Academic LMS & AI</p>
             </div>
 
-            <div className="top-header-right">
+            <div className="fl-top-header-right">
               <NotificationBell />
+
               <button
                 type="button"
-                className="header-icon-btn"
+                className="fl-header-icon-btn"
                 onClick={() => navigate('/faculty/settings')}
                 title="Settings & Profile"
               >
                 ⚙️
               </button>
 
-              <div ref={profileRef} style={{ position: 'relative' }}>
+              <div ref={profileRef} className="fl-profile-popover-wrapper">
                 <div
-                  className="user-profile-badge"
+                  className="fl-user-profile-badge"
                   onClick={() => setProfileMenuOpen(!profileMenuOpen)}
                   title="Click to view account menu"
                 >
-                  <div className="user-avatar-circle">
+                  <div className="fl-user-avatar-circle">
                     {avatarUrl && !avatarUrl.includes('dsi-logo') && !avatarUrl.includes('logo') ? (
                       <img src={avatarUrl} alt="Avatar" />
                     ) : (
                       facultyName[0]?.toUpperCase() || 'F'
                     )}
                   </div>
-                  <div className="user-profile-info">
-                    <div className="user-name-title">{facultyName}</div>
-                    <div className="user-sub-title">{facultyRole}</div>
+                  <div className="fl-user-profile-info">
+                    <div className="fl-user-name-title">{facultyName}</div>
+                    <div className="fl-user-sub-title">{facultyRole}</div>
                   </div>
-                  <span className={`caret-down ${profileMenuOpen ? 'open' : ''}`}>▾</span>
+                  <span className={`fl-caret-down ${profileMenuOpen ? 'open' : ''}`}>▾</span>
                 </div>
 
                 {profileMenuOpen && (
-                  <div className="fl-profile-popover glass-card">
+                  <div className="fl-profile-popover">
                     <div className="fl-pop-header">
                       <div className="fl-pop-avatar">
-                        {avatarUrl ? <img src={avatarUrl} alt="Avatar" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : (facultyName[0]?.toUpperCase() || 'F')}
+                        {avatarUrl ? (
+                          <img src={avatarUrl} alt="Avatar" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                        ) : (
+                          facultyName[0]?.toUpperCase() || 'F'
+                        )}
                       </div>
                       <div className="fl-pop-user-info">
                         <h4 className="fl-pop-name">{facultyName}</h4>

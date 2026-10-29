@@ -1,5 +1,16 @@
 [
   {
+    "id": "mem-1793289608210-el7fu",
+    "club_id": "club-1791103706490-zgq71",
+    "student_id": "85947c37-dfc9-442b-9918-72b4124492ff",
+    "student_name": "Nagaraj",
+    "student_usn": "1DT25MC036",
+    "student_email": "1dt25mc036@dsatm.edu.in",
+    "academic_year": "2026-2027",
+    "status": "ACTIVE",
+    "joined_at": "2026-10-29T16:00:08.210Z"
+  },
+  {
     "id": "mem-1791105444861-m60qx",
     "club_id": "club-1791105347822-p45mu",
     "student_id": "85947c37-dfc9-442b-9918-72b4124492ff",

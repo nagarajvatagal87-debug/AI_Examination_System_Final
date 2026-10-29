@@ -12,9 +12,7 @@
 .landing-page-shell {
   min-height: 100vh;
   width: 100%;
-  background: 
-    linear-gradient(135deg, rgba(15, 23, 42, 0.08) 0%, rgba(30, 58, 138, 0.05) 50%, rgba(15, 23, 42, 0.08) 100%),
-    url('/dsatm-campus.png') no-repeat center center / cover fixed;
+  background: linear-gradient(180deg, #f0f7ff 0%, #f8fafc 35%, #f1f5f9 70%, #eff6ff 100%);
   color: #0f172a;
   display: flex;
   flex-direction: column;
@@ -37,7 +35,7 @@
   padding: 44px 48px;
   margin-bottom: 44px;
   background: #ffffff;
-  border: 2px solid #0f172a;
+  border: 1.5px solid #e2e8f0;
   border-radius: 26px;
   position: relative;
   box-shadow: 0 16px 40px rgba(15, 23, 42, 0.08);
@@ -311,7 +309,7 @@
   flex-wrap: wrap;
   gap: 20px;
   background: #ffffff;
-  border: 2px solid #0f172a;
+  border: 1.5px solid #e2e8f0;
   padding: 20px 28px;
   border-radius: 22px;
   box-shadow: 0 10px 30px rgba(15, 23, 42, 0.08);
@@ -336,7 +334,7 @@
   display: flex;
   gap: 8px;
   background: #ffffff;
-  border: 2px solid #0f172a;
+  border: 1.5px solid #e2e8f0;
   padding: 6px;
   border-radius: 16px;
   box-shadow: 0 4px 14px rgba(15, 23, 42, 0.06);
@@ -362,7 +360,7 @@
 .portal-tab-btn.active {
   background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
   color: #ffffff;
-  border-color: #0f172a;
+  border-color: #cbd5e1;
   box-shadow: 0 4px 14px rgba(37, 99, 235, 0.3);
 }
 
@@ -393,7 +391,7 @@
   position: relative;
   border-radius: 20px;
   background: #ffffff;
-  border: 2px solid #0f172a;
+  border: 1.5px solid #e2e8f0;
   box-shadow: 0 12px 32px rgba(15, 23, 42, 0.06);
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   min-width: 0;
@@ -404,11 +402,110 @@
   box-shadow: 0 20px 45px rgba(15, 23, 42, 0.12);
 }
 
-.portal-card-blue:hover { border-color: #2563eb; }
-.portal-card-emerald:hover { border-color: #059669; }
-.portal-card-purple:hover { border-color: #7c3aed; }
-.portal-card-amber:hover { border-color: #d97706; }
-.portal-card-rose:hover { border-color: #e11d48; }
+/* 1. Student Portal (Soft Blue Theme) */
+.portal-card-blue {
+  background: linear-gradient(180deg, #ffffff 0%, #f0f7ff 50%, #e0f2fe 100%) !important;
+  border: 1.5px solid #bfdbfe !important;
+}
+.portal-card-blue:hover {
+  border-color: #3b82f6 !important;
+  box-shadow: 0 12px 28px rgba(37, 99, 235, 0.12) !important;
+}
+.portal-card-blue .portal-icon-circle {
+  background: #ffffff !important;
+  border: 1.5px solid #93c5fd !important;
+  color: #1d4ed8 !important;
+  box-shadow: 0 2px 8px rgba(37, 99, 235, 0.1);
+}
+.portal-card-blue .feature-chip {
+  background: #ffffff !important;
+  border: 1.5px solid #bfdbfe !important;
+  color: #1e3a8a !important;
+}
+
+/* 2. Faculty Portal (Soft Mint/Emerald Theme) */
+.portal-card-emerald {
+  background: linear-gradient(180deg, #ffffff 0%, #f0fdf4 50%, #dcfce7 100%) !important;
+  border: 1.5px solid #a7f3d0 !important;
+}
+.portal-card-emerald:hover {
+  border-color: #10b981 !important;
+  box-shadow: 0 12px 28px rgba(16, 185, 129, 0.12) !important;
+}
+.portal-card-emerald .portal-icon-circle {
+  background: #ffffff !important;
+  border: 1.5px solid #6ee7b7 !important;
+  color: #047857 !important;
+  box-shadow: 0 2px 8px rgba(16, 185, 129, 0.1);
+}
+.portal-card-emerald .feature-chip {
+  background: #ffffff !important;
+  border: 1.5px solid #a7f3d0 !important;
+  color: #064e3b !important;
+}
+
+/* 3. HOD Portal (Soft Lavender/Purple Theme) */
+.portal-card-purple {
+  background: linear-gradient(180deg, #ffffff 0%, #faf5ff 50%, #ede9fe 100%) !important;
+  border: 1.5px solid #ddd6fe !important;
+}
+.portal-card-purple:hover {
+  border-color: #8b5cf6 !important;
+  box-shadow: 0 12px 28px rgba(139, 92, 246, 0.12) !important;
+}
+.portal-card-purple .portal-icon-circle {
+  background: #ffffff !important;
+  border: 1.5px solid #c4b5fd !important;
+  color: #6d28d9 !important;
+  box-shadow: 0 2px 8px rgba(139, 92, 246, 0.1);
+}
+.portal-card-purple .feature-chip {
+  background: #ffffff !important;
+  border: 1.5px solid #ddd6fe !important;
+  color: #4c1d95 !important;
+}
+
+/* 4. Principal Portal (Soft Warm Amber Theme) */
+.portal-card-amber {
+  background: linear-gradient(180deg, #ffffff 0%, #fffdf5 50%, #fef3c7 100%) !important;
+  border: 1.5px solid #fde68a !important;
+}
+.portal-card-amber:hover {
+  border-color: #f59e0b !important;
+  box-shadow: 0 12px 28px rgba(245, 158, 11, 0.12) !important;
+}
+.portal-card-amber .portal-icon-circle {
+  background: #ffffff !important;
+  border: 1.5px solid #fcd34d !important;
+  color: #b45309 !important;
+  box-shadow: 0 2px 8px rgba(245, 158, 11, 0.1);
+}
+.portal-card-amber .feature-chip {
+  background: #ffffff !important;
+  border: 1.5px solid #fde68a !important;
+  color: #78350f !important;
+}
+
+/* 5. Exam Dept Portal (Soft Rose Theme) */
+.portal-card-rose {
+  background: linear-gradient(180deg, #ffffff 0%, #fff5f6 50%, #ffe4e6 100%) !important;
+  border: 1.5px solid #fecdd3 !important;
+}
+.portal-card-rose:hover {
+  border-color: #f43f5e !important;
+  box-shadow: 0 12px 28px rgba(244, 63, 94, 0.12) !important;
+}
+.portal-card-rose .portal-icon-circle {
+  background: #ffffff !important;
+  border: 1.5px solid #fda4af !important;
+  color: #e11d48 !important;
+  box-shadow: 0 2px 8px rgba(244, 63, 94, 0.1);
+}
+.portal-card-rose .feature-chip {
+  background: #ffffff !important;
+  border: 1.5px solid #fecdd3 !important;
+  color: #881337 !important;
+}
 
 .portal-badge {
   position: absolute;
@@ -440,43 +537,70 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  border: 2px solid #0f172a;
+  border: 1.5px solid #e2e8f0;
   background: #f8fafc;
   flex-shrink: 0;
 }
 
-.portal-card-blue .portal-icon-circle { background: #eff6ff; }
-.portal-card-emerald .portal-icon-circle { background: #ecfdf5; }
-.portal-card-purple .portal-icon-circle { background: #f3e8ff; }
-.portal-card-amber .portal-icon-circle { background: #fef3c7; }
-.portal-card-rose .portal-icon-circle { background: #ffe4e6; }
+.portal-header-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.portal-label-tag-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+  margin-bottom: 2px;
+}
 
 .portal-label-tag {
-  font-size: 10.5px;
-  font-weight: 900;
-  letter-spacing: 0.8px;
-  color: #1e40af;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.6px;
+  text-transform: uppercase;
+}
+
+.portal-card-blue .portal-label-tag { color: #1e40af; }
+.portal-card-emerald .portal-label-tag { color: #047857; }
+.portal-card-purple .portal-label-tag { color: #6d28d9; }
+.portal-card-amber .portal-label-tag { color: #b45309; }
+.portal-card-rose .portal-label-tag { color: #be123c; }
+
+.portal-badge-inline {
+  font-size: 9.5px;
+  font-weight: 800;
+  padding: 1px 6px;
+  border-radius: 6px;
+  background: #ffffff;
+  border: 1px solid #fde68a;
+  color: #b45309;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+  box-shadow: 0 1px 3px rgba(245, 158, 11, 0.15);
 }
 
 .portal-card-title {
-  font-size: 18px;
-  font-weight: 900;
+  font-size: 16.5px;
+  font-weight: 800;
   color: #0f172a;
-  margin-top: 1px;
+  margin: 0;
+  line-height: 1.25;
 }
 
 .portal-card-desc {
-  font-size: 13px;
+  font-size: 12.5px;
   color: #475569;
   line-height: 1.5;
-  margin-bottom: 18px;
+  margin-bottom: 16px;
   font-weight: 500;
   min-height: 54px;
 }
 
 .portal-features-list {
-  display: flex;
-  flex-wrap: wrap;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
   gap: 6px;
   margin-bottom: 20px;
 }
@@ -484,19 +608,25 @@
 .feature-chip {
   font-size: 11px;
   font-weight: 700;
-  padding: 5px 10px;
+  padding: 6px 8px;
   border-radius: 8px;
-  background: #f8fafc;
-  border: 1.5px solid #cbd5e1;
-  color: #0f172a;
+  background: #ffffff;
+  border: 1.5px solid #e2e8f0;
+  color: #334155;
   display: flex;
   align-items: center;
-  gap: 5px;
+  gap: 4px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.02);
 }
 
 .chip-check {
   color: #059669;
   font-weight: 900;
+  font-size: 11px;
+  flex-shrink: 0;
 }
 
 .portal-footer-flow {
@@ -514,7 +644,7 @@
   justify-content: center;
   padding: 14px;
   border-radius: 14px;
-  border: 2px solid #0f172a;
+  border: none;
   font-weight: 900;
   font-size: 15px;
   text-decoration: none;
@@ -539,7 +669,7 @@
 .public-info-section {
   padding: 44px;
   background: #ffffff;
-  border: 2px solid #0f172a;
+  border: 1.5px solid #e2e8f0;
   border-radius: 26px;
   box-shadow: 0 16px 40px rgba(15, 23, 42, 0.08);
 }
@@ -585,7 +715,7 @@
 .public-view-btn {
   display: inline-block;
   background: #f8fafc;
-  border: 2px solid #0f172a;
+  border: 1.5px solid #e2e8f0;
   color: #0f172a;
   padding: 10px 24px;
   border-radius: 12px;
@@ -605,27 +735,21 @@
 
 .public-cards-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-  gap: 24px;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 16px;
 }
 
 .public-subcard {
-  background: #f8fafc;
-  border: 2px solid #0f172a;
   border-radius: 18px;
-  padding: 26px;
-  transition: all 0.25s ease;
+  padding: 22px 18px;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
   position: relative;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
   text-decoration: none;
   color: inherit;
-}
-
-.pub-card-main {
-  display: flex;
-  flex-direction: column;
+  box-shadow: 0 4px 16px rgba(15, 23, 42, 0.04);
 }
 
 .clickable-pub-card {
@@ -633,52 +757,145 @@
 }
 
 .clickable-pub-card:hover {
-  transform: translateY(-6px);
-  background: #ffffff;
-  box-shadow: 0 14px 32px rgba(15, 23, 42, 0.12);
-  border-color: #2563eb;
+  transform: translateY(-4px);
+  box-shadow: 0 14px 32px rgba(15, 23, 42, 0.1);
+}
+
+/* 1. Departments (Soft Blue Theme) */
+.public-subcard.card-glow-blue {
+  background: linear-gradient(180deg, #ffffff 0%, #f0f7ff 50%, #e0f2fe 100%) !important;
+  border: 1.5px solid #bfdbfe !important;
+}
+.public-subcard.card-glow-blue:hover {
+  border-color: #3b82f6 !important;
+  box-shadow: 0 12px 28px rgba(37, 99, 235, 0.14) !important;
+}
+.public-subcard.card-glow-blue .pub-badge-count {
+  background: #ffffff !important;
+  border: 1.5px solid #93c5fd !important;
+  color: #1d4ed8 !important;
+}
+.public-subcard.card-glow-blue .card-click-hint {
+  color: #1d4ed8 !important;
+}
+
+/* 2. Department-wise Fees (Soft Emerald Theme) */
+.public-subcard.card-glow-emerald {
+  background: linear-gradient(180deg, #ffffff 0%, #f0fdf4 50%, #dcfce7 100%) !important;
+  border: 1.5px solid #a7f3d0 !important;
+}
+.public-subcard.card-glow-emerald:hover {
+  border-color: #10b981 !important;
+  box-shadow: 0 12px 28px rgba(16, 185, 129, 0.14) !important;
+}
+.public-subcard.card-glow-emerald .pub-badge-count {
+  background: #ffffff !important;
+  border: 1.5px solid #6ee7b7 !important;
+  color: #047857 !important;
+}
+.public-subcard.card-glow-emerald .card-click-hint {
+  color: #047857 !important;
+}
+
+/* 3. Achievements & Toppers (Soft Warm Amber Theme) */
+.public-subcard.card-glow-amber {
+  background: linear-gradient(180deg, #ffffff 0%, #fffdf5 50%, #fef3c7 100%) !important;
+  border: 1.5px solid #fde68a !important;
+}
+.public-subcard.card-glow-amber:hover {
+  border-color: #f59e0b !important;
+  box-shadow: 0 12px 28px rgba(245, 158, 11, 0.14) !important;
+}
+.public-subcard.card-glow-amber .pub-badge-count {
+  background: #ffffff !important;
+  border: 1.5px solid #fcd34d !important;
+  color: #b45309 !important;
+}
+.public-subcard.card-glow-amber .card-click-hint {
+  color: #b45309 !important;
+}
+
+/* 4. Live Campus Location (Soft Cyan Theme) */
+.public-subcard.card-glow-cyan {
+  background: linear-gradient(180deg, #ffffff 0%, #ecfeff 50%, #cffafe 100%) !important;
+  border: 1.5px solid #a5f3fc !important;
+}
+.public-subcard.card-glow-cyan:hover {
+  border-color: #06b6d4 !important;
+  box-shadow: 0 12px 28px rgba(6, 182, 212, 0.14) !important;
+}
+.public-subcard.card-glow-cyan .pub-badge-count {
+  background: #ffffff !important;
+  border: 1.5px solid #67e8f9 !important;
+  color: #0e7490 !important;
+}
+.public-subcard.card-glow-cyan .card-click-hint {
+  color: #0891b2 !important;
+}
+
+/* 5. Nearby PGs & Hostels (Soft Lavender/Purple Theme) */
+.public-subcard.card-glow-purple {
+  background: linear-gradient(180deg, #ffffff 0%, #faf5ff 50%, #ede9fe 100%) !important;
+  border: 1.5px solid #ddd6fe !important;
+}
+.public-subcard.card-glow-purple:hover {
+  border-color: #8b5cf6 !important;
+  box-shadow: 0 12px 28px rgba(139, 92, 246, 0.14) !important;
+}
+.public-subcard.card-glow-purple .pub-badge-count {
+  background: #ffffff !important;
+  border: 1.5px solid #c4b5fd !important;
+  color: #6d28d9 !important;
+}
+.public-subcard.card-glow-purple .card-click-hint {
+  color: #6d28d9 !important;
+}
+
+.pub-card-main {
+  display: flex;
+  flex-direction: column;
 }
 
 .pub-card-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 16px;
+  margin-bottom: 14px;
 }
 
 .pub-card-icon {
   font-size: 28px;
+  line-height: 1;
 }
 
 .pub-badge-count {
-  font-size: 11.5px;
+  font-size: 11px;
   font-weight: 800;
-  padding: 4px 12px;
+  padding: 3px 10px;
   border-radius: 20px;
-  background: #eff6ff;
-  border: 1.5px solid #bfdbfe;
-  color: #1e40af;
 }
 
 .public-subcard h4 {
-  font-size: 19px;
-  font-weight: 900;
-  margin-bottom: 8px;
+  font-size: 16.5px;
+  font-weight: 800;
+  margin: 10px 0 6px 0;
   color: #0f172a;
+  line-height: 1.25;
 }
 
 .public-subcard p {
-  font-size: 14px;
+  font-size: 12.5px;
   color: #475569;
-  line-height: 1.55;
+  line-height: 1.5;
   font-weight: 500;
+  min-height: 52px;
 }
 
 .card-click-hint {
-  font-size: 12px;
-  font-weight: 800;
-  color: #2563eb;
-  margin-top: 14px;
+  font-size: 11.5px;
+  font-weight: 700;
+  margin-top: auto;
+  padding-top: 10px;
   display: flex;
   align-items: center;
   gap: 4px;
@@ -729,7 +946,7 @@
 
 .modal-dialog-content {
   background: #ffffff;
-  border: 2.5px solid #0f172a;
+  border: 1.5px solid #e2e8f0;
   border-radius: 24px;
   width: 100%;
   max-width: 860px;
@@ -746,7 +963,7 @@
   align-items: center;
   padding: 20px 28px;
   background: #f8fafc;
-  border-bottom: 2px solid #0f172a;
+  border-bottom: 1.5px solid #e2e8f0;
 }
 
 .modal-header-row h3 {
@@ -792,7 +1009,7 @@
 
 .dept-fee-card {
   background: #f8fafc;
-  border: 2px solid #0f172a;
+  border: 1.5px solid #e2e8f0;
   border-radius: 16px;
   padding: 20px;
 }
@@ -892,7 +1109,7 @@
 
 .dept-toppers-block {
   background: #f8fafc;
-  border: 2px solid #0f172a;
+  border: 1.5px solid #e2e8f0;
   border-radius: 18px;
   padding: 22px;
 }
@@ -915,7 +1132,7 @@
 
 .topper-profile-card {
   background: #ffffff;
-  border: 2px solid #0f172a;
+  border: 1.5px solid #e2e8f0;
   border-radius: 16px;
   padding: 16px;
   display: flex;
@@ -1002,7 +1219,7 @@
 
 .dept-directory-card {
   background: #f8fafc;
-  border: 2px solid #0f172a;
+  border: 1.5px solid #e2e8f0;
   border-radius: 16px;
   padding: 20px;
 }
@@ -1058,7 +1275,7 @@
   right: 28px;
   background: linear-gradient(135deg, #1e40af 0%, #2563eb 100%);
   color: #ffffff;
-  border: 2px solid #0f172a;
+  border: 1.5px solid #e2e8f0;
   padding: 12px 20px;
   border-radius: 50px;
   display: flex;
@@ -1096,4 +1313,16 @@
 @keyframes bounce {
   0%, 100% { transform: translateY(0); }
   50% { transform: translateY(-4px); }
+}
+
+.portal-badge-inline {
+  font-size: 9.5px;
+  font-weight: 800;
+  padding: 1px 6px;
+  border-radius: 6px;
+  background: #fffbeb;
+  border: 1px solid #fde68a;
+  color: #b45309;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
 }
