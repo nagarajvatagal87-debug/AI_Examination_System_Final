@@ -1,24 +1,244 @@
 .hod-layout {
   display: flex;
   min-height: 100vh;
-  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 50%, #e2e8f0 100%);
+  background: linear-gradient(180deg, #f0f7ff 0%, #f8fafc 40%, #f8fafc 100%);
   color: #1e293b;
   font-family: 'Inter', system-ui, sans-serif;
 }
 
 .hod-content { flex: 1; min-width: 0; }
 
+/* =========================================
+   TOP INSTITUTIONAL NAVBAR (Height 64px)
+   ========================================= */
+.eduexam-top-header {
+  display: flex !important;
+  justify-content: space-between !important;
+  align-items: center !important;
+  padding: 0 24px !important;
+  background: #ffffff !important;
+  border-bottom: 1.5px solid #e2e8f0 !important;
+  box-shadow: 0 1px 4px rgba(15, 23, 42, 0.03) !important;
+  color: #0f172a !important;
+  height: 64px !important;
+  min-height: 64px !important;
+  max-height: 64px !important;
+  gap: 16px !important;
+  position: sticky !important;
+  top: 0 !important;
+  z-index: 100 !important;
+}
+
+/* 1. Left: Search Bar (Height 40px) */
+.hod-search-bar-wrap {
+  display: flex !important;
+  align-items: center !important;
+  background: #f8fafc !important;
+  border: 1.5px solid #e2e8f0 !important;
+  border-radius: 12px !important;
+  height: 40px !important;
+  padding: 0 14px !important;
+  width: 260px !important;
+  max-width: 260px !important;
+  flex-shrink: 0 !important;
+  gap: 8px !important;
+  transition: all 0.2s ease !important;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.03) !important;
+}
+
+.hod-search-bar-wrap:focus-within {
+  border-color: #3b82f6 !important;
+  background: #ffffff !important;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.12) !important;
+}
+
+.hod-search-icon {
+  font-size: 14px !important;
+  color: #64748b !important;
+  line-height: 1 !important;
+  user-select: none !important;
+}
+
+.hod-search-input {
+  background: transparent !important;
+  border: none !important;
+  outline: none !important;
+  color: #0f172a !important;
+  font-size: 13px !important;
+  font-weight: 500 !important;
+  width: 100% !important;
+  padding: 0 !important;
+  box-shadow: none !important;
+}
+
+.hod-search-input::placeholder {
+  color: #94a3b8 !important;
+  font-weight: 500 !important;
+}
+
+/* 2. Center: College Title & Subtitle */
+.hod-top-header-center {
+  flex: 1 !important;
+  text-align: center !important;
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  justify-content: center !important;
+  min-width: 0 !important;
+  padding: 0 8px !important;
+}
+
+.hod-header-college-title {
+  font-family: 'Inter', system-ui, sans-serif !important;
+  font-size: 14.5px !important;
+  font-weight: 800 !important;
+  letter-spacing: 0.45px !important;
+  text-transform: uppercase !important;
+  color: #0f172a !important;
+  margin: 0 !important;
+  line-height: 1.25 !important;
+  white-space: nowrap !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  max-width: 100% !important;
+}
+
+.hod-header-dashboard-subtitle {
+  font-size: 12px !important;
+  font-weight: 700 !important;
+  color: #2563eb !important;
+  margin: 2px 0 0 0 !important;
+  letter-spacing: 0.25px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 6px !important;
+  line-height: 1.2 !important;
+}
+
+/* 3. Right: Action Controls (Notification + Settings + User Profile) */
+.hod-top-header-right {
+  display: flex !important;
+  align-items: center !important;
+  gap: 10px !important;
+  flex-shrink: 0 !important;
+}
+
+/* Settings Icon Button (Height 40px) */
+.hod-header-icon-btn {
+  width: 40px !important;
+  height: 40px !important;
+  border-radius: 12px !important;
+  background: #ffffff !important;
+  border: 1.5px solid #e2e8f0 !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  font-size: 17px !important;
+  color: #475569 !important;
+  cursor: pointer !important;
+  transition: all 0.2s ease !important;
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04) !important;
+  outline: none !important;
+  padding: 0 !important;
+}
+
+.hod-header-icon-btn:hover {
+  background: #f8fafc !important;
+  border-color: #cbd5e1 !important;
+  color: #0f172a !important;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 10px rgba(15, 23, 42, 0.08) !important;
+}
+
+/* User Profile Badge Pill (Height 40px) */
+.hod-user-profile-badge {
+  height: 40px !important;
+  display: flex !important;
+  align-items: center !important;
+  gap: 10px !important;
+  padding: 3px 14px 3px 4px !important;
+  background: #ffffff !important;
+  border: 1.5px solid #e2e8f0 !important;
+  border-radius: 20px !important;
+  cursor: pointer !important;
+  transition: all 0.2s ease !important;
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04) !important;
+  user-select: none !important;
+}
+
+.hod-user-profile-badge:hover {
+  background: #f8fafc !important;
+  border-color: #cbd5e1 !important;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 10px rgba(15, 23, 42, 0.08) !important;
+}
+
+.hod-user-avatar-circle {
+  width: 32px !important;
+  height: 32px !important;
+  border-radius: 50% !important;
+  overflow: hidden !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%) !important;
+  color: #ffffff !important;
+  font-weight: 800 !important;
+  font-size: 13px !important;
+  flex-shrink: 0 !important;
+  border: 1.5px solid #bfdbfe !important;
+  box-shadow: 0 2px 6px rgba(37, 99, 235, 0.2) !important;
+}
+
+.hod-user-profile-info {
+  display: flex !important;
+  flex-direction: column !important;
+  text-align: left !important;
+  max-width: 200px !important;
+}
+
+.hod-user-name-title {
+  font-size: 12.5px !important;
+  font-weight: 800 !important;
+  color: #0f172a !important;
+  line-height: 1.25 !important;
+  white-space: nowrap !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+}
+
+.hod-user-sub-title {
+  font-size: 10.5px !important;
+  font-weight: 600 !important;
+  color: #64748b !important;
+  line-height: 1.25 !important;
+  white-space: nowrap !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  margin-top: 1px !important;
+}
+
+.hod-caret-down {
+  font-size: 11px !important;
+  color: #64748b !important;
+  margin-left: 2px !important;
+}
+
+/* =========================================
+   HOD CONTENT & CARDS
+   ========================================= */
 .hod-topbar {
   display: flex;
   justify-content: space-between;
   align-items: center;
   padding: 20px 28px;
   background: #ffffff !important;
-  border: 1.5px solid #1e293b !important;
+  border: 1.5px solid #e2e8f0 !important;
   border-radius: 16px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.04);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03);
   position: relative;
-  z-index: 999;
+  z-index: 99;
 }
 .hod-page-title { font-size: 22px; font-weight: 800; margin: 0; color: #0f172a !important; }
 .hod-page-sub { font-size: 13px; color: #475569; margin: 4px 0 0; font-weight: 500; }
@@ -43,7 +263,7 @@
 }
 .hod-stat-card {
   background: #ffffff;
-  border: 1.5px solid #1e293b;
+  border: 1.5px solid #e2e8f0;
   border-radius: 16px;
   padding: 20px;
   box-shadow: 0 4px 16px rgba(0,0,0,0.03);
@@ -51,6 +271,7 @@
 }
 .hod-stat-card:hover {
   transform: translateY(-2px);
+  border-color: #cbd5e1;
   box-shadow: 0 8px 24px rgba(0,0,0,0.06);
 }
 .hod-stat-icon { font-size: 24px; margin-bottom: 8px; }
@@ -60,28 +281,28 @@
 
 .tone-blue {
   background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%) !important;
-  border-color: #1e40af !important;
+  border-color: #bfdbfe !important;
   color: #1e40af;
 }
 .tone-green {
   background: linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%) !important;
-  border-color: #047857 !important;
+  border-color: #a7f3d0 !important;
   color: #065f46;
 }
 .tone-purple {
   background: linear-gradient(135deg, #f5f3ff 0%, #ede9fe 100%) !important;
-  border-color: #6d28d9 !important;
+  border-color: #ddd6fe !important;
   color: #5b21b6;
 }
 .tone-amber {
   background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%) !important;
-  border-color: #b45309 !important;
+  border-color: #fde68a !important;
   color: #92400e;
 }
 
 .hod-card {
   background: #ffffff !important;
-  border: 1.5px solid #1e293b !important;
+  border: 1.5px solid #e2e8f0 !important;
   border-radius: 16px;
   padding: 24px;
   box-shadow: 0 4px 16px rgba(15, 23, 42, 0.04);
@@ -96,17 +317,17 @@
   padding: 24px;
   text-align: center;
   background: #f8fafc;
-  border: 1.5px dashed #1e293b;
+  border: 1.5px dashed #cbd5e1;
   border-radius: 12px;
 }
 
-.hod-table { width: 100%; border-collapse: separate; border-spacing: 0; font-size: 14px; background: #ffffff; border: 1.5px solid #1e293b; border-radius: 12px; overflow: hidden; }
+.hod-table { width: 100%; border-collapse: separate; border-spacing: 0; font-size: 14px; background: #ffffff; border: 1.5px solid #e2e8f0; border-radius: 12px; overflow: hidden; }
 .hod-table th {
   text-align: left; color: #0f172a; font-size: 12px; font-weight: 800; text-transform: uppercase;
-  padding: 12px 14px; border-bottom: 2px solid #1e293b; border-right: 1.5px solid #334155; background: #f1f5f9;
+  padding: 12px 14px; border-bottom: 2px solid #e2e8f0; border-right: 1.5px solid #e2e8f0; background: #f8fafc;
 }
 .hod-table th:last-child { border-right: none; }
-.hod-table td { padding: 13px 14px; border-bottom: 1.5px solid #334155; border-right: 1.5px solid #cbd5e1; color: #0f172a !important; }
+.hod-table td { padding: 13px 14px; border-bottom: 1.5px solid #f1f5f9; border-right: 1.5px solid #f1f5f9; color: #0f172a !important; }
 .hod-table td:last-child { border-right: none; }
 .hod-table tr:last-child td { border-bottom: none; }
 .hod-table tr:hover td { background: #f8fafc; }

@@ -3,8 +3,8 @@
   min-height: 100vh;
   background: #ffffff !important;
   color: #1e293b !important;
-  border-right: 2px solid #1e293b !important;
-  box-shadow: 2px 0 12px rgba(0, 0, 0, 0.04);
+  border-right: 1.5px solid #e2e8f0 !important;
+  box-shadow: 2px 0 12px rgba(0, 0, 0, 0.03);
   display: flex;
   flex-direction: column;
   padding: 20px 0;
@@ -16,7 +16,7 @@
   align-items: center;
   gap: 12px;
   padding: 0 20px 20px;
-  border-bottom: 1.5px solid #1e293b !important;
+  border-bottom: 1.5px solid #e2e8f0 !important;
 }
 
 .sidebar-logo {
@@ -29,7 +29,7 @@
   justify-content: center;
   font-size: 18px;
   color: #ffffff;
-  border: 1.5px solid #1e293b !important;
+  border: 1.5px solid #cbd5e1 !important;
 }
 
 .sidebar-brand-title {
@@ -54,8 +54,14 @@
   padding: 14px 16px;
   margin: 14px 16px;
   background: #f8fafc !important;
-  border: 1.5px solid #1e293b !important;
+  border: 1.5px solid #e2e8f0 !important;
   border-radius: 14px;
+  transition: all 0.2s ease;
+}
+
+.sidebar-user:hover {
+  background: #f1f5f9 !important;
+  border-color: #cbd5e1 !important;
 }
 
 .sidebar-avatar {
@@ -69,7 +75,7 @@
   font-weight: 800;
   color: #ffffff;
   font-size: 15px;
-  border: 1.5px solid #1e293b !important;
+  border: 1.5px solid #bfdbfe !important;
 }
 
 .sidebar-user-name {
@@ -100,7 +106,7 @@
   flex: 1;
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 4px;
   padding: 14px 12px;
   overflow-y: auto;
 }
@@ -109,31 +115,31 @@
   display: flex;
   align-items: center;
   gap: 12px;
-  padding: 11px 14px;
+  padding: 10px 14px;
   border-radius: 10px;
   border: 1.5px solid transparent !important;
   background: transparent !important;
-  color: #334155 !important;
+  color: #475569 !important;
   font-size: 13.5px;
   font-weight: 600;
   text-align: left;
   cursor: pointer;
   width: 100%;
-  transition: all 0.2s ease;
+  transition: all 0.15s ease;
 }
 
 .sidebar-item:hover {
-  background: #f1f5f9 !important;
+  background: #f8fafc !important;
   color: #0f172a !important;
-  border-color: #1e293b !important;
+  border-color: #e2e8f0 !important;
 }
 
 .sidebar-item.active {
   background: #eff6ff !important;
-  color: #1e40af !important;
+  color: #1d4ed8 !important;
   font-weight: 800;
-  border: 2px solid #1e293b !important;
-  box-shadow: 0 2px 8px rgba(30, 41, 59, 0.1) !important;
+  border: 1.5px solid #bfdbfe !important;
+  box-shadow: 0 2px 6px rgba(37, 99, 235, 0.08) !important;
 }
 
 .sidebar-item-icon {
@@ -144,22 +150,22 @@
 
 .sidebar-logout {
   margin: 14px;
-  padding: 11px 14px;
+  padding: 10px 14px;
   border-radius: 10px;
-  border: 1.5px solid #dc2626 !important;
+  border: 1.5px solid #fecaca !important;
   background: #fef2f2 !important;
   color: #dc2626 !important;
   font-size: 13px;
-  font-weight: 800;
+  font-weight: 700;
   display: flex;
   align-items: center;
   gap: 8px;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all 0.15s ease;
 }
 
 .sidebar-logout:hover {
   background: #fee2e2 !important;
-  color: #991b1b !important;
-  border-color: #991b1b !important;
+  border-color: #fca5a5 !important;
+  color: #b91c1c !important;
 }

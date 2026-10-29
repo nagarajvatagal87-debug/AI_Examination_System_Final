@@ -9,7 +9,6 @@ import HodPublicPublishSection from './HodPublicPublishSection.jsx'
 import AcademicCalendarView from '../../components/AcademicCalendar/AcademicCalendarView.jsx'
 import SportsManagementView from '../../components/SportsManagement/SportsManagementView.jsx'
 import ClubsManagementView from '../../components/ClubsManagement/ClubsManagementView.jsx'
-import '../student/StudentDashboard.css'
 import './HodDashboard.css'
 
 const SECTIONS = [
@@ -39,6 +38,7 @@ export default function HodDashboard() {
   const [overview, setOverview] = useState(null)
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(true)
+  const [headerSearch, setHeaderSearch] = useState('')
 
   useEffect(() => {
     api.get('/hod/overview')
@@ -60,29 +60,55 @@ export default function HodDashboard() {
 
         <div className="hod-content">
           <header className="eduexam-top-header">
-            <div className="search-bar-wrap">
-              <span className="search-icon">🔍</span>
-              <input type="text" placeholder="Search subjects, faculty, students..." />
+            <div className="hod-search-bar-wrap">
+              <span className="hod-search-icon">🔍</span>
+              <input
+                className="hod-search-input"
+                type="text"
+                placeholder="Search subjects, faculty, students..."
+                value={headerSearch}
+                onChange={(e) => setHeaderSearch(e.target.value)}
+              />
             </div>
 
-            <div className="top-header-center">
-              <h1 className="header-college-title-center">DAYANANDA SAGAR ACADEMY OF TECHNOLOGY AND MANAGEMENT</h1>
-              <p className="header-dashboard-subtitle-center">👩‍💼 HOD Dashboard — {overview?.department_name || 'MCA Department'}</p>
+            <div className="hod-top-header-center">
+              <h1 className="hod-header-college-title">DAYANANDA SAGAR ACADEMY OF TECHNOLOGY AND MANAGEMENT</h1>
+              <p className="hod-header-dashboard-subtitle">👩‍💼 HOD Dashboard — {overview?.department_name || 'MCA Department'}</p>
             </div>
 
-            <div className="top-header-right">
+            <div className="hod-top-header-right">
               <NotificationBell count={0} />
-              <div className="header-icon-btn" onClick={() => setActiveSection('settings')} style={{ cursor: 'pointer' }} title="Settings">⚙️</div>
 
-              <div className="user-profile-badge" onClick={() => setActiveSection('settings')} style={{ cursor: 'pointer' }}>
-                <div className="user-avatar-circle" style={{ width: 36, height: 36, borderRadius: '50%', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#2563eb', color: '#fff', fontWeight: 800 }}>
-                  {user?.avatarUrl || user?.avatar_url || localStorage.getItem('user_avatar') ? <img src={user.avatarUrl || user.avatar_url || localStorage.getItem('user_avatar')} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : (user?.fullName?.[0] || 'H')}
+              <button
+                type="button"
+                className="hod-header-icon-btn"
+                onClick={() => setActiveSection('settings')}
+                title="Settings and Profile"
+              >
+                ⚙️
+              </button>
+
+              <div
+                className="hod-user-profile-badge"
+                onClick={() => setActiveSection('settings')}
+                title="View HOD Profile and Settings"
+              >
+                <div className="hod-user-avatar-circle">
+                  {user?.avatarUrl || user?.avatar_url || localStorage.getItem('user_avatar') ? (
+                    <img
+                      src={user?.avatarUrl || user?.avatar_url || localStorage.getItem('user_avatar')}
+                      alt="HOD Avatar"
+                      style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                    />
+                  ) : (
+                    (user?.fullName?.[0] || 'H').toUpperCase()
+                  )}
                 </div>
-                <div>
-                  <div className="user-name-title">{user?.fullName || 'HOD User'}</div>
-                  <div className="user-sub-title">{overview?.department_name || 'MCA'} · Head of Dept</div>
+                <div className="hod-user-profile-info">
+                  <div className="hod-user-name-title">{user?.fullName || 'HOD User'}</div>
+                  <div className="hod-user-sub-title">{overview?.department_name || 'MCA'} · Head of Dept</div>
                 </div>
-                <span className="caret-down">▾</span>
+                <span className="hod-caret-down">▾</span>
               </div>
             </div>
           </header>

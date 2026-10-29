@@ -3,7 +3,7 @@
   display: flex;
   min-height: 100vh;
   width: 100%;
-  background: linear-gradient(135deg, #eef2ff 0%, #e0e7ff 35%, #f1f5f9 70%, #ede9fe 100%) !important;
+  background: linear-gradient(180deg, #f0f7ff 0%, #f8fafc 40%, #f8fafc 100%) !important;
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   color: #0f172a;
 }
@@ -11,13 +11,13 @@
 .ed-sidebar {
   width: 260px;
   background: #ffffff !important;
-  border-right: 2px solid #1e293b !important;
+  border-right: 1.5px solid #e2e8f0 !important;
   color: #1e293b;
   display: flex;
   flex-direction: column;
   padding: 24px 18px;
   flex-shrink: 0;
-  box-shadow: 2px 0 12px rgba(0, 0, 0, 0.04);
+  box-shadow: 2px 0 12px rgba(0, 0, 0, 0.03);
   z-index: 10;
 }
 
@@ -33,14 +33,14 @@
   width: 44px;
   height: 44px;
   border-radius: 50%;
-  padding: 2.5px;
+  padding: 2px;
   background: linear-gradient(135deg, #f59e0b 0%, #3b82f6 100%);
-  box-shadow: 0 0 16px rgba(245, 158, 11, 0.45);
+  box-shadow: 0 0 10px rgba(245, 158, 11, 0.25);
   display: flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
-  border: 1.5px solid #0f172a;
+  border: 1.5px solid #cbd5e1;
 }
 
 .ed-college-logo {
@@ -63,14 +63,20 @@
   text-align: center;
   padding: 18px 12px;
   background: #f8fafc !important;
-  border: 1.5px solid #1e293b !important;
+  border: 1.5px solid #e2e8f0 !important;
   border-radius: 14px;
   margin-bottom: 20px;
+  transition: all 0.2s ease;
+}
+
+.ed-profile:hover {
+  background: #f1f5f9 !important;
+  border-color: #cbd5e1 !important;
 }
 
 .ed-avatar {
-  width: 60px;
-  height: 60px;
+  width: 58px;
+  height: 58px;
   border-radius: 50%;
   background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
   color: #fff;
@@ -81,8 +87,8 @@
   font-weight: 800;
   margin: 0 auto 12px;
   overflow: hidden;
-  box-shadow: 0 4px 16px rgba(37, 99, 235, 0.25);
-  border: 2px solid #1e293b;
+  box-shadow: 0 4px 14px rgba(37, 99, 235, 0.2);
+  border: 2px solid #bfdbfe;
 }
 
 .ed-avatar img {
@@ -93,12 +99,12 @@
 
 .ed-profile-name {
   font-weight: 800;
-  font-size: 15px;
+  font-size: 14.5px;
   color: #0f172a !important;
 }
 
 .ed-profile-role {
-  font-size: 12px;
+  font-size: 11.5px;
   color: #64748b !important;
   margin-top: 2px;
   font-weight: 600;
@@ -114,7 +120,7 @@
   background: #ecfdf5 !important;
   padding: 3px 10px;
   border-radius: 12px;
-  border: 1px solid #059669 !important;
+  border: 1px solid #a7f3d0 !important;
   font-weight: 700;
 }
 
@@ -123,7 +129,7 @@
   height: 6px;
   border-radius: 50%;
   background: #10b981;
-  box-shadow: 0 0 8px #10b981;
+  box-shadow: 0 0 6px #10b981;
 }
 
 .ed-nav {
@@ -138,9 +144,9 @@
   display: flex;
   align-items: center;
   gap: 12px;
-  padding: 11px 14px;
+  padding: 10px 14px;
   border-radius: 10px;
-  color: #334155 !important;
+  color: #475569 !important;
   text-decoration: none;
   font-size: 13.5px;
   font-weight: 600;
@@ -149,17 +155,17 @@
 }
 
 .ed-nav-item:hover {
-  background: #f1f5f9 !important;
+  background: #f8fafc !important;
   color: #0f172a !important;
-  border-color: #1e293b !important;
+  border-color: #e2e8f0 !important;
 }
 
 .ed-nav-item.active {
   background: #eff6ff !important;
-  color: #1e40af !important;
+  color: #1d4ed8 !important;
   font-weight: 800;
-  border: 2px solid #1e293b !important;
-  box-shadow: 0 2px 8px rgba(30, 41, 59, 0.1) !important;
+  border: 1.5px solid #bfdbfe !important;
+  box-shadow: 0 2px 6px rgba(37, 99, 235, 0.08) !important;
 }
 
 .ed-nav-icon {
@@ -171,13 +177,13 @@
 .ed-logout {
   margin-top: 16px;
   background: #fef2f2 !important;
-  border: 1.5px solid #dc2626 !important;
+  border: 1.5px solid #fecaca !important;
   color: #dc2626 !important;
-  padding: 11px;
+  padding: 10px;
   border-radius: 10px;
   cursor: pointer;
   font-size: 13px;
-  font-weight: 800;
+  font-weight: 700;
   transition: all 0.15s ease;
   display: flex;
   align-items: center;
@@ -187,6 +193,7 @@
 
 .ed-logout:hover {
   background: #fee2e2 !important;
+  border-color: #fca5a5 !important;
   color: #b91c1c !important;
 }
 
@@ -195,74 +202,239 @@
   display: flex;
   flex-direction: column;
   min-width: 0;
-  background: linear-gradient(135deg, #eef2ff 0%, #e0e7ff 35%, #f1f5f9 70%, #ede9fe 100%) !important;
+  background: linear-gradient(180deg, #f0f7ff 0%, #f8fafc 40%, #f8fafc 100%) !important;
 }
 
-/* Top Header Bar - High-Contrast Dark Navy Title on Clean White Background */
+/* =========================================
+   TOP INSTITUTIONAL NAVBAR (Height 64px)
+   ========================================= */
 .eduexam-top-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 16px 28px;
+  display: flex !important;
+  justify-content: space-between !important;
+  align-items: center !important;
+  padding: 0 24px !important;
   background: #ffffff !important;
-  border-bottom: 2px solid #0f172a !important;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.04);
+  border-bottom: 1.5px solid #e2e8f0 !important;
+  box-shadow: 0 1px 4px rgba(15, 23, 42, 0.03) !important;
   color: #0f172a !important;
+  height: 64px !important;
+  min-height: 64px !important;
+  max-height: 64px !important;
+  gap: 16px !important;
+  position: sticky !important;
+  top: 0 !important;
+  z-index: 100 !important;
 }
 
-.eduexam-top-header .header-college-title-center {
-  font-size: 15.5px !important;
-  font-weight: 900 !important;
-  letter-spacing: 0.5px !important;
+/* 1. Left: Search Bar (Height 40px) */
+.ed-search-bar-wrap {
+  display: flex !important;
+  align-items: center !important;
+  background: #f8fafc !important;
+  border: 1.5px solid #e2e8f0 !important;
+  border-radius: 12px !important;
+  height: 40px !important;
+  padding: 0 14px !important;
+  width: 260px !important;
+  max-width: 260px !important;
+  flex-shrink: 0 !important;
+  gap: 8px !important;
+  transition: all 0.2s ease !important;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.03) !important;
+}
+
+.ed-search-bar-wrap:focus-within {
+  border-color: #3b82f6 !important;
+  background: #ffffff !important;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.12) !important;
+}
+
+.ed-search-icon {
+  font-size: 14px !important;
+  color: #64748b !important;
+  line-height: 1 !important;
+  user-select: none !important;
+}
+
+.ed-search-input {
+  background: transparent !important;
+  border: none !important;
+  outline: none !important;
+  color: #0f172a !important;
+  font-size: 13px !important;
+  font-weight: 500 !important;
+  width: 100% !important;
+  padding: 0 !important;
+  box-shadow: none !important;
+}
+
+.ed-search-input::placeholder {
+  color: #94a3b8 !important;
+  font-weight: 500 !important;
+}
+
+/* 2. Center: College Title & Subtitle */
+.ed-top-header-center {
+  flex: 1 !important;
+  text-align: center !important;
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  justify-content: center !important;
+  min-width: 0 !important;
+  padding: 0 8px !important;
+}
+
+.ed-header-college-title {
+  font-family: 'Inter', system-ui, sans-serif !important;
+  font-size: 14.5px !important;
+  font-weight: 800 !important;
+  letter-spacing: 0.45px !important;
   text-transform: uppercase !important;
   color: #0f172a !important;
-  background: none !important;
-  -webkit-background-clip: unset !important;
-  -webkit-text-fill-color: #0f172a !important;
   margin: 0 !important;
   line-height: 1.25 !important;
-  filter: none !important;
-  opacity: 1 !important;
-  visibility: visible !important;
+  white-space: nowrap !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  max-width: 100% !important;
 }
 
-.eduexam-top-header .header-dashboard-subtitle-center {
+.ed-header-dashboard-subtitle {
+  font-size: 12px !important;
+  font-weight: 700 !important;
+  color: #2563eb !important;
+  margin: 2px 0 0 0 !important;
+  letter-spacing: 0.25px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 6px !important;
+  line-height: 1.2 !important;
+}
+
+/* 3. Right: Action Controls (Notification + Settings + User Profile) */
+.ed-top-header-right {
+  display: flex !important;
+  align-items: center !important;
+  gap: 10px !important;
+  flex-shrink: 0 !important;
+}
+
+/* Settings Icon Button (Height 40px) */
+.ed-header-icon-btn {
+  width: 40px !important;
+  height: 40px !important;
+  border-radius: 12px !important;
+  background: #ffffff !important;
+  border: 1.5px solid #e2e8f0 !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  font-size: 17px !important;
+  color: #475569 !important;
+  cursor: pointer !important;
+  transition: all 0.2s ease !important;
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04) !important;
+  outline: none !important;
+  padding: 0 !important;
+}
+
+.ed-header-icon-btn:hover {
+  background: #f8fafc !important;
+  border-color: #cbd5e1 !important;
+  color: #0f172a !important;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 10px rgba(15, 23, 42, 0.08) !important;
+}
+
+/* User Profile Badge Pill (Height 40px) */
+.ed-profile-popover-wrapper {
+  position: relative !important;
+}
+
+.ed-user-profile-badge {
+  height: 40px !important;
+  display: flex !important;
+  align-items: center !important;
+  gap: 10px !important;
+  padding: 3px 14px 3px 4px !important;
+  background: #ffffff !important;
+  border: 1.5px solid #e2e8f0 !important;
+  border-radius: 20px !important;
+  cursor: pointer !important;
+  transition: all 0.2s ease !important;
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04) !important;
+  user-select: none !important;
+}
+
+.ed-user-profile-badge:hover {
+  background: #f8fafc !important;
+  border-color: #cbd5e1 !important;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 10px rgba(15, 23, 42, 0.08) !important;
+}
+
+.ed-user-avatar-circle {
+  width: 32px !important;
+  height: 32px !important;
+  border-radius: 50% !important;
+  overflow: hidden !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%) !important;
+  color: #ffffff !important;
+  font-weight: 800 !important;
+  font-size: 13px !important;
+  flex-shrink: 0 !important;
+  border: 1.5px solid #bfdbfe !important;
+  box-shadow: 0 2px 6px rgba(37, 99, 235, 0.2) !important;
+}
+
+.ed-user-avatar-circle img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.ed-user-profile-info {
+  display: flex !important;
+  flex-direction: column !important;
+  text-align: left !important;
+  max-width: 200px !important;
+}
+
+.ed-user-name-title {
   font-size: 12.5px !important;
   font-weight: 800 !important;
-  color: #1d4ed8 !important;
-  margin-top: 2px !important;
-  opacity: 1 !important;
-  visibility: visible !important;
+  color: #0f172a !important;
+  line-height: 1.25 !important;
+  white-space: nowrap !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
 }
 
-.search-bar-wrap {
-  display: flex;
-  align-items: center;
-  background: #f1f5f9;
-  border: 1px solid #cbd5e1;
-  border-radius: 10px;
-  padding: 8px 14px;
-  width: 260px;
-  gap: 8px;
+.ed-user-sub-title {
+  font-size: 10.5px !important;
+  font-weight: 600 !important;
+  color: #64748b !important;
+  line-height: 1.25 !important;
+  white-space: nowrap !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  margin-top: 1px !important;
 }
 
-.search-bar-wrap input {
-  background: transparent;
-  border: none;
-  outline: none;
-  color: #0f172a;
-  font-size: 13px;
-  width: 100%;
+.ed-caret-down {
+  font-size: 11px !important;
+  color: #64748b !important;
+  margin-left: 2px !important;
+  transition: transform 0.2s ease;
 }
 
-.search-bar-wrap input::placeholder {
-  color: #64748b;
-}
-
-.user-profile-widget {
-  display: flex;
-  align-items: center;
-  gap: 16px;
+.ed-caret-down.open {
+  transform: rotate(180deg);
 }
 
 .ed-content {
@@ -274,13 +446,13 @@
 /* User Profile Popover Dropdown */
 .ed-profile-popover {
   position: absolute;
-  top: calc(100% + 12px);
+  top: calc(100% + 8px);
   right: 0;
-  width: 320px;
+  width: 300px;
   background: #ffffff !important;
-  border: 2px solid #0f172a !important;
+  border: 1.5px solid #e2e8f0 !important;
   border-radius: 16px;
-  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.18);
+  box-shadow: 0 16px 36px rgba(15, 23, 42, 0.12);
   padding: 16px;
   z-index: 1000;
 }
@@ -304,7 +476,13 @@
   justify-content: center;
   font-weight: 800;
   overflow: hidden;
-  border: 1.5px solid #0f172a;
+  border: 1.5px solid #bfdbfe;
+}
+
+.ed-pop-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 }
 
 .ed-pop-user-info {

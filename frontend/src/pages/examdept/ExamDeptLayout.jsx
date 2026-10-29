@@ -2,7 +2,6 @@ import React, { useState, useEffect, useRef } from 'react'
 import { NavLink, Outlet, useNavigate } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext.jsx'
 import NotificationBell from '../../components/NotificationBell.jsx'
-import '../student/StudentDashboard.css'
 import './ExamDeptLayout.css'
 
 const NAV_ITEMS = [
@@ -87,34 +86,50 @@ export default function ExamDeptLayout() {
 
       <div className="ed-main">
         <header className="eduexam-top-header">
-          <div className="search-bar-wrap">
-            <span className="search-icon">🔍</span>
-            <input type="text" placeholder="Search exams, rosters, scripts, results..." />
+          <div className="ed-search-bar-wrap">
+            <span className="ed-search-icon">🔍</span>
+            <input
+              className="ed-search-input"
+              type="text"
+              placeholder="Search exams, rosters, scripts, results..."
+            />
           </div>
 
-          <div className="top-header-center">
-            <h1 className="header-college-title-center">DAYANANDA SAGAR ACADEMY OF TECHNOLOGY AND MANAGEMENT</h1>
-            <p className="header-dashboard-subtitle-center">🏛️ Main Examination Control Centre</p>
+          <div className="ed-top-header-center">
+            <h1 className="ed-header-college-title">DAYANANDA SAGAR ACADEMY OF TECHNOLOGY AND MANAGEMENT</h1>
+            <p className="ed-header-dashboard-subtitle">🏛️ Main Examination Control Centre</p>
           </div>
 
-          <div className="top-header-right" style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
+          <div className="ed-top-header-right">
             <NotificationBell />
-            <div className="header-icon-btn" onClick={() => navigate('/examdept/settings')} style={{ cursor: 'pointer' }} title="Settings">⚙️</div>
 
-            <div ref={profileRef} style={{ position: 'relative' }}>
+            <button
+              type="button"
+              className="ed-header-icon-btn"
+              onClick={() => navigate('/examdept/settings')}
+              title="Settings and Profile"
+            >
+              ⚙️
+            </button>
+
+            <div ref={profileRef} className="ed-profile-popover-wrapper">
               <div
-                className="user-profile-badge"
+                className="ed-user-profile-badge"
                 onClick={() => setProfileMenuOpen(!profileMenuOpen)}
-                style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 10, padding: '4px 10px', background: '#f1f5f9', borderRadius: 20, border: '1px solid #cbd5e1' }}
+                title="Click to view account menu"
               >
-                <div style={{ width: 34, height: 34, borderRadius: '50%', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#2563eb', color: '#fff', fontWeight: 800, fontSize: 13 }}>
-                  {avatarUrl ? <img src={avatarUrl} alt="Avatar" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : (userName[0]?.toUpperCase() || 'E')}
+                <div className="ed-user-avatar-circle">
+                  {avatarUrl ? (
+                    <img src={avatarUrl} alt="Avatar" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                  ) : (
+                    userName[0]?.toUpperCase() || 'E'
+                  )}
                 </div>
-                <div style={{ textAlign: 'left' }}>
-                  <div style={{ fontSize: 12, fontWeight: 800, color: '#0f172a' }}>{userName}</div>
-                  <div style={{ fontSize: 10, color: '#64748b', fontWeight: 600 }}>{userRole}</div>
+                <div className="ed-user-profile-info">
+                  <div className="ed-user-name-title">{userName}</div>
+                  <div className="ed-user-sub-title">{userRole}</div>
                 </div>
-                <span style={{ fontSize: 10, color: '#64748b' }}>▾</span>
+                <span className={`ed-caret-down ${profileMenuOpen ? 'open' : ''}`}>▾</span>
               </div>
 
               {profileMenuOpen && (
@@ -148,23 +163,6 @@ export default function ExamDeptLayout() {
 
                     <button
                       type="button"
-                      className="ed-pop-item"
-                      onClick={() => {
-                        setProfileMenuOpen(false)
-                        navigate('/examdept/examinations')
-                      }}
-                    >
-                      <span>📝</span>
-                      <div>
-                        <strong>Main Examinations</strong>
-                        <p>Schedules, rosters & hall tickets</p>
-                      </div>
-                    </button>
-
-                    <div className="ed-pop-divider" />
-
-                    <button
-                      type="button"
                       className="ed-pop-item logout"
                       onClick={() => {
                         setProfileMenuOpen(false)
@@ -174,7 +172,7 @@ export default function ExamDeptLayout() {
                       <span>🚪</span>
                       <div>
                         <strong>Sign Out</strong>
-                        <p>End examination department session</p>
+                        <p>End session securely</p>
                       </div>
                     </button>
                   </div>

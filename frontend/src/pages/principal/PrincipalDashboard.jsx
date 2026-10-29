@@ -4,7 +4,6 @@ import { useAuth } from '../../context/AuthContext.jsx'
 import NotificationBell from '../../components/NotificationBell.jsx'
 import ProfileSettings from '../../components/ProfileSettings.jsx'
 import Notifications from '../faculty/Notifications.jsx'
-import '../student/StudentDashboard.css'
 import './PrincipalDashboard.css'
 
 // Modular Principal Components
@@ -148,10 +147,11 @@ export default function PrincipalDashboard() {
 
         {/* Main Content Workspace */}
         <main className="pd-main">
-          <header className="eduexam-top-header" style={{ position: 'relative' }}>
-            <div className="search-bar-wrap" style={{ position: 'relative' }}>
-              <span className="search-icon">🔍</span>
+          <header className="eduexam-top-header">
+            <div className="pd-search-bar-wrap" style={{ position: 'relative' }}>
+              <span className="pd-search-icon">🔍</span>
               <input
+                className="pd-search-input"
                 type="text"
                 placeholder="Search departments, students, faculty, circulars..."
                 value={searchQuery}
@@ -161,23 +161,23 @@ export default function PrincipalDashboard() {
               {searchQuery.trim() && (
                 <div style={{
                   position: 'absolute', top: '100%', left: 0, right: 0, background: '#ffffff',
-                  border: '1.5px solid #1e293b', borderRadius: 10, marginTop: 6, zIndex: 1000,
-                  boxShadow: '0 10px 25px rgba(0,0,0,0.15)', overflow: 'hidden'
+                  border: '1.5px solid #e2e8f0', borderRadius: 12, marginTop: 6, zIndex: 1000,
+                  boxShadow: '0 10px 25px rgba(0,0,0,0.08)', overflow: 'hidden'
                 }}>
                   {searching ? (
-                    <div style={{ padding: 12, fontSize: 12, color: '#475569', textAlign: 'center' }}>Searching database...</div>
+                    <div style={{ padding: 12, fontSize: 12, color: '#64748b', textAlign: 'center' }}>Searching database...</div>
                   ) : searchResults.length === 0 ? (
-                    <div style={{ padding: 12, fontSize: 12, color: '#475569', textAlign: 'center' }}>No matching institutional records</div>
+                    <div style={{ padding: 12, fontSize: 12, color: '#64748b', textAlign: 'center' }}>No matching institutional records</div>
                   ) : (
                     searchResults.map((item, idx) => (
                       <div
                         key={idx}
                         onClick={() => { setActive(item.tab); setSearchQuery('') }}
-                        style={{ padding: '10px 14px', borderBottom: '1px solid #e2e8f0', cursor: 'pointer', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}
+                        style={{ padding: '10px 14px', borderBottom: '1px solid #f1f5f9', cursor: 'pointer', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}
                       >
                         <div>
                           <div style={{ fontWeight: 800, fontSize: 13, color: '#0f172a' }}>{item.title}</div>
-                          <div style={{ fontSize: 11, color: '#475569' }}>{item.sub}</div>
+                          <div style={{ fontSize: 11, color: '#64748b' }}>{item.sub}</div>
                         </div>
                         <span style={{ fontSize: 10, background: '#eff6ff', color: '#1d4ed8', padding: '2px 8px', borderRadius: 4, fontWeight: 800 }}>
                           {item.type}
@@ -189,30 +189,37 @@ export default function PrincipalDashboard() {
               )}
             </div>
 
-            <div className="top-header-center">
-              <h1 className="header-college-title-center">DAYANANDA SAGAR ACADEMY OF TECHNOLOGY AND MANAGEMENT</h1>
-              <p className="header-dashboard-subtitle-center">👑 Principal Dashboard — Academic Governance</p>
+            <div className="pd-top-header-center">
+              <h1 className="pd-header-college-title">DAYANANDA SAGAR ACADEMY OF TECHNOLOGY AND MANAGEMENT</h1>
+              <p className="pd-header-dashboard-subtitle">👑 Principal Dashboard — Academic Governance</p>
             </div>
 
-            <div className="top-header-right">
+            <div className="pd-top-header-right">
               <div onClick={() => setActive('notifications')} style={{ cursor: 'pointer' }}>
                 <NotificationBell count={unreadNotifCount} />
               </div>
-              <div className="header-icon-btn" onClick={() => setActive('profile')} style={{ cursor: 'pointer' }} title="Profile Settings">⚙️</div>
+              <button
+                type="button"
+                className="pd-header-icon-btn"
+                onClick={() => setActive('profile')}
+                title="Profile Settings"
+              >
+                ⚙️
+              </button>
 
-              <div className="user-profile-badge" onClick={() => setActive('profile')} style={{ cursor: 'pointer' }}>
-                <div className="user-avatar-circle" style={{ width: 36, height: 36, borderRadius: '50%', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#2563eb', color: '#fff', fontWeight: 800 }}>
+              <div className="pd-user-profile-badge" onClick={() => setActive('profile')} title="Principal Profile">
+                <div className="pd-user-avatar-circle">
                   {myProfile?.avatar_url || user?.avatarUrl || user?.avatar_url ? (
-                    <img src={myProfile?.avatar_url || user?.avatarUrl || user?.avatar_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                    <img src={myProfile?.avatar_url || user?.avatarUrl || user?.avatar_url} alt="Principal Avatar" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                   ) : (
                     '👑'
                   )}
                 </div>
-                <div>
-                  <div className="user-name-title">{user?.fullName || myProfile?.full_name || 'Principal'}</div>
-                  <div className="user-sub-title">DSATM · Institution Head</div>
+                <div className="pd-user-profile-info">
+                  <div className="pd-user-name-title">{user?.fullName || myProfile?.full_name || 'Principal'}</div>
+                  <div className="pd-user-sub-title">DSATM · Institution Head</div>
                 </div>
-                <span className="caret-down">▾</span>
+                <span className="pd-caret-down">▾</span>
               </div>
             </div>
           </header>

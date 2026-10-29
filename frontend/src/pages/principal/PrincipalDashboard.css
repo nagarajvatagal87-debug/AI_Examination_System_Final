@@ -2,7 +2,7 @@
   display: flex;
   min-height: 100vh;
   font-family: 'Inter', 'Segoe UI', system-ui, sans-serif;
-  background: linear-gradient(135deg, #eef2ff 0%, #e0e7ff 35%, #f1f5f9 70%, #ede9fe 100%) !important;
+  background: linear-gradient(180deg, #f0f7ff 0%, #f8fafc 40%, #f8fafc 100%) !important;
   color: #0f172a;
 }
 
@@ -14,13 +14,13 @@
   flex-direction: column;
   padding: 20px 0;
   flex-shrink: 0;
-  border-right: 2px solid #1e293b !important;
-  box-shadow: 2px 0 12px rgba(0, 0, 0, 0.04);
+  border-right: 1.5px solid #e2e8f0 !important;
+  box-shadow: 2px 0 12px rgba(0, 0, 0, 0.03);
 }
 
 .pd-sidebar-brand {
   padding: 0 20px 20px;
-  border-bottom: 1.5px solid #1e293b !important;
+  border-bottom: 1.5px solid #e2e8f0 !important;
 }
 
 .pd-sidebar-brand .name {
@@ -40,75 +40,297 @@
   padding: 14px 12px;
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 4px;
 }
 
 .pd-nav-item {
   display: flex;
   align-items: center;
   gap: 12px;
-  padding: 11px 14px;
+  padding: 10px 14px;
   font-size: 13.5px;
   font-weight: 600;
-  color: #334155 !important;
+  color: #475569 !important;
   cursor: pointer;
   border-radius: 10px;
-  transition: all 0.2s ease;
+  transition: all 0.15s ease;
   border: 1.5px solid transparent !important;
 }
 
 .pd-nav-item:hover {
-  background: #f1f5f9 !important;
+  background: #f8fafc !important;
   color: #0f172a !important;
-  border-color: #1e293b !important;
+  border-color: #e2e8f0 !important;
 }
 
 .pd-nav-item.active {
   background: #eff6ff !important;
-  color: #1e40af !important;
+  color: #1d4ed8 !important;
   font-weight: 800 !important;
-  box-shadow: 0 2px 8px rgba(30, 41, 59, 0.1) !important;
-  border: 2px solid #1e293b !important;
+  box-shadow: 0 2px 6px rgba(37, 99, 235, 0.08) !important;
+  border: 1.5px solid #bfdbfe !important;
 }
 
 .pd-sidebar-logout {
   margin: 14px;
-  padding: 11px;
+  padding: 10px 14px;
   background: #fef2f2 !important;
-  border: 1.5px solid #dc2626 !important;
+  border: 1.5px solid #fecaca !important;
   border-radius: 10px;
   color: #dc2626 !important;
   cursor: pointer;
   font-size: 13px;
-  font-weight: 800;
-  transition: all 0.2s ease;
+  font-weight: 700;
+  transition: all 0.15s ease;
 }
 
 .pd-sidebar-logout:hover {
   background: #fee2e2 !important;
-  color: #991b1b !important;
+  border-color: #fca5a5 !important;
+  color: #b91c1c !important;
 }
 
 .pd-main {
   flex: 1;
   display: flex;
   flex-direction: column;
-  background: linear-gradient(135deg, #eef2ff 0%, #e0e7ff 35%, #f1f5f9 70%, #ede9fe 100%) !important;
+  min-width: 0;
+  background: linear-gradient(180deg, #f0f7ff 0%, #f8fafc 40%, #f8fafc 100%) !important;
 }
 
+/* =========================================
+   TOP INSTITUTIONAL NAVBAR (Height 64px)
+   ========================================= */
+.eduexam-top-header {
+  display: flex !important;
+  justify-content: space-between !important;
+  align-items: center !important;
+  padding: 0 24px !important;
+  background: #ffffff !important;
+  border-bottom: 1.5px solid #e2e8f0 !important;
+  box-shadow: 0 1px 4px rgba(15, 23, 42, 0.03) !important;
+  color: #0f172a !important;
+  height: 64px !important;
+  min-height: 64px !important;
+  max-height: 64px !important;
+  gap: 16px !important;
+  position: sticky !important;
+  top: 0 !important;
+  z-index: 100 !important;
+}
+
+/* 1. Left: Search Bar (Height 40px) */
+.pd-search-bar-wrap {
+  display: flex !important;
+  align-items: center !important;
+  background: #f8fafc !important;
+  border: 1.5px solid #e2e8f0 !important;
+  border-radius: 12px !important;
+  height: 40px !important;
+  padding: 0 14px !important;
+  width: 280px !important;
+  max-width: 280px !important;
+  flex-shrink: 0 !important;
+  gap: 8px !important;
+  transition: all 0.2s ease !important;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.03) !important;
+}
+
+.pd-search-bar-wrap:focus-within {
+  border-color: #3b82f6 !important;
+  background: #ffffff !important;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.12) !important;
+}
+
+.pd-search-icon {
+  font-size: 14px !important;
+  color: #64748b !important;
+  line-height: 1 !important;
+  user-select: none !important;
+}
+
+.pd-search-input {
+  background: transparent !important;
+  border: none !important;
+  outline: none !important;
+  color: #0f172a !important;
+  font-size: 13px !important;
+  font-weight: 500 !important;
+  width: 100% !important;
+  padding: 0 !important;
+  box-shadow: none !important;
+}
+
+.pd-search-input::placeholder {
+  color: #94a3b8 !important;
+  font-weight: 500 !important;
+}
+
+/* 2. Center: College Title & Subtitle */
+.pd-top-header-center {
+  flex: 1 !important;
+  text-align: center !important;
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  justify-content: center !important;
+  min-width: 0 !important;
+  padding: 0 8px !important;
+}
+
+.pd-header-college-title {
+  font-family: 'Inter', system-ui, sans-serif !important;
+  font-size: 14.5px !important;
+  font-weight: 800 !important;
+  letter-spacing: 0.45px !important;
+  text-transform: uppercase !important;
+  color: #0f172a !important;
+  margin: 0 !important;
+  line-height: 1.25 !important;
+  white-space: nowrap !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  max-width: 100% !important;
+}
+
+.pd-header-dashboard-subtitle {
+  font-size: 12px !important;
+  font-weight: 700 !important;
+  color: #2563eb !important;
+  margin: 2px 0 0 0 !important;
+  letter-spacing: 0.25px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 6px !important;
+  line-height: 1.2 !important;
+}
+
+/* 3. Right: Action Controls (Notification + Settings + User Profile) */
+.pd-top-header-right {
+  display: flex !important;
+  align-items: center !important;
+  gap: 10px !important;
+  flex-shrink: 0 !important;
+}
+
+/* Settings Icon Button (Height 40px) */
+.pd-header-icon-btn {
+  width: 40px !important;
+  height: 40px !important;
+  border-radius: 12px !important;
+  background: #ffffff !important;
+  border: 1.5px solid #e2e8f0 !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  font-size: 17px !important;
+  color: #475569 !important;
+  cursor: pointer !important;
+  transition: all 0.2s ease !important;
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04) !important;
+  outline: none !important;
+  padding: 0 !important;
+}
+
+.pd-header-icon-btn:hover {
+  background: #f8fafc !important;
+  border-color: #cbd5e1 !important;
+  color: #0f172a !important;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 10px rgba(15, 23, 42, 0.08) !important;
+}
+
+/* User Profile Badge Pill (Height 40px) */
+.pd-user-profile-badge {
+  height: 40px !important;
+  display: flex !important;
+  align-items: center !important;
+  gap: 10px !important;
+  padding: 3px 14px 3px 4px !important;
+  background: #ffffff !important;
+  border: 1.5px solid #e2e8f0 !important;
+  border-radius: 20px !important;
+  cursor: pointer !important;
+  transition: all 0.2s ease !important;
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04) !important;
+  user-select: none !important;
+}
+
+.pd-user-profile-badge:hover {
+  background: #f8fafc !important;
+  border-color: #cbd5e1 !important;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 10px rgba(15, 23, 42, 0.08) !important;
+}
+
+.pd-user-avatar-circle {
+  width: 32px !important;
+  height: 32px !important;
+  border-radius: 50% !important;
+  overflow: hidden !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%) !important;
+  color: #ffffff !important;
+  font-weight: 800 !important;
+  font-size: 13px !important;
+  flex-shrink: 0 !important;
+  border: 1.5px solid #bfdbfe !important;
+  box-shadow: 0 2px 6px rgba(37, 99, 235, 0.2) !important;
+}
+
+.pd-user-profile-info {
+  display: flex !important;
+  flex-direction: column !important;
+  text-align: left !important;
+  max-width: 200px !important;
+}
+
+.pd-user-name-title {
+  font-size: 12.5px !important;
+  font-weight: 800 !important;
+  color: #0f172a !important;
+  line-height: 1.25 !important;
+  white-space: nowrap !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+}
+
+.pd-user-sub-title {
+  font-size: 10.5px !important;
+  font-weight: 600 !important;
+  color: #64748b !important;
+  line-height: 1.25 !important;
+  white-space: nowrap !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  margin-top: 1px !important;
+}
+
+.pd-caret-down {
+  font-size: 11px !important;
+  color: #64748b !important;
+  margin-left: 2px !important;
+}
+
+/* =========================================
+   PRINCIPAL CONTENT & CARDS
+   ========================================= */
 .pd-topbar {
   display: flex;
   justify-content: space-between;
   align-items: center;
   padding: 16px 28px;
   background: #ffffff !important;
-  border: 1.5px solid #1e293b !important;
+  border: 1.5px solid #e2e8f0 !important;
   border-radius: 16px;
   margin: 20px 28px 0;
-  box-shadow: 0 4px 16px rgba(15, 23, 42, 0.04);
+  box-shadow: 0 4px 16px rgba(15, 23, 42, 0.03);
   color: #0f172a !important;
   position: relative;
-  z-index: 999;
+  z-index: 99;
 }
 
 .pd-topbar h1 {
@@ -137,11 +359,18 @@
 
 .pd-stat-card {
   background: #ffffff;
-  border: 1.5px solid #1e293b !important;
+  border: 1.5px solid #e2e8f0 !important;
   border-radius: 14px;
   padding: 18px 20px;
-  box-shadow: 0 4px 16px rgba(15, 23, 42, 0.04);
+  box-shadow: 0 4px 16px rgba(15, 23, 42, 0.03);
   border-top: 4px solid #4f46e5 !important;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.pd-stat-card:hover {
+  transform: translateY(-2px);
+  border-color: #cbd5e1 !important;
+  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.06);
 }
 
 .pd-stat-card.blue {
@@ -181,11 +410,11 @@
 
 .pd-panel {
   background: #ffffff !important;
-  border: 1.5px solid #1e293b !important;
+  border: 1.5px solid #e2e8f0 !important;
   border-radius: 16px;
   padding: 24px;
   margin-bottom: 24px;
-  box-shadow: 0 4px 16px rgba(15, 23, 42, 0.04);
+  box-shadow: 0 4px 16px rgba(15, 23, 42, 0.03);
   color: #0f172a !important;
 }
 
@@ -221,7 +450,7 @@
   flex: 1;
   height: 20px;
   background: #e2e8f0 !important;
-  border: 1px solid #1e293b !important;
+  border: 1px solid #cbd5e1 !important;
   border-radius: 6px;
   overflow: hidden;
 }
@@ -243,7 +472,7 @@
   width: 100%;
   border-collapse: separate;
   border-spacing: 0;
-  border: 1.5px solid #1e293b !important;
+  border: 1.5px solid #e2e8f0 !important;
   border-radius: 12px;
   overflow: hidden;
   background: #ffffff !important;
@@ -261,9 +490,9 @@
   font-size: 11px;
   text-transform: uppercase;
   letter-spacing: 0.5px;
-  background: #f1f5f9 !important;
-  border-bottom: 2px solid #1e293b !important;
-  border-right: 1.5px solid #334155 !important;
+  background: #f8fafc !important;
+  border-bottom: 2px solid #e2e8f0 !important;
+  border-right: 1.5px solid #e2e8f0 !important;
 }
 
 .pd-table th:last-child {
@@ -272,8 +501,8 @@
 
 .pd-table td {
   color: #0f172a !important;
-  border-bottom: 1.5px solid #334155 !important;
-  border-right: 1.5px solid #cbd5e1 !important;
+  border-bottom: 1.5px solid #f1f5f9 !important;
+  border-right: 1.5px solid #f1f5f9 !important;
 }
 
 .pd-table td:last-child {
@@ -291,7 +520,7 @@
 .pd-panel select, .pd-panel input, .pd-panel textarea,
 .pd-form-row input, .pd-form-row select, .pd-form-row textarea {
   background: #ffffff !important;
-  border: 1.5px solid #334155 !important;
+  border: 1.5px solid #cbd5e1 !important;
   border-radius: 8px;
   padding: 10px 14px;
   font-size: 13px;
@@ -306,7 +535,7 @@
 
 .pd-btn {
   padding: 10px 20px;
-  border: 1.5px solid #1e293b;
+  border: 1px solid transparent;
   border-radius: 8px;
   font-weight: 800;
   cursor: pointer;
@@ -329,7 +558,7 @@
   justify-content: space-between;
   align-items: center;
   padding: 10px 0;
-  border-bottom: 1.5px solid #cbd5e1;
+  border-bottom: 1.5px solid #e2e8f0;
   font-size: 13px;
 }
 
@@ -339,7 +568,7 @@
   padding: 4px 10px;
   border-radius: 6px;
   color: #1d4ed8;
-  border: 1.5px solid #1e293b;
+  border: 1px solid #cbd5e1;
   font-weight: 700;
 }
 
@@ -353,14 +582,14 @@
   border-radius: 8px;
   background: #eff6ff;
   color: #1e40af;
-  border: 1.5px solid #1e40af;
+  border: 1.5px solid #bfdbfe;
   font-weight: 700;
 }
 
 .pd-status.error {
   background: #fef2f2;
   color: #b91c1c;
-  border: 1.5px solid #dc2626;
+  border: 1.5px solid #fecaca;
   font-weight: 700;
 }
 
@@ -375,17 +604,17 @@
 .badge-status.scheduled {
   background: #eff6ff;
   color: #1d4ed8;
-  border: 1.5px solid #1e40af;
+  border: 1.5px solid #bfdbfe;
 }
 
 .badge-status.evaluation {
   background: #fffbeb;
   color: #b45309;
-  border: 1.5px solid #b45309;
+  border: 1.5px solid #fde68a;
 }
 
 .badge-status.published, .badge-status.done {
   background: #ecfdf5;
   color: #047857;
-  border: 1.5px solid #059669;
+  border: 1.5px solid #a7f3d0;
 }
